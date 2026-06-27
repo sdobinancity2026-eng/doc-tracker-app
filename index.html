@@ -1,5 +1,427 @@
 <!DOCTYPE html>
 <html lang="en">
-  <body>
-    <div id="root"></div> </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Tracking System</title>
+  
+  <!-- PWA Theme Color for Mobile Browsers -->
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- Manifest Link for App Installation -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Fonts & Lucide Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #2563eb;       /* Shopee uses orange, we use professional corporate blue */
+      --primary-light: #dbeafe;
+      --success: #16a34a;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-dark);
+      padding-bottom: 40px;
+    }
+
+    /* Header Bar */
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    .btn-install {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: none; /* Shown dynamically via JS */
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+
+    /* Search/Tracking Input Card */
+    .search-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .search-card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .search-box {
+      display: flex;
+      gap: 10px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+    .search-box button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Info Summary Card */
+    .info-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .info-header {
+      background-color: var(--primary-light);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-badge {
+      background: var(--primary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .info-body {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .info-group p:first-child {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .info-group p:last-child {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* The Timeline Component (Shopee Style) */
+    .timeline-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+    .timeline-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    /* Vertical Line */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background-color: var(--border);
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 30px;
+    }
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Timeline Nodes/Circles */
+    .timeline-icon {
+      position: absolute;
+      left: -32px;
+      top: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 3px solid var(--card-bg);
+      box-shadow: 0 0 0 2px var(--border);
+      transition: all 0.3s;
+    }
+
+    /* Active/Completed Node Highlights */
+    .timeline-item.active .timeline-icon {
+      background: var(--success);
+      box-shadow: 0 0 0 2px var(--success);
+    }
+    .timeline-item.completed .timeline-icon {
+      background: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .timeline-content {
+      display: flex;
+      flex-direction: column;
+    }
+    .timeline-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .timeline-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    .timeline-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Highlighting active step text */
+    .timeline-item.active .timeline-title {
+      color: var(--success);
+    }
+
+    /* Desktop and Mobile Responsiveness tweaks */
+    @media (max-width: 600px) {
+      .info-body {
+        grid-template-columns: 1fr;
+      }
+      .search-box {
+        flex-direction: column;
+      }
+      .search-box button {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <i data-lucide="file-search"></i> DocumentTrack
+      </div>
+      <button class="btn-install" id="installBtn">
+        <i data-lucide="download"></i> Install App
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Search / Tracking input -->
+    <div class="search-card">
+      <h2>Track Document Status</h2>
+      <div class="search-box">
+        <input type="text" id="trackingInput" placeholder="Enter Reference / Tracking Number..." value="DOC-2026-9942">
+        <button onclick="mockSearch()">Search</button>
+      </div>
+    </div>
+
+    <!-- Metadata Panel -->
+    <div class="info-card">
+      <div class="info-header">
+        <div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Tracking No:</span>
+          <strong id="displayTrackingNo" style="font-size: 1rem; margin-left: 5px;">DOC-2026-9942</strong>
+        </div>
+        <span class="status-badge" id="displayStatus">In Review</span>
+      </div>
+      <div class="info-body">
+        <div class="info-group">
+          <p>Client Name</p>
+          <p id="clientName">Acme Corp Inc.</p>
+        </div>
+        <div class="info-group">
+          <p>Document Type</p>
+          <p id="docType">Business Permit Clearance & Tax Forms</p>
+        </div>
+        <div class="info-group">
+          <p>Date Submitted</p>
+          <p id="dateSubmitted">June 24, 2026</p>
+        </div>
+        <div class="info-group">
+          <p>Assigned Department</p>
+          <p id="deptAssigned">Legal & Compliance Division</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Tracking Flow -->
+    <div class="timeline-card">
+      <h3>Processing History</h3>
+      
+      <div class="timeline">
+        
+        <!-- Step 4 (Current Active Step Example) -->
+        <div class="timeline-item active">
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <span class="timeline-time">June 27, 2026 - 02:14 PM</span>
+            <span class="timeline-title">Under Review / Verification</span>
+            <span class="timeline-desc">Document is being thoroughly reviewed by Officer Sarah Jenkins at the Legal Department. Expect update within 24 hours.</span>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="timeline-item completed">
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <span class="timeline-time">June 25, 2026 - 09:30 AM</span>
+            <span class="timeline-title">Forwarded to Department</span>
+            <span class="timeline-desc">Documents cleared initial intake screening and have been routed to the Compliance team.</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="timeline-item completed">
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <span class="timeline-time">June 24, 2026 - 04:00 PM</span>
+            <span class="timeline-title">Document Intake & Sorting</span>
+            <span class="timeline-desc">Documents have been safely unpacked, organized, and digitized into our registry system.</span>
+          </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="timeline-item completed">
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <span class="timeline-time">June 24, 2026 - 11:15 AM</span>
+            <span class="timeline-title">Submitted Successfully</span>
+            <span class="timeline-desc">Client submitted digital copy via the portal. Hard copies received at Front Desk Desk 4.</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Mock search interaction function
+    function mockSearch() {
+      const inputVal = document.getElementById('trackingInput').value.trim();
+      if(inputVal === "") {
+        alert("Please enter a tracking number");
+        return;
+      }
+      document.getElementById('displayTrackingNo').innerText = inputVal;
+      alert("Searching status database for: " + inputVal);
+    }
+
+    // --- PROGRESSIVE WEB APP (PWA) INSTALL LOGIC ---
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      deferredPrompt = e;
+      // Update UI notify the user they can install the PWA
+      installBtn.style.display = 'flex';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      // Show the install prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      }
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA was installed successfully');
+      installBtn.style.display = 'none';
+    });
+
+    // Register simple dummy service worker to satisfy PWA requirements
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration skipped/failed', err));
+      });
+    }
+  </script>
+</body>
 </html>

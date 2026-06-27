@@ -1,0 +1,16 @@
+{
+  "name": "Document Tracking System",
+  "short_name": "DocTrack",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme-color": "#2563eb",
+  "description": "Track the physical and digital progress of client documents.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2815/2815428.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

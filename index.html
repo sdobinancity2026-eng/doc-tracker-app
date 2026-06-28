@@ -29,28 +29,41 @@
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
 
         <section id="login-view" class="max-w-md mx-auto mt-12 bg-white p-8 rounded-2xl shadow-xl border border-gray-100 transition-all">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-extrabold text-gray-900">Welcome Back</h2>
-                <p class="text-gray-500 mt-2 text-sm">Sign in to track or manage your documents</p>
+    <div class="text-center mb-8">
+        <i class="fa-solid fa-shield-halved text-4xl text-indigo-600 mb-2"></i>
+        <h2 class="text-3xl font-extrabold text-gray-900">Secure Sign In</h2>
+        <p class="text-gray-500 mt-2 text-sm">Enter credentials to manage or track documents</p>
+    </div>
+    
+    <form onsubmit="handleSecureLogin(event)" class="space-y-5">
+        <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Username / Client ID</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <i class="fa-solid fa-user"></i>
+                </span>
+                <input type="text" id="login-username" placeholder="Enter your ID or username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
             </div>
-            <form onsubmit="handleLogin(event)" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Role Selection (Simulation)</label>
-                    <select id="login-role" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                        <option value="client">Client (Track Document)</option>
-                        <option value="admin">Admin (Reviewer)</option>
-                        <option value="superadmin">Super Admin (System Owner)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Access Key / Tracking ID</label>
-                    <input type="password" id="login-key" value="1234" placeholder="Enter password or tracking number" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition duration-200">
-                    Sign In
-                </button>
-            </form>
-        </section>
+        </div>
+        
+        <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password / Access PIN</label>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <i class="fa-solid fa-lock"></i>
+                </span>
+                <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+            </div>
+        </div>
+
+        <div id="login-error" class="hidden text-red-500 text-xs font-semibold bg-red-50 p-3 rounded-lg border border-red-100">
+            </div>
+
+        <button type="submit" id="btn-login-submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition duration-200">
+            Sign In
+        </button>
+    </form>
+</section>
 
 
         <section id="client-view" class="hidden space-y-6 max-w-3xl mx-auto">
@@ -418,6 +431,56 @@ function logout() {
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = `Create System Account`;
+    }
+}
+
+        async function handleSecureLogin(event) {
+    event.preventDefault();
+    
+    const usernameInput = document.getElementById('login-username').value;
+    const passwordInput = document.getElementById('login-password').value;
+    const errorBox = document.getElementById('login-error');
+    const loginBtn = document.getElementById('btn-login-submit');
+    
+    // Reset status elements
+    errorBox.classList.add('hidden');
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
+    
+    try {
+        // Fetch credentials matching check from Apps Script
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "login",
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Load global documents data database cache before switching layouts
+            const dataResponse = await fetch(API_URL);
+            documentCache = await dataResponse.json();
+            
+            // Route user directly based on dynamic database permission flags
+            renderTargetDashboard(result.role, result.username);
+        } else {
+            // Display error feedback UI
+            errorBox.innerText = result.message || "Invalid account credentials.";
+            errorBox.classList.remove('hidden');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In`;
+        }
+        
+    } catch (err) {
+        errorBox.innerText = "Connection failed. Verify Apps Script configuration permissions.";
+        errorBox.classList.remove('hidden');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `Sign In`;
+        console.error(err);
     }
 }
     </script>

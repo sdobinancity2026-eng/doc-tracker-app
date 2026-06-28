@@ -15,6 +15,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
   <style>
     :root {
       --primary: #2563eb;       /* Shopee uses orange, we use professional corporate blue */
@@ -371,57 +374,134 @@
   </main>
 
   <script>
-    // Initialize Lucide Icons
-    lucide.createIcons();
+   // 1. Paste YOUR Firebase Config here from the Firebase Console project settings
+ const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "sdodoctrack.firebaseapp.com",
+  databaseURL: "https://sdodoctrack-default-rtdb.firebaseio.com",
+  projectId: "sdodoctrack",
+  storageBucket: "sdodoctrack.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
 
-    // Mock search interaction function
-    function mockSearch() {
-      const inputVal = document.getElementById('trackingInput').value.trim();
-      if(inputVal === "") {
-        alert("Please enter a tracking number");
-        return;
-      }
-      document.getElementById('displayTrackingNo').innerText = inputVal;
-      alert("Searching status database for: " + inputVal);
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Initialize UI Icons
+  lucide.createIcons();
+
+  // 2. Search Function: Fetch document history from Firebase
+  function mockSearch() {
+    const trackingNo = document.getElementById('trackingInput').value.trim().toUpperCase();
+    
+    if (trackingNo === "") {
+      alert("Please enter a tracking number");
+      return;
     }
 
-    // --- PROGRESSIVE WEB APP (PWA) INSTALL LOGIC ---
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
+    // Look up the tracking code in your database under the "documents" path
+    database.ref('documents/' + trackingNo).once('value')
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          updateUI(trackingNo, data);
+        } else {
+          alert("Tracking number not found. If this is a new setup, click 'Simulate Demo Data' below.");
+        }
+      })
+      .catch((error) => {
+        console.error("Database read error: ", error);
+        alert("Error connecting to database. Verify your configuration.");
+      });
+  }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      deferredPrompt = e;
-      // Update UI notify the user they can install the PWA
-      installBtn.style.display = 'flex';
-    });
+  // 3. Render the dynamic data onto the Shopee-style layout
+  function updateUI(trackingNo, data) {
+    // Update Info Card Metadata
+    document.getElementById('displayTrackingNo').innerText = trackingNo;
+    document.getElementById('displayStatus').innerText = data.currentStatus || "Unknown";
+    document.getElementById('clientName').innerText = data.clientName || "N/A";
+    document.getElementById('docType').innerText = data.docType || "N/A";
+    document.getElementById('dateSubmitted').innerText = data.dateSubmitted || "N/A";
+    document.getElementById('deptAssigned').innerText = data.deptAssigned || "N/A";
 
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      // Show the install prompt
-      deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      }
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
+    // Rebuild the Timeline Dynamically
+    const timelineContainer = document.querySelector('.timeline');
+    timelineContainer.innerHTML = ""; // Clear old hardcoded items
 
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed successfully');
-      installBtn.style.display = 'none';
-    });
+    if (data.history && Array.isArray(data.history)) {
+      data.history.forEach((step, index) => {
+        const itemDiv = document.createElement('div');
+        // The first element in the array is the latest/current status
+        itemDiv.className = (index === 0) ? "timeline-item active" : "timeline-item completed";
 
-    // Register simple dummy service worker to satisfy PWA requirements
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration skipped/failed', err));
+        itemDiv.innerHTML = `
+          <div class="timeline-icon"></div>
+          <div class="timeline-content">
+            <span class="timeline-time">${step.time || ''}</span>
+            <span class="timeline-title">${step.title || ''}</span>
+            <span class="timeline-desc">${step.desc || ''}</span>
+          </div>
+        `;
+        timelineContainer.appendChild(itemDiv);
       });
     }
+  }
+
+  // 4. Temporary Demo Button: Run this once to inject sample data into your Firebase
+  function injectSampleData() {
+    const sampleDocNum = "DOC-2026-TEST";
+    const samplePayload = {
+      clientName: "Alpha Corp Ltd.",
+      docType: "Contract & Registration Papers",
+      dateSubmitted: "June 28, 2026",
+      deptAssigned: "Records Management",
+      currentStatus: "In Progress",
+      history: [
+        {
+          time: "June 28, 2026 - 10:00 AM",
+          title: "Awaiting Final Signature",
+          desc: "Documents verified. Pending signature from executive director."
+        },
+        {
+          time: "June 28, 2026 - 08:30 AM",
+          title: "Initial Assessment Completed",
+          desc: "Verification agent checked compliance. Passed basic criteria."
+        },
+        {
+          time: "June 27, 2026 - 01:15 PM",
+          title: "Documents Received",
+          desc: "Digital submission successfully logged into database registry."
+        }
+      ]
+    };
+
+    database.ref('documents/' + sampleDocNum).set(samplePayload)
+      .then(() => {
+        document.getElementById('trackingInput').value = sampleDocNum;
+        alert(`Successfully injected sample data! Type "${sampleDocNum}" and click Search.`);
+      });
+  }
+
+  // --- PROGRESSIVE WEB APP (PWA) INSTALL LOGIC ---
+  let deferredPrompt;
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'flex';
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
   </script>
 </body>
 </html>

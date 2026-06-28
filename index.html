@@ -537,7 +537,7 @@ async function createNewAccount(event) {
     const errorBox = document.getElementById('login-error');
     const loginBtn = document.getElementById('btn-login-submit');
     
-    // Reset status elements
+    // Reset UI elements
     errorBox.classList.add('hidden');
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
@@ -559,21 +559,38 @@ async function createNewAccount(event) {
         const result = await response.json();
         
         if (result.success) {
-            // 1. Save session details securely to localStorage
+            // If the role returned is a client, double check that their document exists in cache BEFORE switching views
+            if (result.role === 'client') {
+                const doc = documentCache.find(d => 
+                    d.docId === result.username || 
+                    d.clientName.toLowerCase() === result.username.toLowerCase()
+                );
+                
+                if (!doc) {
+                    // Fail gracefully on the login screen instead of popping up a broken system alert
+                    errorBox.innerText = "Tracking file records not found in database registry.";
+                    errorBox.classList.remove('hidden');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = `Sign In`;
+                    return;
+                }
+            }
+
+            // Save session details securely to localStorage
             localStorage.setItem('docTrack_session', JSON.stringify({
                 role: result.role,
                 username: result.username,
                 fullName: result.fullName
             }));
 
-            // ⚠️ FIX: Reset the login button state so it's ready if they logout later!
+            // Reset the login button state
             loginBtn.disabled = false;
             loginBtn.innerHTML = `Sign In`;
 
-            // 2. Pass data to your dashboard renderer as usual
+            // Pass data to your dashboard renderer
             renderTargetDashboard(result.role, result.username, result.fullName);
         } else {
-            // Display error feedback UI
+            // Display normal incorrect password/username message feedback
             errorBox.innerText = result.message || "Invalid account credentials.";
             errorBox.classList.remove('hidden');
             loginBtn.disabled = false;

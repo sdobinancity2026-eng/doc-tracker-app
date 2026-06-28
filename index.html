@@ -46,15 +46,20 @@
             </div>
         </div>
         
-        <div>
-            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password / Access PIN</label>
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                    <i class="fa-solid fa-lock"></i>
-                </span>
-                <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
-            </div>
-        </div>
+       <div>
+    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password / Access PIN</label>
+    <div class="relative flex items-center">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+            <i class="fa-solid fa-lock"></i>
+        </span>
+        
+        <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+        
+        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-indigo-600 focus:outline-none transition">
+            <i id="password-toggle-icon" class="fa-solid fa-eye"></i>
+        </button>
+    </div>
+</div>
 
         <div id="login-error" class="hidden text-red-500 text-xs font-semibold bg-red-50 p-3 rounded-lg border border-red-100">
             </div>
@@ -481,6 +486,24 @@ function logout() {
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
         console.error(err);
+    }
+}
+
+        function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('login-password');
+    const toggleIcon = document.getElementById('password-toggle-icon');
+    
+    // Check current state and flip it
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        // Change icon to eye-slash (slashed out)
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        // Change icon back to open eye
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
     }
 }
     </script>

@@ -244,43 +244,110 @@
     </footer>
 
     <script>
-        function handleLogin(event) {
-            event.preventDefault();
-            const role = document.getElementById('login-role').value;
-            
-            // Hide all active view states first
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('client-view').classList.add('hidden');
-            document.getElementById('admin-view').classList.add('hidden');
-            document.getElementById('superadmin-view').classList.add('hidden');
+// Replace this placeholder string with your live deployed Apps Script Web App URL!
+const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec"; 
 
-            // Render view dynamically based on selected role dropdown
-            if (role === 'client') {
-                document.getElementById('client-view').classList.remove('hidden');
-            } else if (role === 'admin') {
-                document.getElementById('admin-view').classList.remove('hidden');
-            } else if (role === 'superadmin') {
-                document.getElementById('superadmin-view').classList.remove('hidden');
-            }
+let documentCache = [];
 
-            // Update Navigation Bar Metadata
-            const badge = document.getElementById('user-badge');
-            badge.innerText = role;
-            if (role === 'client') badge.className = "bg-blue-600 px-3 py-1 rounded-full text-xs font-semibold uppercase";
-            if (role === 'admin') badge.className = "bg-purple-600 px-3 py-1 rounded-full text-xs font-semibold uppercase";
-            if (role === 'superadmin') badge.className = "bg-rose-600 px-3 py-1 rounded-full text-xs font-semibold uppercase";
-            
-            document.getElementById('nav-user-info').classList.remove('hidden');
+async function handleLogin(event) {
+    event.preventDefault();
+    const role = document.getElementById('login-role').value;
+    const targetKey = document.getElementById('login-key').value.trim();
+    
+    // Show loading state
+    document.getElementById('login-view').innerHTML = `<p class="text-center text-indigo-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Contacting Sheet Server...</p>`;
+    
+    try {
+        const response = await fetch(API_URL);
+        documentCache = await response.json();
+        
+        // Restore login form UI structure internally for future logouts
+        location.reload; 
+        
+        renderTargetDashboard(role, targetKey);
+    } catch (error) {
+        alert("Failed to connect to Google Sheets API. Check deployment configurations.");
+        console.error(error);
+    }
+}
+
+function renderTargetDashboard(role, targetKey) {
+    // Hide all views
+    document.getElementById('login-view').classList.add('hidden');
+    
+    if (role === 'client') {
+        const doc = documentCache.find(d => d.docId === targetKey);
+        if (!doc) {
+            alert("Tracking ID not found in Google Sheets database!");
+            window.location.reload();
+            return;
         }
+        renderClientView(doc);
+    } else if (role === 'admin' || role === 'superadmin') {
+        document.getElementById(`${role}-view`).classList.remove('hidden');
+        if (role === 'admin') renderAdminTable();
+    }
+    
+    // Set up navbar badges
+    const badge = document.getElementById('user-badge');
+    badge.innerText = role;
+    badge.className = "bg-indigo-700 px-3 py-1 rounded-full text-xs font-semibold uppercase";
+    document.getElementById('nav-user-info').classList.remove('hidden');
+}
 
-        function logout() {
-            // Revert interface changes back to basic initialization state
-            document.getElementById('client-view').classList.add('hidden');
-            document.getElementById('admin-view').classList.add('hidden');
-            document.getElementById('superadmin-view').classList.add('hidden');
-            document.getElementById('nav-user-info').classList.add('hidden');
-            document.getElementById('login-view').classList.remove('hidden');
-        }
+function renderClientView(doc) {
+    const clientView = document.getElementById('client-view');
+    clientView.classList.remove('hidden');
+    
+    // Dynamic Shopee Timeline Generation Engine
+    let timelineHTML = '';
+    if(doc.history && doc.history.length > 0) {
+        doc.history.forEach((step, index) => {
+            const isLatest = index === 0;
+            timelineHTML += `
+            <div class="relative">
+                <div class="absolute -left-[41px] top-0 ${isLatest ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-emerald-500'} text-white rounded-full w-5 h-5 flex items-center justify-center">
+                    ${isLatest ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
+                </div>
+                <div>
+                    <h4 class="${isLatest ? 'font-bold text-indigo-600' : 'font-semibold text-gray-800'} text-sm">${step.title}</h4>
+                    <p class="text-xs text-gray-500 mt-1">${step.description}</p>
+                    <span class="text-xs text-gray-400 block mt-1">${step.timestamp}</span>
+                </div>
+            </div>`;
+        });
+    } else {
+        timelineHTML = `<p class="text-sm text-gray-400">No milestone events initialized yet.</p>`;
+    }
+
+    clientView.innerHTML = `
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Document Tracking System</span>
+                <h2 class="text-xl font-bold text-gray-900 mt-1">ID: ${doc.docId}</h2>
+                <p class="text-sm text-gray-500">Owner: ${doc.clientName} | ${doc.docType}</p>
+            </div>
+            <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase">${doc.currentStatus}</span>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-8"><i class="fa-solid fa-truck-fast text-indigo-500 mr-2"></i>Logistics Workflow</h3>
+            <div class="relative pl-8 border-l-2 border-indigo-200 space-y-8">${timelineHTML}</div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                 <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-sm text-indigo-600 font-medium hover:underline">
+                     <i class="fa-solid fa-file-pdf mr-2 text-red-500 text-lg"></i> View Source Document in Google Drive
+                 </a>
+            </div>
+        </div>`;
+}
+
+function renderAdminTable() {
+    // This functions loops through the live documentCache array to populate 
+    // the admin dashboard table rows dynamically and binds action items to update tracking states!
+}
+
+function logout() {
+    window.location.reload();
+}
     </script>
 </body>
 </html>

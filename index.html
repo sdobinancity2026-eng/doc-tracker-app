@@ -5,22 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document Tracking System</title>
   
-  <!-- PWA Theme Color for Mobile Browsers -->
   <meta name="theme-color" content="#2563eb">
-  
-  <!-- Manifest Link for App Installation -->
   <link rel="manifest" href="manifest.json">
-  
-  <!-- Google Fonts & Lucide Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
   <style>
     :root {
-      --primary: #2563eb;       /* Shopee uses orange, we use professional corporate blue */
+      --primary: #2563eb;       
       --primary-light: #dbeafe;
       --success: #16a34a;
       --text-dark: #1e293b;
@@ -41,24 +33,31 @@
       background-color: var(--bg);
       color: var(--text-dark);
       padding-bottom: 40px;
+      /* Add padding to the top of the body so the content doesn't hide behind the fixed navbar */
+      padding-top: 75px; 
     }
 
-    /* Header Bar */
+    /* --- FIXED NAVBAR --- */
     header {
       background-color: var(--card-bg);
       border-bottom: 1px solid var(--border);
-      position: sticky;
+      position: fixed; /* Permanently pins the header to the top */
       top: 0;
-      z-index: 50;
+      left: 0;
+      right: 0;
+      z-index: 1000; /* Ensures it stays on top of all other elements */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
+    
     .header-container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 14px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    
     .brand {
       display: flex;
       align-items: center;
@@ -67,6 +66,33 @@
       font-size: 1.2rem;
       color: var(--primary);
     }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* New Submit Docs Button Style */
+    .btn-submit {
+      background: transparent;
+      color: var(--text-dark);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-submit:hover {
+      background-color: var(--bg);
+      border-color: var(--text-muted);
+    }
+
     .btn-install {
       background-color: var(--primary);
       color: white;
@@ -76,19 +102,18 @@
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      display: none; /* Shown dynamically via JS */
+      display: none; /* Managed dynamically via JS */
       align-items: center;
       gap: 6px;
     }
 
-    /* Main Container */
+    /* --- MAIN CONTENT PANELS --- */
     main {
       max-width: 800px;
-      margin: 20px auto;
+      margin: 0 auto;
       padding: 0 16px;
     }
 
-    /* Search/Tracking Input Card */
     .search-card {
       background: var(--card-bg);
       padding: 24px;
@@ -113,10 +138,6 @@
       border-radius: 10px;
       font-size: 1rem;
       outline: none;
-      transition: border-color 0.2s;
-    }
-    .search-box input:focus {
-      border-color: var(--primary);
     }
     .search-box button {
       background: var(--primary);
@@ -128,7 +149,6 @@
       cursor: pointer;
     }
 
-    /* Info Summary Card */
     .info-card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -163,14 +183,11 @@
       color: var(--text-muted);
       text-transform: uppercase;
       margin-bottom: 4px;
-      letter-spacing: 0.5px;
     }
     .info-group p:last-child {
       font-weight: 600;
-      font-size: 0.95rem;
     }
 
-    /* The Timeline Component (Shopee Style) */
     .timeline-card {
       background: var(--card-bg);
       padding: 24px;
@@ -189,7 +206,6 @@
       position: relative;
       padding-left: 32px;
     }
-    /* Vertical Line */
     .timeline::before {
       content: '';
       position: absolute;
@@ -204,11 +220,6 @@
       position: relative;
       margin-bottom: 30px;
     }
-    .timeline-item:last-child {
-      margin-bottom: 0;
-    }
-
-    /* Timeline Nodes/Circles */
     .timeline-icon {
       position: absolute;
       left: -32px;
@@ -219,10 +230,7 @@
       background: var(--border);
       border: 3px solid var(--card-bg);
       box-shadow: 0 0 0 2px var(--border);
-      transition: all 0.3s;
     }
-
-    /* Active/Completed Node Highlights */
     .timeline-item.active .timeline-icon {
       background: var(--success);
       box-shadow: 0 0 0 2px var(--success);
@@ -231,7 +239,6 @@
       background: var(--primary);
       box-shadow: 0 0 0 2px var(--primary);
     }
-
     .timeline-content {
       display: flex;
       flex-direction: column;
@@ -243,31 +250,20 @@
     }
     .timeline-title {
       font-weight: 600;
-      font-size: 0.95rem;
-      margin-bottom: 4px;
     }
     .timeline-desc {
       font-size: 0.85rem;
       color: var(--text-muted);
       line-height: 1.4;
     }
-
-    /* Highlighting active step text */
     .timeline-item.active .timeline-title {
       color: var(--success);
     }
 
-    /* Desktop and Mobile Responsiveness tweaks */
     @media (max-width: 600px) {
-      .info-body {
-        grid-template-columns: 1fr;
-      }
-      .search-box {
-        flex-direction: column;
-      }
-      .search-box button {
-        padding: 12px;
-      }
+      .info-body { grid-template-columns: 1fr; }
+      .search-box { flex-direction: column; }
+      .search-box button { padding: 12px; }
     }
   </style>
 </head>
@@ -278,230 +274,132 @@
       <div class="brand">
         <i data-lucide="file-search"></i> DocumentTrack
       </div>
-      <button class="btn-install" id="installBtn">
-        <i data-lucide="download"></i> Install App
-      </button>
+      <div class="nav-actions">
+        <button class="btn-submit" onclick="handleSubmitDocs()">
+          <i data-lucide="file-up"></i> Submit Docs
+        </button>
+        <button class="btn-install" id="installBtn">
+          <i data-lucide="download"></i> Install
+        </button>
+      </div>
     </div>
   </header>
 
   <main>
-    <!-- Search / Tracking input -->
     <div class="search-card">
       <h2>Track Document Status</h2>
       <div class="search-box">
-        <input type="text" id="trackingInput" placeholder="Enter Reference / Tracking Number..." value="DOC-2026-9942">
+        <input type="text" id="trackingInput" placeholder="Enter Reference / Tracking Number..." value="DOC-2026-TEST">
         <button onclick="mockSearch()">Search</button>
       </div>
     </div>
 
-    <!-- Metadata Panel -->
     <div class="info-card">
       <div class="info-header">
         <div>
           <span style="font-size: 0.8rem; color: var(--text-muted);">Tracking No:</span>
-          <strong id="displayTrackingNo" style="font-size: 1rem; margin-left: 5px;">DOC-2026-9942</strong>
+          <strong id="displayTrackingNo" style="font-size: 1rem; margin-left: 5px;">-</strong>
         </div>
-        <span class="status-badge" id="displayStatus">In Review</span>
+        <span class="status-badge" id="displayStatus">Awaiting Search</span>
       </div>
       <div class="info-body">
-        <div class="info-group">
-          <p>Client Name</p>
-          <p id="clientName">Acme Corp Inc.</p>
-        </div>
-        <div class="info-group">
-          <p>Document Type</p>
-          <p id="docType">Business Permit Clearance & Tax Forms</p>
-        </div>
-        <div class="info-group">
-          <p>Date Submitted</p>
-          <p id="dateSubmitted">June 24, 2026</p>
-        </div>
-        <div class="info-group">
-          <p>Assigned Department</p>
-          <p id="deptAssigned">Legal & Compliance Division</p>
-        </div>
+        <div class="info-group"><p>Client Name</p><p id="clientName">-</p></div>
+        <div class="info-group"><p>Document Type</p><p id="docType">-</p></div>
+        <div class="info-group"><p>Date Submitted</p><p id="dateSubmitted">-</p></div>
+        <div class="info-group"><p>Assigned Department</p><p id="deptAssigned">-</p></div>
       </div>
     </div>
 
-    <!-- Timeline Tracking Flow -->
     <div class="timeline-card">
       <h3>Processing History</h3>
-      
       <div class="timeline">
-        
-        <!-- Step 4 (Current Active Step Example) -->
-        <div class="timeline-item active">
-          <div class="timeline-icon"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">June 27, 2026 - 02:14 PM</span>
-            <span class="timeline-title">Under Review / Verification</span>
-            <span class="timeline-desc">Document is being thoroughly reviewed by Officer Sarah Jenkins at the Legal Department. Expect update within 24 hours.</span>
-          </div>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="timeline-item completed">
-          <div class="timeline-icon"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">June 25, 2026 - 09:30 AM</span>
-            <span class="timeline-title">Forwarded to Department</span>
-            <span class="timeline-desc">Documents cleared initial intake screening and have been routed to the Compliance team.</span>
-          </div>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="timeline-item completed">
-          <div class="timeline-icon"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">June 24, 2026 - 04:00 PM</span>
-            <span class="timeline-title">Document Intake & Sorting</span>
-            <span class="timeline-desc">Documents have been safely unpacked, organized, and digitized into our registry system.</span>
-          </div>
-        </div>
-
-        <!-- Step 1 -->
-        <div class="timeline-item completed">
-          <div class="timeline-icon"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">June 24, 2026 - 11:15 AM</span>
-            <span class="timeline-title">Submitted Successfully</span>
-            <span class="timeline-desc">Client submitted digital copy via the portal. Hard copies received at Front Desk Desk 4.</span>
-          </div>
-        </div>
-
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Enter a tracking ID above to load history data.</p>
       </div>
     </div>
   </main>
 
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
   <script>
-   // 1. Paste YOUR Firebase Config here from the Firebase Console project settings
- const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "sdodoctrack.firebaseapp.com",
-  databaseURL: "https://sdodoctrack-default-rtdb.firebaseio.com",
-  projectId: "sdodoctrack",
-  storageBucket: "sdodoctrack.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
-};
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-
-  // Initialize UI Icons
-  lucide.createIcons();
-
-  // 2. Search Function: Fetch document history from Firebase
-  function mockSearch() {
-    const trackingNo = document.getElementById('trackingInput').value.trim().toUpperCase();
-    
-    if (trackingNo === "") {
-      alert("Please enter a tracking number");
-      return;
-    }
-
-    // Look up the tracking code in your database under the "documents" path
-    database.ref('documents/' + trackingNo).once('value')
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          updateUI(trackingNo, data);
-        } else {
-          alert("Tracking number not found. If this is a new setup, click 'Simulate Demo Data' below.");
-        }
-      })
-      .catch((error) => {
-        console.error("Database read error: ", error);
-        alert("Error connecting to database. Verify your configuration.");
-      });
-  }
-
-  // 3. Render the dynamic data onto the Shopee-style layout
-  function updateUI(trackingNo, data) {
-    // Update Info Card Metadata
-    document.getElementById('displayTrackingNo').innerText = trackingNo;
-    document.getElementById('displayStatus').innerText = data.currentStatus || "Unknown";
-    document.getElementById('clientName').innerText = data.clientName || "N/A";
-    document.getElementById('docType').innerText = data.docType || "N/A";
-    document.getElementById('dateSubmitted').innerText = data.dateSubmitted || "N/A";
-    document.getElementById('deptAssigned').innerText = data.deptAssigned || "N/A";
-
-    // Rebuild the Timeline Dynamically
-    const timelineContainer = document.querySelector('.timeline');
-    timelineContainer.innerHTML = ""; // Clear old hardcoded items
-
-    if (data.history && Array.isArray(data.history)) {
-      data.history.forEach((step, index) => {
-        const itemDiv = document.createElement('div');
-        // The first element in the array is the latest/current status
-        itemDiv.className = (index === 0) ? "timeline-item active" : "timeline-item completed";
-
-        itemDiv.innerHTML = `
-          <div class="timeline-icon"></div>
-          <div class="timeline-content">
-            <span class="timeline-time">${step.time || ''}</span>
-            <span class="timeline-title">${step.title || ''}</span>
-            <span class="timeline-desc">${step.desc || ''}</span>
-          </div>
-        `;
-        timelineContainer.appendChild(itemDiv);
-      });
-    }
-  }
-
-  // 4. Temporary Demo Button: Run this once to inject sample data into your Firebase
-  function injectSampleData() {
-    const sampleDocNum = "DOC-2026-TEST";
-    const samplePayload = {
-      clientName: "Alpha Corp Ltd.",
-      docType: "Contract & Registration Papers",
-      dateSubmitted: "June 28, 2026",
-      deptAssigned: "Records Management",
-      currentStatus: "In Progress",
-      history: [
-        {
-          time: "June 28, 2026 - 10:00 AM",
-          title: "Awaiting Final Signature",
-          desc: "Documents verified. Pending signature from executive director."
-        },
-        {
-          time: "June 28, 2026 - 08:30 AM",
-          title: "Initial Assessment Completed",
-          desc: "Verification agent checked compliance. Passed basic criteria."
-        },
-        {
-          time: "June 27, 2026 - 01:15 PM",
-          title: "Documents Received",
-          desc: "Digital submission successfully logged into database registry."
-        }
-      ]
+    // Paste YOUR Firebase Config here
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    database.ref('documents/' + sampleDocNum).set(samplePayload)
-      .then(() => {
-        document.getElementById('trackingInput').value = sampleDocNum;
-        alert(`Successfully injected sample data! Type "${sampleDocNum}" and click Search.`);
-      });
-  }
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    lucide.createIcons();
 
-  // --- PROGRESSIVE WEB APP (PWA) INSTALL LOGIC ---
-  let deferredPrompt;
-  const installBtn = document.getElementById('installBtn');
+    // Trigger action when "Submit Docs" is pressed
+    function handleSubmitDocs() {
+      alert("Redirecting to document portal or submission form...");
+      // You can change this to redirect anywhere, like a Google Form:
+      // window.location.href = "https://forms.google.com/...";
+    }
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'flex';
-  });
+    function mockSearch() {
+      const trackingNo = document.getElementById('trackingInput').value.trim().toUpperCase();
+      if (trackingNo === "") return alert("Please enter a tracking number");
 
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-  });
+      database.ref('documents/' + trackingNo).once('value')
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            updateUI(trackingNo, snapshot.val());
+          } else {
+            alert("Tracking number not found.");
+          }
+        });
+    }
+
+    function updateUI(trackingNo, data) {
+      document.getElementById('displayTrackingNo').innerText = trackingNo;
+      document.getElementById('displayStatus').innerText = data.currentStatus || "Unknown";
+      document.getElementById('clientName').innerText = data.clientName || "-";
+      document.getElementById('docType').innerText = data.docType || "-";
+      document.getElementById('dateSubmitted').innerText = data.dateSubmitted || "-";
+      document.getElementById('deptAssigned').innerText = data.deptAssigned || "-";
+
+      const timelineContainer = document.querySelector('.timeline');
+      timelineContainer.innerHTML = "";
+
+      if (data.history && Array.isArray(data.history)) {
+        data.history.forEach((step, index) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = (index === 0) ? "timeline-item active" : "timeline-item completed";
+          itemDiv.innerHTML = `
+            <div class="timeline-icon"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">${step.time || ''}</span>
+              <span class="timeline-title">${step.title || ''}</span>
+              <span class="timeline-desc">${step.desc || ''}</span>
+            </div>
+          `;
+          timelineContainer.appendChild(itemDiv);
+        });
+      }
+    }
+
+    // PWA Logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'flex';
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
   </script>
 </body>
 </html>

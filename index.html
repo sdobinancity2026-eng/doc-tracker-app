@@ -605,6 +605,105 @@ async function createNewAccount(event) {
         toggleIcon.classList.add('fa-eye');
     }
 }
+        // Handles tab view transitions within the active workspace sidebar layout
+// Handles tab view transitions within the active workspace sidebar layout
+function switchSidebarTab(targetTab) {
+    const opsCenter = document.getElementById('shared-dashboard-view');
+    const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
+
+    // Remove active styles from all nav items first to keep styling clean
+    const navLinks = document.querySelectorAll('#dashboard-sidebar nav a');
+    navLinks.forEach(link => {
+        link.classList.remove('bg-indigo-800', 'text-white');
+        link.classList.add('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
+    });
+
+    // Handle View Routing & Highlight Active Nav Item
+    if (targetTab === 'main-dash') {
+        opsCenter.classList.remove('hidden');
+        ledgerCenter.classList.add('hidden');
+        
+        // Safely add active classes to the clicked link element via window.event
+        if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.add('bg-indigo-800', 'text-white');
+        }
+    } 
+    else if (targetTab === 'user-ledger') {
+        opsCenter.classList.add('hidden'); // Fixed: Added .classList here
+        ledgerCenter.classList.remove('hidden'); // Reveal User table ledger
+        
+        if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.add('bg-indigo-800', 'text-white');
+        }
+        
+        // Automatically fetch live records from your spreadsheet
+        if (typeof loadUserLedgerDirectory === 'function') {
+            loadUserLedgerDirectory();
+        }
+    }
+}
+        async function loadUserLedgerDirectory() {
+    const tbody = document.getElementById('user-ledger-tbody');
+    if (!tbody) return;
+
+    // Set a loading indicator row while waiting for API
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="p-8 text-center text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
+            </td>
+        </tr>
+    `;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getUsers" })
+        });
+        
+        const users = await response.json();
+        tbody.innerHTML = ''; // Clear loading row
+
+        if (!users || users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No user accounts found.</td></tr>`;
+            return;
+        }
+
+        // Build HTML table rows dynamically
+        users.forEach(user => {
+            const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
+                                   user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
+            
+            const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50/50 transition">
+                    <td class="p-4">
+                        <span class="font-bold text-gray-900 block">${user.fullName || 'No Name'}</span>
+                        <span class="text-xs ${roleBadgeColor} px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider inline-block mt-1">${user.role}</span>
+                    </td>
+                    <td class="p-4 font-mono text-xs text-gray-500">${user.username}</td>
+                    <td class="p-4 text-xs">
+                        <span class="block text-gray-700 font-medium">${user.position || 'N/A'}</span>
+                        <span class="text-gray-400 block">${metaInfo}</span>
+                    </td>
+                    <td class="p-4 text-right space-x-1 whitespace-nowrap">
+                        <button onclick="promptEditPassword('${user.username}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 p-2 rounded-lg text-xs transition" title="Change Account Password">
+                            <i class="fa-solid fa-key"></i> Pass
+                        </button>
+                        <button onclick="confirmDeleteUser('${user.username}')" class="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 p-2 rounded-lg text-xs transition" title="Revoke Account Access">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50 font-medium">Failed to establish sync pathway with global user ledger directory.</td></tr>`;
+    }
+}
         
         
         

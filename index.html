@@ -244,25 +244,50 @@
     </div>
     
     <form onsubmit="createNewAccount(event)" class="space-y-4">
-        <div>
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
-            <select id="new-user-role" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                <option value="admin">System Admin</option>
-                <option value="client">Standard Client</option>
-            </select>
-        </div>
+    <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
+        <select id="new-user-role" onchange="toggleConditionalFields()" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+            <option value="admin">System Admin</option>
+            <option value="client">Standard Client</option>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
-            <input type="text" id="new-user-name" placeholder="e.g. john_reviewer or CLIENT-104" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+            <input type="text" id="new-user-name" placeholder="e.g. john_reviewer" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
         </div>
         <div>
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Access Password / PIN Key</label>
             <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
         </div>
-        <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
-            Create System Account
-        </button>
-    </form>
+    </div>
+
+    <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+        <input type="text" id="new-user-fullname" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
+            <input type="text" id="new-user-position" placeholder="e.g. Engineer II / Proponent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
+            <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+        </div>
+    </div>
+
+    <div id="conditional-client-fields" class="hidden border-l-4 border-indigo-500 pl-3 bg-indigo-50/50 p-3 rounded-r-xl transition-all">
+        <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">School Name</label>
+        <input type="text" id="new-user-school" placeholder="e.g. State University" class="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+    </div>
+
+    <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
+        Create System Account
+    </button>
+</form>
 </div>
         </section>
 
@@ -386,44 +411,62 @@ function logout() {
     window.location.reload();
 }
 
-        async function createNewAccount(event) {
+        // Toggle display state of school inputs based on dropdown selection
+function toggleConditionalFields() {
+    const selectedRole = document.getElementById('new-user-role').value;
+    const clientBox = document.getElementById('conditional-client-fields');
+    const schoolInput = document.getElementById('new-user-school');
+
+    if (selectedRole === 'client') {
+        clientBox.classList.remove('hidden');
+        schoolInput.required = true; // Make it required only when visible
+    } else {
+        clientBox.classList.add('hidden');
+        schoolInput.required = false;
+        schoolInput.value = ''; // Reset value if switched back
+    }
+}
+
+// Update your submit pipeline function 
+async function createNewAccount(event) {
     event.preventDefault();
     
-    const role = document.getElementById('new-user-role').value;
-    const username = document.getElementById('new-user-name').value.trim();
-    const password = document.getElementById('new-user-pass').value.trim();
     const submitBtn = document.getElementById('btn-create-account');
-    
-    // Visual Loading Feedback state
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering with Sheets...`;
-    
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering Data...`;
+
     const payload = {
         action: "addUser",
-        role: role,
-        username: username,
-        password: password
+        role: document.getElementById('new-user-role').value,
+        username: document.getElementById('new-user-name').value.trim(),
+        password: document.getElementById('new-user-pass').value.trim(),
+        fullName: document.getElementById('new-user-fullname').value.trim(),
+        position: document.getElementById('new-user-position').value.trim(),
+        office: document.getElementById('new-user-office').value.trim(),
+        schoolName: document.getElementById('new-user-school').value.trim() // Sends blank if admin
     };
-    
+
     try {
-        const response = await fetch(API_URL, {
+        await fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", // Necessary for cross-origin Google App Script execution without handling dynamic CORS pre-flights
-            headers: {
-                "Content-Type": "application/json"
-            },
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
+
+        alert(`Successfully registered profile account for ${payload.fullName}!`);
         
-        // Because "no-cors" returns an opaque response, we assume success if the fetch promise completes successfully.
-        alert(`Successfully registered ${username} as a system ${role}!`);
-        
-        // Reset form inputs safely
+        // Reset inputs cleanly
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-pass').value = '';
+        document.getElementById('new-user-fullname').value = '';
+        document.getElementById('new-user-position').value = '';
+        document.getElementById('new-user-office').value = '';
+        document.getElementById('new-user-school').value = '';
+        toggleConditionalFields(); // Re-hide fields if necessary
         
     } catch (error) {
-        alert("Failed to submit payload to database backend server.");
+        alert("Error saving account creation profile values to sheet log.");
         console.error(error);
     } finally {
         submitBtn.disabled = false;

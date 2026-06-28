@@ -331,23 +331,28 @@ function renderTargetDashboard(role, targetKey, fullName) {
     
     // TRACKING STATE: CLIENT ROUTE
     if (role === 'client') {
-        // Enforce top navbar visibility, hide dashboard sidebar interface layout elements
-        document.getElementById('top-navbar').classList.remove('hidden');
-        document.getElementById('dashboard-sidebar').classList.add('hidden');
-        document.getElementById('shared-dashboard-view').classList.add('hidden');
-        
+        // Find matching document in cache
         const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
+        
+        // 💡 FIX: Instead of alerting and breaking the page with a reload loop, 
+        // if the document isn't ready or found, log them out safely.
         if (!doc) {
-            alert("Tracking ID or associated Client Document folder not found!");
-            window.location.reload();
+            console.warn("Client document cache not fully loaded or ID invalid yet.");
+            localStorage.removeItem('docTrack_session'); // Clear the bad session
+            document.getElementById('login-view').classList.remove('hidden'); // Show login again
+            document.getElementById('top-navbar').classList.add('hidden');
             return;
         }
         
-        // Show client card elements structure
+        // Enforce layout visibility states for valid clients
+        document.getElementById('top-navbar').classList.remove('hidden');
+        document.getElementById('dashboard-sidebar').classList.add('hidden');
+        document.getElementById('shared-dashboard-view').classList.add('hidden');
         document.getElementById('client-view').classList.remove('hidden');
+        
         renderClientView(doc);
         
-        // Inject names into the client layout top-navbar
+        // Inject names into the client top-navbar
         const nameDisplay = document.getElementById('user-fullname');
         if (fullName) {
             nameDisplay.innerText = fullName;
@@ -362,27 +367,21 @@ function renderTargetDashboard(role, targetKey, fullName) {
     
     // MANAGEMENT STATE: ADMIN / SUPERADMIN ROUTE
     if (role === 'admin' || role === 'superadmin') {
-        // Hide standard guest client tracking headers completely
         document.getElementById('top-navbar').classList.add('hidden');
         document.getElementById('client-view').classList.add('hidden');
         
-        // Expose Sidebar layout panels blocks
         document.getElementById('dashboard-sidebar').classList.remove('hidden');
         document.getElementById('shared-dashboard-view').classList.remove('hidden');
         
-        // Deep reset individual tab states cleanly
         document.getElementById('admin-view').classList.add('hidden');
         document.getElementById('superadmin-view').classList.add('hidden');
         document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
         
-        // Expose target operational row context view template cards 
         document.getElementById(`${role}-view`).classList.remove('hidden');
         
-        // Populate persistent active data attributes inside navigation sidebar panel frames
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
         document.getElementById('sidebar-role-pill').innerText = role;
         
-        // Context-dependent operational triggers
         if (role === 'admin') {
             if (typeof renderAdminTable === "function") renderAdminTable();
         } else if (role === 'superadmin') {
@@ -391,7 +390,6 @@ function renderTargetDashboard(role, targetKey, fullName) {
         }
     }
 }
-
 function renderClientView(doc) {
     const clientView = document.getElementById('client-view');
     clientView.classList.remove('hidden');
@@ -529,7 +527,7 @@ async function createNewAccount(event) {
     }
 }
 
-        async function handleSecureLogin(event) {
+       async function handleSecureLogin(event) {
     event.preventDefault();
     
     const usernameInput = document.getElementById('login-username').value;
@@ -537,7 +535,7 @@ async function createNewAccount(event) {
     const errorBox = document.getElementById('login-error');
     const loginBtn = document.getElementById('btn-login-submit');
     
-    // Reset UI elements
+    // Reset UI elements and start loading spinner
     errorBox.classList.add('hidden');
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
@@ -559,22 +557,8 @@ async function createNewAccount(event) {
         const result = await response.json();
         
         if (result.success) {
-            // If the role returned is a client, double check that their document exists in cache BEFORE switching views
-            if (result.role === 'client') {
-                const doc = documentCache.find(d => 
-                    d.docId === result.username || 
-                    d.clientName.toLowerCase() === result.username.toLowerCase()
-                );
-                
-                if (!doc) {
-                    // Fail gracefully on the login screen instead of popping up a broken system alert
-                    errorBox.innerText = "Tracking file records not found in database registry.";
-                    errorBox.classList.remove('hidden');
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = `Sign In`;
-                    return;
-                }
-            }
+            // 💡 FIX: Removed the documentCache restriction completely! 
+            // If the Apps Script successfully verified the user account, we log them in directly.
 
             // Save session details securely to localStorage
             localStorage.setItem('docTrack_session', JSON.stringify({
@@ -587,10 +571,10 @@ async function createNewAccount(event) {
             loginBtn.disabled = false;
             loginBtn.innerHTML = `Sign In`;
 
-            // Pass data to your dashboard renderer
+            // Route user directly to their respective role dashboard view
             renderTargetDashboard(result.role, result.username, result.fullName);
         } else {
-            // Display normal incorrect password/username message feedback
+            // Display normal incorrect password/username message feedback from backend
             errorBox.innerText = result.message || "Invalid account credentials.";
             errorBox.classList.remove('hidden');
             loginBtn.disabled = false;
@@ -729,17 +713,22 @@ function switchSidebarTab(targetTab) {
         
         
         // Automatically check session state on page refresh
-window.addEventListener('DOMContentLoaded', () => {
+// Make sure this is placed at the very bottom of your script file
+window.addEventListener('DOMContentLoaded', async () => {
+    // 1. FIRST: Wait for your existing application data initialization function to finish loading documents!
+    // (Replace 'initializeAppData' with whatever function name you use to fetch your Documents sheet records into documentCache)
+    if (typeof initializeAppData === 'function') {
+        await initializeAppData(); 
+    }
+
+    // 2. SECOND: Now that documentCache is fully loaded, check if a valid session exists
     const savedSession = localStorage.getItem('docTrack_session');
     
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
-            
-            // Bypass login view and boot straight into the dashboard
             renderTargetDashboard(user.role, user.username, user.fullName);
         } catch (e) {
-            // Clean up if corrupted storage strings exist
             localStorage.removeItem('docTrack_session');
         }
     }

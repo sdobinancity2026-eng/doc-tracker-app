@@ -243,7 +243,7 @@
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
                                     <input type="text" id="new-user-position" placeholder="e.g. Engineer II / Proponent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
                                 </div>
-                                <div>
+                                <div id="office-field-container" class="transition-all">
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
                                     <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
                                 </div>
@@ -443,22 +443,42 @@ function renderAdminTable() {
 }
 
 function logout() {
-    window.location.reload();
+    // 1. Clear the persistent storage token
+    localStorage.removeItem('docTrack_session');
+    
+    // 2. Perform your standard view teardown and reload
+    alert("Session ended safely.");
+    window.location.reload(); 
 }
 
         // Toggle display state of school inputs based on dropdown selection
 function toggleConditionalFields() {
     const selectedRole = document.getElementById('new-user-role').value;
+    
     const clientBox = document.getElementById('conditional-client-fields');
     const schoolInput = document.getElementById('new-user-school');
+    
+    const officeContainer = document.getElementById('office-field-container');
+    const officeInput = document.getElementById('new-user-office');
 
     if (selectedRole === 'client') {
+        // Show School field and require it
         clientBox.classList.remove('hidden');
-        schoolInput.required = true; // Make it required only when visible
+        schoolInput.required = true;
+        
+        // Hide Office field and disable requirements
+        officeContainer.classList.add('hidden');
+        officeInput.required = false;
+        officeInput.value = ''; // Clean old entries out
     } else {
+        // Hide School field and disable requirements
         clientBox.classList.add('hidden');
         schoolInput.required = false;
-        schoolInput.value = ''; // Reset value if switched back
+        schoolInput.value = '';
+        
+        // Show Office field and require it
+        officeContainer.classList.remove('hidden');
+        officeInput.required = true;
     }
 }
 
@@ -525,27 +545,34 @@ async function createNewAccount(event) {
     try {
         // Fetch credentials matching check from Apps Script
         const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-        "Content-Type": "text/plain;charset=utf-8" 
-    },
-    body: JSON.stringify({
-        action: "login",
-        username: usernameInput,
-        password: passwordInput
-    })
-});
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8" 
+            },
+            body: JSON.stringify({
+                action: "login",
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
         
         const result = await response.json();
         
-       // Inside your handleSecureLogin function where it checks if (result.success):
-if (result.success) {
-    const dataResponse = await fetch(API_URL);
-    documentCache = await dataResponse.json();
-    
-    // Pass result.fullName here 👇
-    renderTargetDashboard(result.role, result.username, result.fullName);
-} else {
+        if (result.success) {
+            // 1. Save session details securely to localStorage
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: result.role,
+                username: result.username,
+                fullName: result.fullName
+            }));
+
+            // ⚠️ FIX: Reset the login button state so it's ready if they logout later!
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In`;
+
+            // 2. Pass data to your dashboard renderer as usual
+            renderTargetDashboard(result.role, result.username, result.fullName);
+        } else {
             // Display error feedback UI
             errorBox.innerText = result.message || "Invalid account credentials.";
             errorBox.classList.remove('hidden');
@@ -561,7 +588,6 @@ if (result.success) {
         console.error(err);
     }
 }
-
         function togglePasswordVisibility() {
     const passwordInput = document.getElementById('login-password');
     const toggleIcon = document.getElementById('password-toggle-icon');
@@ -579,6 +605,29 @@ if (result.success) {
         toggleIcon.classList.add('fa-eye');
     }
 }
+        
+        
+        
+        
+        
+        
+        
+        // Automatically check session state on page refresh
+window.addEventListener('DOMContentLoaded', () => {
+    const savedSession = localStorage.getItem('docTrack_session');
+    
+    if (savedSession) {
+        try {
+            const user = JSON.parse(savedSession);
+            
+            // Bypass login view and boot straight into the dashboard
+            renderTargetDashboard(user.role, user.username, user.fullName);
+        } catch (e) {
+            // Clean up if corrupted storage strings exist
+            localStorage.removeItem('docTrack_session');
+        }
+    }
+});
     </script>
 </body>
 </html>

@@ -235,6 +235,33 @@
                     </button>
                 </div>
             </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+    <div>
+        <h3 class="text-lg font-bold text-gray-900 mb-2"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account</h3>
+        <p class="text-xs text-gray-500">Create login tokens or dedicated admin workspace credentials instantly within the global Google Sheet user ledger database.</p>
+    </div>
+    
+    <form onsubmit="createNewAccount(event)" class="space-y-4">
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
+            <select id="new-user-role" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                <option value="admin">System Admin</option>
+                <option value="client">Standard Client</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
+            <input type="text" id="new-user-name" placeholder="e.g. john_reviewer or CLIENT-104" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Access Password / PIN Key</label>
+            <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+        </div>
+        <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
+            Create System Account
+        </button>
+    </form>
+</div>
         </section>
 
     </main>
@@ -245,7 +272,7 @@
 
     <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
-const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_ID/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxzZbTcsVy8OEKFW_2izeP-5aNM78rYp-MKoYUXScURPkUhXvzbrf-Ks5b1ZAWfv746/execc"; 
 
 let documentCache = [];
 
@@ -347,6 +374,51 @@ function renderAdminTable() {
 
 function logout() {
     window.location.reload();
+}
+
+        async function createNewAccount(event) {
+    event.preventDefault();
+    
+    const role = document.getElementById('new-user-role').value;
+    const username = document.getElementById('new-user-name').value.trim();
+    const password = document.getElementById('new-user-pass').value.trim();
+    const submitBtn = document.getElementById('btn-create-account');
+    
+    // Visual Loading Feedback state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering with Sheets...`;
+    
+    const payload = {
+        action: "addUser",
+        role: role,
+        username: username,
+        password: password
+    };
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors", // Necessary for cross-origin Google App Script execution without handling dynamic CORS pre-flights
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        // Because "no-cors" returns an opaque response, we assume success if the fetch promise completes successfully.
+        alert(`Successfully registered ${username} as a system ${role}!`);
+        
+        // Reset form inputs safely
+        document.getElementById('new-user-name').value = '';
+        document.getElementById('new-user-pass').value = '';
+        
+    } catch (error) {
+        alert("Failed to submit payload to database backend server.");
+        console.error(error);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `Create System Account`;
+    }
 }
     </script>
 </body>

@@ -1,405 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document Tracking System</title>
-  
-  <meta name="theme-color" content="#2563eb">
-  <link rel="manifest" href="manifest.json">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    :root {
-      --primary: #2563eb;       
-      --primary-light: #dbeafe;
-      --success: #16a34a;
-      --text-dark: #1e293b;
-      --text-muted: #64748b;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --border: #e2e8f0;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text-dark);
-      padding-bottom: 40px;
-      /* Add padding to the top of the body so the content doesn't hide behind the fixed navbar */
-      padding-top: 75px; 
-    }
-
-    /* --- FIXED NAVBAR --- */
-    header {
-      background-color: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      position: fixed; /* Permanently pins the header to the top */
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000; /* Ensures it stays on top of all other elements */
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    }
-    
-    .header-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 14px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      font-size: 1.2rem;
-      color: var(--primary);
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    /* New Submit Docs Button Style */
-    .btn-submit {
-      background: transparent;
-      color: var(--text-dark);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-    .btn-submit:hover {
-      background-color: var(--bg);
-      border-color: var(--text-muted);
-    }
-
-    .btn-install {
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: none; /* Managed dynamically via JS */
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* --- MAIN CONTENT PANELS --- */
-    main {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
-
-    .search-card {
-      background: var(--card-bg);
-      padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-    .search-card h2 {
-      font-size: 1.1rem;
-      margin-bottom: 12px;
-      font-weight: 600;
-    }
-    .search-box {
-      display: flex;
-      gap: 10px;
-    }
-    .search-box input {
-      flex: 1;
-      padding: 12px 16px;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      font-size: 1rem;
-      outline: none;
-    }
-    .search-box button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0 24px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .info-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-    .info-header {
-      background-color: var(--primary-light);
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .status-badge {
-      background: var(--primary);
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .info-body {
-      padding: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .info-group p:first-child {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .info-group p:last-child {
-      font-weight: 600;
-    }
-
-    .timeline-card {
-      background: var(--card-bg);
-      padding: 24px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-    }
-    .timeline-card h3 {
-      font-size: 1.1rem;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-    }
-    
-    .timeline {
-      position: relative;
-      padding-left: 32px;
-    }
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 7px;
-      top: 10px;
-      bottom: 10px;
-      width: 2px;
-      background-color: var(--border);
-    }
-    
-    .timeline-item {
-      position: relative;
-      margin-bottom: 30px;
-    }
-    .timeline-icon {
-      position: absolute;
-      left: -32px;
-      top: 2px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--border);
-      border: 3px solid var(--card-bg);
-      box-shadow: 0 0 0 2px var(--border);
-    }
-    .timeline-item.active .timeline-icon {
-      background: var(--success);
-      box-shadow: 0 0 0 2px var(--success);
-    }
-    .timeline-item.completed .timeline-icon {
-      background: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary);
-    }
-    .timeline-content {
-      display: flex;
-      flex-direction: column;
-    }
-    .timeline-time {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-    .timeline-title {
-      font-weight: 600;
-    }
-    .timeline-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-    .timeline-item.active .timeline-title {
-      color: var(--success);
-    }
-
-    @media (max-width: 600px) {
-      .info-body { grid-template-columns: 1fr; }
-      .search-box { flex-direction: column; }
-      .search-box button { padding: 12px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocTrack | Document Tracking System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
-  <header>
-    <div class="header-container">
-      <div class="brand">
-        <i data-lucide="file-search"></i> DocumentTrack
-      </div>
-      <div class="nav-actions">
-        <button class="btn-submit" onclick="handleSubmitDocs()">
-          <i data-lucide="file-up"></i> Submit Docs
-        </button>
-        <button class="btn-install" id="installBtn">
-          <i data-lucide="download"></i> Install
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <div class="search-card">
-      <h2>Track Document Status</h2>
-      <div class="search-box">
-        <input type="text" id="trackingInput" placeholder="Enter Reference / Tracking Number..." value="DOC-2026-TEST">
-        <button onclick="mockSearch()">Search</button>
-      </div>
-    </div>
-
-    <div class="info-card">
-      <div class="info-header">
-        <div>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Tracking No:</span>
-          <strong id="displayTrackingNo" style="font-size: 1rem; margin-left: 5px;">-</strong>
+    <nav class="bg-orange-600 text-white shadow-md sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-file-invoice text-2xl"></i>
+            <span class="text-xl font-bold tracking-wide">DocTrack</span>
         </div>
-        <span class="status-badge" id="displayStatus">Awaiting Search</span>
-      </div>
-      <div class="info-body">
-        <div class="info-group"><p>Client Name</p><p id="clientName">-</p></div>
-        <div class="info-group"><p>Document Type</p><p id="docType">-</p></div>
-        <div class="info-group"><p>Date Submitted</p><p id="dateSubmitted">-</p></div>
-        <div class="info-group"><p>Assigned Department</p><p id="deptAssigned">-</p></div>
-      </div>
-    </div>
+        <div class="flex space-x-1 bg-orange-700 p-1 rounded-lg text-xs md:text-sm">
+            <button onclick="switchView('client')" id="btn-client" class="px-3 py-1.5 rounded-md font-medium transition bg-white text-orange-600 shadow-sm">Client</button>
+            <button onclick="switchView('admin')" id="btn-admin" class="px-3 py-1.5 rounded-md font-medium transition hover:bg-orange-500">Admin</button>
+            <button onclick="switchView('superadmin')" id="btn-superadmin" class="px-3 py-1.5 rounded-md font-medium transition hover:bg-orange-500">Super Admin</button>
+        </div>
+    </nav>
 
-    <div class="timeline-card">
-      <h3>Processing History</h3>
-      <div class="timeline">
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Enter a tracking ID above to load history data.</p>
-      </div>
-    </div>
-  </main>
+    <main class="max-w-6xl mx-auto p-4 md:p-6 min-h-[calc(100vh-60px)]">
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
-  <script>
-    // Paste YOUR Firebase Config here
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_MESSAGING_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    lucide.createIcons();
-
-    // Trigger action when "Submit Docs" is pressed
-    function handleSubmitDocs() {
-      alert("Redirecting to document portal or submission form...");
-      // You can change this to redirect anywhere, like a Google Form:
-      // window.location.href = "https://forms.google.com/...";
-    }
-
-    function mockSearch() {
-      const trackingNo = document.getElementById('trackingInput').value.trim().toUpperCase();
-      if (trackingNo === "") return alert("Please enter a tracking number");
-
-      database.ref('documents/' + trackingNo).once('value')
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            updateUI(trackingNo, snapshot.val());
-          } else {
-            alert("Tracking number not found.");
-          }
-        });
-    }
-
-    function updateUI(trackingNo, data) {
-      document.getElementById('displayTrackingNo').innerText = trackingNo;
-      document.getElementById('displayStatus').innerText = data.currentStatus || "Unknown";
-      document.getElementById('clientName').innerText = data.clientName || "-";
-      document.getElementById('docType').innerText = data.docType || "-";
-      document.getElementById('dateSubmitted').innerText = data.dateSubmitted || "-";
-      document.getElementById('deptAssigned').innerText = data.deptAssigned || "-";
-
-      const timelineContainer = document.querySelector('.timeline');
-      timelineContainer.innerHTML = "";
-
-      if (data.history && Array.isArray(data.history)) {
-        data.history.forEach((step, index) => {
-          const itemDiv = document.createElement('div');
-          itemDiv.className = (index === 0) ? "timeline-item active" : "timeline-item completed";
-          itemDiv.innerHTML = `
-            <div class="timeline-icon"></div>
-            <div class="timeline-content">
-              <span class="timeline-time">${step.time || ''}</span>
-              <span class="timeline-title">${step.title || ''}</span>
-              <span class="timeline-desc">${step.desc || ''}</span>
+        <section id="view-client" class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center max-w-xl mx-auto mt-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Track Your Document</h2>
+                <p class="text-sm text-gray-500 mb-6">Enter your unique Document Tracking ID below.</p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="track-id-input" placeholder="e.g., DOC-2026-89A" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-center uppercase tracking-wider font-semibold">
+                    <button onclick="trackDocument()" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl transition duration-200 shadow-md">Track Now</button>
+                </div>
             </div>
-          `;
-          timelineContainer.appendChild(itemDiv);
-        });
-      }
-    }
 
-    // PWA Logic
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'flex';
-    });
-    installBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt = null;
-      installBtn.style.display = 'none';
-    });
-  </script>
+            <div id="tracking-result" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-2xl mx-auto dynamic-fade-in">
+                <div class="border-b border-gray-100 pb-4 mb-6 flex justify-between items-center flex-wrap gap-2">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">Document ID</p>
+                        <p class="text-lg font-bold text-gray-800" id="res-id">DOC-2026-89A</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="res-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600">Under Review</span>
+                    </div>
+                </div>
+
+                <div class="relative flex flex-col space-y-8 left-4 md:left-10 my-6">
+                    <div class="absolute left-3 top-2 bottom-2 w-0.5 bg-gray-200 z-0"></div>
+
+                    <div class="flex items-start space-x-4 relative z-10" id="step-3">
+                        <div class="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center text-white ring-4 ring-orange-100">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-orange-600 text-sm md:text-base" id="step-3-title">In Review</h4>
+                            <p class="text-xs text-gray-500" id="step-3-desc">Currently processing at the Registrar's Desk.</p>
+                            <p class="text-[10px] text-gray-400 mt-1" id="step-3-time">June 28, 2026 - 02:30 PM</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4 relative z-10 opacity-60" id="step-2">
+                        <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white" id="step-2-dot">
+                            <i class="fa-solid fa-circle text-[8px]"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 text-sm md:text-base" id="step-2-title">Received & Logged</h4>
+                            <p class="text-xs text-gray-500">Document accepted into the system archive.</p>
+                            <p class="text-[10px] text-gray-400 mt-1">June 27, 2026 - 10:15 AM</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4 relative z-10 opacity-60" id="step-1">
+                        <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                            <i class="fa-solid fa-circle text-[8px]"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 text-sm md:text-base">Submitted Online</h4>
+                            <p class="text-xs text-gray-500">Client uploaded initial document files.</p>
+                            <p class="text-[10px] text-gray-400 mt-1">June 26, 2026 - 04:00 PM</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end">
+                    <a id="res-download" href="#" target="_blank" class="inline-flex items-center space-x-2 text-sm font-medium text-orange-600 hover:text-orange-700">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>View Document PDF</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="view-admin" class="hidden space-y-6">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Admin Workspace</h1>
+                    <p class="text-sm text-gray-500">Update document pathways and workflow status.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4">Document ID</th>
+                                <th class="p-4">Client</th>
+                                <th class="p-4">Current Location</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm" id="admin-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="view-superadmin" class="hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Documents</p>
+                        <h3 class="text-2xl font-black text-gray-900 mt-1" id="stat-total">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600"><i class="fa-solid fa-folder-open text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">In Progress</p>
+                        <h3 class="text-2xl font-black text-yellow-600 mt-1" id="stat-pending">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600"><i class="fa-solid fa-spinner text-xl"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Completed</p>
+                        <h3 class="text-2xl font-black text-green-600 mt-1" id="stat-done">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600"><i class="fa-solid fa-circle-check text-xl"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fa-solid fa-plus-circle text-orange-600 mr-2"></i>Register New Document Entry</h3>
+                <form id="new-doc-form" onsubmit="createNewDocument(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="form-client" placeholder="Client Full Name" required class="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <input type="text" id="form-type" placeholder="Document Type (e.g. Contract, Visa)" required class="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <input type="url" id="form-drive" placeholder="Google Drive Share Link" required class="px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <div class="md:col-span-3 text-right">
+                        <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow transition">Create & Issue Tracking ID</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Replace this URL with your published Google Apps Script Web App URL later
+        const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+
+        // Mock Database Instance for immediate plug-and-play testing
+        let database = [
+            { id: "DOC-2026-A1", client: "Alice Smith", type: "Business License", status: "In Review", location: "Legal Department", time: "June 28, 2026 - 02:30 PM", link: "https://drive.google.com" },
+            { id: "DOC-2026-B4", client: "Bob Jones", type: "Tax Clearance", status: "Submitted Online", location: "Digital Queue", time: "June 27, 2026 - 09:00 AM", link: "https://drive.google.com" }
+        ];
+
+        function switchView(viewName) {
+            ['client', 'admin', 'superadmin'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`btn-${v}`).className = "px-3 py-1.5 rounded-md font-medium transition text-white hover:bg-orange-500";
+            });
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            document.getElementById(`btn-${viewName}`).className = "px-3 py-1.5 rounded-md font-medium transition bg-white text-orange-600 shadow-sm";
+            
+            if(viewName === 'admin' || viewName === 'superadmin') renderAdminPanels();
+        }
+
+        function trackDocument() {
+            const inputId = document.getElementById('track-id-input').value.trim().toUpperCase();
+            const doc = database.find(d => d.id === inputId);
+            const resultBox = document.getElementById('tracking-result');
+
+            if (!doc) {
+                alert("Tracking reference ID not found. Try: DOC-2026-A1");
+                resultBox.classList.add('hidden');
+                return;
+            }
+
+            resultBox.classList.remove('hidden');
+            document.getElementById('res-id').innerText = doc.id;
+            document.getElementById('res-badge').innerText = doc.status;
+            document.getElementById('res-download').href = doc.link;
+            document.getElementById('step-3-title').innerText = doc.status;
+            document.getElementById('step-3-desc').innerText = `Located at: ${doc.location}`;
+            document.getElementById('step-3-time').innerText = doc.time;
+        }
+
+        function renderAdminPanels() {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+            
+            database.forEach(doc => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-4 font-bold text-gray-900">${doc.id}</td>
+                        <td class="p-4">${doc.client}<br><span class="text-xs text-gray-400">${doc.type}</span></td>
+                        <td class="p-4"><span class="text-xs bg-gray-100 px-2 py-1 rounded border border-gray-200">${doc.location}</span></td>
+                        <td class="p-4"><span class="text-xs font-semibold ${doc.status === 'In Review' ? 'text-orange-600':'text-blue-600'}">${doc.status}</span></td>
+                        <td class="p-4 text-right">
+                            <select onchange="updateStatus('${doc.id}', this.value)" class="text-xs border border-gray-300 rounded p-1">
+                                <option value="">Move Progress</option>
+                                <option value="In Review">In Review</option>
+                                <option value="Approved/Done">Approved/Done</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('stat-total').innerText = database.length;
+            document.getElementById('stat-pending').innerText = database.filter(d => d.status !== 'Approved/Done').length;
+            document.getElementById('stat-done').innerText = database.filter(d => d.status === 'Approved/Done').length;
+        }
+
+        function createNewDocument(e) {
+            e.preventDefault();
+            const newId = `DOC-2026-X${Math.floor(Math.random() * 900 + 100)}`;
+            const newEntry = {
+                id: newId,
+                client: document.getElementById('form-client').value,
+                type: document.getElementById('form-type').value,
+                status: "Submitted Online",
+                location: "Processing Center",
+                time: new Date().toLocaleString(),
+                link: document.getElementById('form-drive').value
+            };
+            database.push(newEntry);
+            document.getElementById('new-doc-form').reset();
+            renderAdminPanels();
+            alert(`Document Saved successfully!\nTracking Key generated: ${newId}`);
+        }
+
+        function updateStatus(id, newStatus) {
+            if(!newStatus) return;
+            const doc = database.find(d => d.id === id);
+            if(doc) {
+                doc.status = newStatus;
+                doc.location = newStatus === 'Approved/Done' ? 'Archive Vault' : 'Review Board Desk';
+                doc.time = new Date().toLocaleString();
+                renderAdminPanels();
+            }
+        }
+    </script>
 </body>
 </html>

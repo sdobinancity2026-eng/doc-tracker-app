@@ -16,12 +16,15 @@
                     <i class="fa-solid fa-file-invoice text-2xl text-yellow-400"></i>
                     <span class="font-bold text-xl tracking-tight">DocTrack</span>
                 </div>
-                <div id="nav-user-info" class="hidden flex items-center space-x-4">
+                <div id="nav-user-info" class="hidden flex items-center space-x-3 sm:space-x-4">
+                    <span id="user-fullname" class="text-xs sm:text-sm font-medium text-indigo-100 hidden sm:inline border-r border-indigo-400 pr-3 sm:pr-4"></span>
+                    
                     <span id="user-badge" class="bg-indigo-700 px-3 py-1 rounded-full text-xs font-semibold uppercase"></span>
+                    
                     <button onclick="logout()" class="text-sm bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded transition">
-                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
                     </button>
-                </div>
+            </div>
             </div>
         </div>
     </nav>
@@ -234,25 +237,6 @@
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                <h3 class="text-lg font-bold text-gray-900"><i class="fa-solid fa-gears text-indigo-500 mr-2"></i>Infrastructure Pipeline Connections</h3>
-                
-                <div class="space-y-4 pt-2">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Google Sheet API AppScript URL</label>
-                        <input type="text" readonly value="https://script.google.com/macros/s/AKfycbz...EXAMPLE_DEPLOYMENT_ID.../exec" class="w-full bg-gray-50 text-gray-500 border border-gray-200 px-3 py-2 rounded-xl text-xs font-mono select-all">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Google Drive Target Folder ID</label>
-                        <input type="text" readonly value="1lV9zHwx_fG0e_EXAMPLE_DRIVE_FOLDER_ID" class="w-full bg-gray-50 text-gray-500 border border-gray-200 px-3 py-2 rounded-xl text-xs font-mono select-all">
-                    </div>
-                </div>
-                <div class="pt-4 border-t border-gray-100 flex justify-end">
-                    <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow transition">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Configuration Changes
-                    </button>
-                </div>
-            </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
     <div>
         <h3 class="text-lg font-bold text-gray-900 mb-2"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account</h3>
@@ -316,14 +300,15 @@ async function handleLogin(event) {
     }
 }
 
-function renderTargetDashboard(role, targetKey) {
+// Update your existing function to accept 'fullName' as a third parameter
+function renderTargetDashboard(role, targetKey, fullName) {
     // Hide all views
     document.getElementById('login-view').classList.add('hidden');
     
     if (role === 'client') {
-        const doc = documentCache.find(d => d.docId === targetKey);
+        const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
         if (!doc) {
-            alert("Tracking ID not found in Google Sheets database!");
+            alert("Tracking ID or associated Client Document folder not found!");
             window.location.reload();
             return;
         }
@@ -333,6 +318,13 @@ function renderTargetDashboard(role, targetKey) {
         if (role === 'admin') renderAdminTable();
     }
     
+    // Inject and show the Full Name next to the logout button
+    const nameDisplay = document.getElementById('user-fullname');
+    if (fullName) {
+        nameDisplay.innerText = fullName;
+        nameDisplay.classList.remove('hidden');
+    }
+
     // Set up navbar badges
     const badge = document.getElementById('user-badge');
     badge.innerText = role;
@@ -468,14 +460,14 @@ function logout() {
         
         const result = await response.json();
         
-        if (result.success) {
-            // Load global documents data database cache before switching layouts
-            const dataResponse = await fetch(API_URL);
-            documentCache = await dataResponse.json();
-            
-            // Route user directly based on dynamic database permission flags
-            renderTargetDashboard(result.role, result.username);
-        } else {
+       // Inside your handleSecureLogin function where it checks if (result.success):
+if (result.success) {
+    const dataResponse = await fetch(API_URL);
+    documentCache = await dataResponse.json();
+    
+    // Pass result.fullName here 👇
+    renderTargetDashboard(result.role, result.username, result.fullName);
+} else {
             // Display error feedback UI
             errorBox.innerText = result.message || "Invalid account credentials.";
             errorBox.classList.remove('hidden');

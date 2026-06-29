@@ -226,8 +226,7 @@
             </div>
 
             <div id="shared-dashboard-view" class="hidden space-y-6">
-                
-                <section id="admin-view" class="hidden space-y-6">
+                <section id="admin-view" class="space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 class="text-2xl font-extrabold text-gray-900">Admin Operations Queue</h2>
@@ -249,18 +248,9 @@
                                         <th class="p-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-sm text-gray-600">
-                                    <tr class="hover:bg-gray-50/50 transition">
-                                        <td class="p-4">
-                                            <span class="font-bold text-gray-900 block">#DOC-88392-XL</span>
-                                            <span class="text-xs text-gray-400">Business Permit App</span>
-                                        </td>
-                                        <td class="p-4">John Doe Industries</td>
-                                        <td class="p-4"><span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold">Engineering Review</span></td>
-                                        <td class="p-4 text-right space-x-2">
-                                            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg text-xs"><i class="fa-solid fa-folder-open text-amber-500"></i> File</button>
-                                            <button class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-3 py-2 rounded-lg text-xs">Update Step</button>
-                                        </td>
+                                <tbody id="admin-table-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                                    <tr>
+                                        <td colspan="4" class="p-4 text-center text-gray-400">Loading operational documents...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -369,8 +359,12 @@
                                     <th class="p-4">Organization Metadata</th>
                                     <th class="p-4 text-right">System Action Auth Flags</th>
                                 </tr>
-                            </table>
-                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600"></tbody>
+                            </thead>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                                <tr>
+                                    <td colspan="4" class="p-4 text-center text-gray-400">Loading database user directory...</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -382,6 +376,7 @@
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
     </div>
+</body>
   <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
 const API_URL = "https://script.google.com/macros/s/AKfycbxzZbTcsVy8OEKFW_2izeP-5aNM78rYp-MKoYUXScURPkUhXvzbrf-Ks5b1ZAWfv746/exec"; 

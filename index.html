@@ -382,7 +382,7 @@
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
     </div>
-   <script>
+  <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
 const API_URL = "https://script.google.com/macros/s/AKfycbxzZbTcsVy8OEKFW_2izeP-5aNM78rYp-MKoYUXScURPkUhXvzbrf-Ks5b1ZAWfv746/exec"; 
 
@@ -457,16 +457,18 @@ function renderTargetDashboard(role, targetKey, fullName) {
         }
     } 
     else if (role === 'admin' || role === 'superadmin') {
-        // Expose Staff Links
+        // Expose Staff Links (Visible to both Admin and Superadmin)
         document.getElementById('staff-only-links').classList.remove('hidden');
-        document.getElementById('shared-dashboard-view').classList.remove('hidden');
         
+        // FIX: Ensure Operations Center is unhidden and rendered by default for both roles
+        document.getElementById('shared-dashboard-view').classList.remove('hidden');
         if (typeof renderAdminTable === "function") renderAdminTable();
         
         if (role === 'superadmin') {
+            // Expose Superadmin Specific Sidebar Navigation Options
             document.getElementById('superadmin-only-links').classList.remove('hidden');
-            // Route directly into the user ledger directory view panel
-            document.getElementById('superadmin-user-ledger-view').classList.remove('hidden');
+            
+            // Pre-fetch and prime the data from the Users table so it is ready when clicked
             if (typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
         }
     }
@@ -516,7 +518,7 @@ function renderClientView(doc) {
         </div>`;
 }
 
-// FIX: Populates the Operations Queue table rows dynamically with context action updates
+// Populates the Operations Queue table rows dynamically
 function renderAdminTable() {
     const tbody = document.getElementById('admin-table-tbody') || document.querySelector('#shared-dashboard-view table tbody');
     if (!tbody) return;
@@ -550,12 +552,10 @@ function renderAdminTable() {
     });
 }
 
-// Helper stub for processing actions on an operations document element 
 function openActionModal(docId) {
     const nextStatus = prompt(`Update status parameters for Document reference ${docId}:`, "Approved / In Review / Released");
     if (nextStatus) {
         alert(`Forwarding update state context "${nextStatus}" to backend engine pipeline for tracking payload ${docId}.`);
-        // Add your fetch call to API_URL here if you wish to write status mutations back to sheets!
     }
 }
 
@@ -700,6 +700,7 @@ function togglePasswordVisibility() {
     }
 }
 
+// FIX: Seamless view container swaps when switching panels in the sidebar
 function switchSidebarTab(targetTab) {
     const opsCenter = document.getElementById('shared-dashboard-view');
     const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
@@ -774,7 +775,7 @@ async function loadUserLedgerDirectory() {
             const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
 
             tbody.innerHTML += `
-                <tr class="hover:bg-gray-50/50 transition">
+                <tr class="hover:bg-gray-50/50 transition border-b border-gray-100">
                     <td class="p-4">
                         <span class="font-bold text-gray-900 block">${user.fullName || 'No Name'}</span>
                         <span class="text-xs ${roleBadgeColor} px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider inline-block mt-1">${user.role}</span>
@@ -881,15 +882,13 @@ async function handleDocumentSubmission(event) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-    // Attempt load if application caching hook exists
     if (typeof initializeAppData === 'function') {
         await initializeAppData(); 
     } else {
-        // Fallback fetch setup to preload document queue data if initializeAppData isn't globally declared
         try {
             const res = await fetch(API_URL);
             documentCache = await res.json();
-        } catch(e) { console.warn("Initial document cache pre-fetch paused:", e); }
+        } catch(e) { console.warn("Initial document cache fetch skipped:", e); }
     }
 
     const savedSession = localStorage.getItem('docTrack_session');

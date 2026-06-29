@@ -63,15 +63,10 @@
         </div>
     </aside>
 
-    <main class="flex-1 h-full overflow-y-auto flex flex-col">
-        </main>
-
-</div>
-    
-    <div class="flex-grow flex flex-col min-h-screen">
+  <main class="flex-1 h-full overflow-y-auto flex flex-col">
         
-        <nav id="top-navbar" class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav id="top-navbar" class="bg-indigo-600 text-white shadow-md sticky top-0 z-50 flex-shrink-0">
+            <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     <div class="flex items-center space-x-2">
                         <i class="fa-solid fa-file-invoice text-2xl text-yellow-400"></i>
@@ -88,7 +83,7 @@
             </div>
         </nav>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        <div class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
             <section id="login-view" class="max-w-md mx-auto mt-12 bg-white p-8 rounded-2xl shadow-xl border border-gray-100 transition-all">
                 <div class="text-center mb-8">
@@ -233,7 +228,7 @@
                 </form>
             </div>
 
-           <div id="shared-dashboard-view" class="hidden space-y-6">
+            <div id="shared-dashboard-view" class="hidden space-y-6">
                 <section id="admin-view" class="space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -351,44 +346,43 @@
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-                        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Global User Ledger</h3>
-                                <p class="text-xs text-gray-500">View, modify access credentials, or permanently rescind profile authorizations from the system directory.</p>
-                            </div>
-                            <button onclick="if(typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory()" class="bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold py-2 px-3 rounded-xl border border-gray-200 transition flex items-center">
-                                <i class="fa-solid fa-rotate mr-1.5"></i> Sync Directory
-                            </button>
+                    <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Global User Ledger</h3>
+                            <p class="text-xs text-gray-500">View, modify access credentials, or permanently rescind profile authorizations from the system directory.</p>
                         </div>
-                    
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                        <th class="p-4">Profile Details</th>
-                                        <th class="p-4">Username / ID</th>
-                                        <th class="p-4">Workspace Meta</th>
-                                        <th class="p-4 text-right">System Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
-                                    <tr>
-                                        <td colspan="4" class="p-8 text-center text-gray-400">
-                                            <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <button onclick="if(typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory()" class="bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold py-2 px-3 rounded-xl border border-gray-200 transition flex items-center">
+                            <i class="fa-solid fa-rotate mr-1.5"></i> Sync Directory
+                        </button>
                     </div>
+                
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                    <th class="p-4">Profile Details</th>
+                                    <th class="p-4">Username / ID</th>
+                                    <th class="p-4">Workspace Meta</th>
+                                    <th class="p-4 text-right">System Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                                <tr>
+                                    <td colspan="4" class="p-8 text-center text-gray-400">
+                                        <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
+        </div>
 
-        </main>
-
-        <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 mt-auto">
+        <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 mt-auto flex-shrink-0 w-full">
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
-    </div>
+    </main>
 </body>
   <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!

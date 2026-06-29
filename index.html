@@ -714,7 +714,6 @@ async function handleSecureLogin(event) {
         return;
     }
 
-    // Modern Loading UI State
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Verifying Credentials...`;
 
@@ -732,43 +731,25 @@ async function handleSecureLogin(event) {
         const data = await response.json();
 
         if (data.success) {
-            // Modern Custom Toast Notification Injection
+            // Display modern toast confirmation
             showModernLoginToast(data.fullName || data.username, data.role);
             
-            // Core Session Storage Initialization (helps persistent dashboard rendering)
+            // Set persistent data streams
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('userFullName', data.fullName || data.username);
             localStorage.setItem('username', data.username);
 
-            // FIX: Smooth delay to show toast notification before popping the workspace open
+            // FIX: Smooth transition delay
             setTimeout(() => {
-                // 1. Find and hide the login box/card container itself
-                // We will try standard class/ID wrappers commonly used for forms
-                const loginCard = document.getElementById('login-card') || 
-                                  loginBtn.closest('div.bg-white') || 
-                                  document.querySelector('form').parentElement;
-                                  
-                if (loginCard) {
-                    loginCard.classList.add('hidden');
+                // 1. Hide the entire login wrapper container from line 427
+                const loginScreen = document.getElementById('login-ledger-body');
+                if (loginScreen) {
+                    loginScreen.classList.add('hidden');
                 }
 
-                // 2. Clear out any parent login section wrappers if they exist
-                const loginSection = document.getElementById('login-section');
-                if (loginSection) loginSection.classList.add('hidden');
-
-                // 3. Fire your interface dynamic builder loops
-                if (typeof initializeUserDashboard === "function") {
-                    initializeUserDashboard(data.role, data.fullName);
-                } 
+                // 2. Initialize the view layout panels
+                initializeUserDashboard(data.role, data.fullName || data.username);
                 
-                // 4. Force a sidebar navigation switch so the dashboard contents load up instantly
-                if (typeof switchSidebarTab === "function") {
-                    if (data.role === 'superadmin' || data.role === 'admin') {
-                        switchSidebarTab('admin-queue'); // Opens your admin operations view
-                    } else {
-                        switchSidebarTab('client-tracking'); // Opens client view
-                    }
-                }
             }, 1500);
 
         } else {
@@ -781,6 +762,44 @@ async function handleSecureLogin(event) {
         showModernErrorToast("Connection failed. Check network link streams.");
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
+    }
+}
+      function initializeUserDashboard(role, fullName) {
+    console.log(`Initializing workspace panels for: ${role}`);
+
+    // 1. Target the text container element right below ACTIVE WORKSPACE in your sidebar
+    // This removes the "---" placeholder seen in your screenshot
+    const workspaceIndicator = document.querySelector('aside .text-slate-400.font-medium + div') || 
+                                 document.querySelector('aside div.text-emerald-400');
+    
+    if (workspaceIndicator) {
+        workspaceIndicator.innerText = role.toUpperCase();
+        workspaceIndicator.className = "text-xs font-bold text-emerald-400 tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 w-fit mt-1";
+    }
+
+    // 2. Handle structural workflow panel routing
+    const adminPanel = document.getElementById('superadmin-ledger-choice'); // Matches line 297 from your video layout grid
+    const docSubmissionSection = document.getElementById('client-document-submission-view'); // Matches your input forms section
+
+    if (role === 'superadmin' || role === 'admin') {
+        // Unhide admin controls dashboard grid layout
+        if (adminPanel) adminPanel.classList.remove('hidden');
+        
+        // Unhide admin only navigation links in sidebar menu
+        const adminLinks = document.querySelectorAll('.admin-only, [onclick*="admin-queue"], [onclick*="user-ledger"]');
+        adminLinks.forEach(el => el.classList.remove('hidden'));
+
+        // Automatically load data logs into the system active queues
+        if (typeof switchSidebarTab === "function") {
+            switchSidebarTab('admin-queue');
+        }
+    } else {
+        // Fallback layout routing sequence for clients/guests
+        if (adminPanel) adminPanel.classList.add('hidden');
+        
+        if (typeof switchSidebarTab === "function") {
+            switchSidebarTab('client-tracking');
+        }
     }
 }
 

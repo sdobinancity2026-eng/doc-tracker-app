@@ -411,14 +411,81 @@
         </footer>
     </main>
 
-    <script>
+
+<script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
 const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
 
 let documentCache = [];
-// Global variable tracking the active session role context
+// Global variables tracking the active session context
 let currentLoggedUserRole = '';
+let currentLoggedUserOffice = ''; 
+let currentLoggedFullName = '';
 
+// ==========================================
+// 1. ADMIN LOGISTICS: ROUTE / SCAN DOCUMENT
+// ==========================================
+async function handleReceiveDocument(event) {
+    event.preventDefault();
+
+    const trackingNumber = document.getElementById('scan-track-number').value.trim();
+    const actionStatus = document.getElementById('scan-action-status').value; 
+    const remarks = document.getElementById('scan-remarks').value.trim();
+    const receiveBtn = document.getElementById('btn-scan-submit');
+
+    if (!trackingNumber) {
+        alert("Please scan a QR Code or enter a tracking number.");
+        return;
+    }
+
+    receiveBtn.disabled = true;
+    receiveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Registering Route Log...`;
+
+    const logPayload = {
+        action: "receiveDocument",
+        docId: trackingNumber,
+        officeLocation: currentLoggedUserOffice, // Auto-tagged from admin's logged profile office
+        receivedBy: currentLoggedFullName,       // Auto-tagged from admin name
+        status: actionStatus,
+        remarks: remarks
+    };
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(logPayload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert(`Document ${trackingNumber} successfully updated at ${currentLoggedUserOffice}!`);
+            document.getElementById('form-receive-document').reset();
+            
+            // Refresh local application data state
+            if (typeof initializeAppData === 'function') {
+                await initializeAppData();
+            } else {
+                const res = await fetch(API_URL);
+                documentCache = await res.json();
+            }
+            renderAdminTable();
+        } else {
+            alert(`Routing Error: ${result.message}`);
+        }
+    } catch (err) {
+        console.error("Logistics Transmission Failure:", err);
+        alert("Failed to connect to backend sheet router routing matrix.");
+    } finally {
+        receiveBtn.disabled = false;
+        receiveBtn.innerHTML = `<i class="fa-solid fa-qrcode mr-2"></i> Log Document Entry`;
+    }
+}
+
+// ==========================================
+// 2. AUTHENTICATION & LOGIN PROCESSORS
+// ==========================================
 async function handleLogin(event) {
     event.preventDefault();
 
@@ -434,7 +501,6 @@ async function handleLogin(event) {
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
 
-    // Pack login data into FormData so the backend parses it smoothly
     const loginFormData = new FormData();
     loginFormData.append("action", "login");
     loginFormData.append("username", usernameInput);
@@ -443,14 +509,20 @@ async function handleLogin(event) {
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            body: loginFormData // Send as form data stream instead of JSON.stringify
+            body: loginFormData 
         });
 
         const data = await response.json();
 
         if (data.success) {
             alert(`Welcome back, ${data.fullName || data.username}!`);
-            initializeUserDashboard(data.role, data.fullName); 
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: data.role,
+                username: data.username,
+                fullName: data.fullName,
+                office: data.office
+            }));
+            renderTargetDashboard(data.role, data.username, data.fullName, data.office); 
         } else {
             alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
         }
@@ -463,38 +535,42 @@ async function handleLogin(event) {
     }
 }
 
-function renderTargetDashboard(role, targetKey, fullName) {
+async function handleSecureLogin(event) {
+    // Linked as a failsafe configuration fallback mapping
+    await handleLogin(event);
+}
+
+// ==========================================
+// 3. UI DASHBOARD GENERATION & SHELL ROUTING
+// ==========================================
+function renderTargetDashboard(role, targetKey, fullName, office) {
     currentLoggedUserRole = role;
+    currentLoggedFullName = fullName;
+    currentLoggedUserOffice = office || 'Main Desk';
 
-    // Always hide login screen
     document.getElementById('login-view').classList.add('hidden');
-
-    // Unhide universal dashboard shell components
     document.getElementById('dashboard-sidebar').classList.remove('hidden');
     document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
-    document.getElementById('sidebar-role-pill').innerText = role;
+    document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
 
-    // Reset visibility groups
     document.getElementById('staff-only-links').classList.add('hidden');
     document.getElementById('superadmin-only-links').classList.add('hidden');
     document.getElementById('client-only-links').classList.add('hidden');
 
-    // Reset view panels
     document.getElementById('shared-dashboard-view').classList.add('hidden');
     document.getElementById('client-view').classList.add('hidden');
     document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
 
-    // Optional: Hide custom client submission container if it exists yet
     const submissionView = document.getElementById('client-submission-view');
     if (submissionView) submissionView.classList.add('hidden');
+    
+    const receiverPanel = document.getElementById('office-receiver-view');
+    if (receiverPanel) receiverPanel.classList.add('hidden');
 
-    // ROLE ROUTING CONFIGURATIONS
     if (role === 'client') {
-        // Expose Client Links only
         document.getElementById('client-only-links').classList.remove('hidden');
         document.getElementById('client-view').classList.remove('hidden');
 
-        // Load the document card tracking records
         const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
         if (doc) {
             renderClientView(doc);
@@ -503,72 +579,106 @@ function renderTargetDashboard(role, targetKey, fullName) {
                 <div class="max-w-md mx-auto my-12 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
                     <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-folder-open text-amber-500 text-2xl"></i></div>
                     <h3 class="text-lg font-bold text-gray-900 mb-1">No Active Documents</h3>
-                    <p class="text-gray-500 text-sm">There are no active document files tracking pathways mapped to your account ID.</p>
+                    <p class="text-gray-500 text-sm">There are no active tracking pathways mapped to your account ID.</p>
                 </div>`;
         }
     } 
     else if (role === 'admin' || role === 'superadmin') {
-        // Expose Staff Links (Visible to both Admin and Superadmin)
         document.getElementById('staff-only-links').classList.remove('hidden');
-
-        // Ensure Operations Center is unhidden and rendered by default for both roles
         document.getElementById('shared-dashboard-view').classList.remove('hidden');
-        if (typeof renderAdminTable === "function") renderAdminTable();
+        if (receiverPanel) receiverPanel.classList.remove('hidden'); 
+        
+        renderAdminTable();
 
         if (role === 'superadmin') {
-            // Expose Superadmin Specific Sidebar Navigation Options
             document.getElementById('superadmin-only-links').classList.remove('hidden');
-
-            // Pre-fetch and prime the data from the Users table so it is ready when clicked
-            if (typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
+            loadUserLedgerDirectory();
         }
     }
 }
 
+// ==========================================
+// 4. CLIENT INTER-OFFICE PROGRESS TIMELINE
+// ==========================================
 function renderClientView(doc) {
     const clientView = document.getElementById('client-view');
     clientView.classList.remove('hidden');
 
     let timelineHTML = '';
-    if(doc.history && doc.history.length > 0) {
+    
+    if (doc.history && doc.history.length > 0) {
         doc.history.forEach((step, index) => {
-            const isLatest = index === 0;
+            const isCurrentLocation = index === 0; 
             timelineHTML += `
-            <div class="relative">
-                <div class="absolute -left-[41px] top-0 ${isLatest ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-emerald-500'} text-white rounded-full w-5 h-5 flex items-center justify-center">
-                    ${isLatest ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
+            <div class="relative pl-6 pb-6 border-l-2 ${isCurrentLocation ? 'border-indigo-600' : 'border-emerald-200'} last:pb-0">
+                <div class="absolute -left-[11px] top-0 ${isCurrentLocation ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-emerald-500'} text-white rounded-full w-5 h-5 flex items-center justify-center">
+                    ${isCurrentLocation ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
                 </div>
                 <div>
-                    <h4 class="${isLatest ? 'font-bold text-indigo-600' : 'font-semibold text-gray-800'} text-sm">${step.title}</h4>
-                    <p class="text-xs text-gray-500 mt-1">${step.description}</p>
-                    <span class="text-xs text-gray-400 block mt-1">${step.timestamp}</span>
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${step.officeLocation}</span>
+                    <h4 class="${isCurrentLocation ? 'font-bold text-indigo-600 text-base' : 'font-semibold text-gray-800 text-sm'}">${step.status}</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Processed by: ${step.receivedBy} ${step.remarks ? `— "${step.remarks}"` : ''}</p>
+                    <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${step.timestamp}</span>
                 </div>
             </div>`;
         });
     } else {
-        timelineHTML = `<p class="text-sm text-gray-400">No milestone events initialized yet.</p>`;
+        timelineHTML = `
+            <div class="relative pl-6 border-l-2 border-amber-300">
+                <div class="absolute -left-[11px] top-0 bg-amber-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                    <div class="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-gray-400 uppercase">${doc.originOffice || 'System Record'}</span>
+                    <h4 class="font-bold text-amber-600">Document Initialized</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Awaiting initial structural office routing scan assignment parameters.</p>
+                </div>
+            </div>`;
     }
 
     clientView.innerHTML = `
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:flex justify-between items-center">
             <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Document Tracking System</span>
-                <h2 class="text-xl font-bold text-gray-900 mt-1">ID: ${doc.docId}</h2>
-                <p class="text-sm text-gray-500">Owner: ${doc.clientName} | ${doc.docType}</p>
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">SDO Biñan Tracking Pipeline</span>
+                <h2 class="text-xl font-bold text-gray-900 mt-1">Tracking ID: ${doc.docId}</h2>
+                <p class="text-sm text-gray-500">Classification: <strong>${doc.docType || 'N/A'}</strong> | Owner: ${doc.clientName}</p>
             </div>
-            <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase">${doc.currentStatus}</span>
+            <div class="mt-4 md:mt-0 text-left md:text-right">
+                <span class="text-xs text-gray-400 block mb-1">Current Log Status</span>
+                <span class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">${doc.currentStatus}</span>
+            </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-8"><i class="fa-solid fa-truck-fast text-indigo-500 mr-2"></i>Logistics Workflow</h3>
-            <div class="relative pl-8 border-l-2 border-indigo-200 space-y-8">${timelineHTML}</div>
-            <div class="mt-6 pt-4 border-t border-gray-100">
-                 <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-sm text-indigo-600 font-medium hover:underline">
-                     <i class="fa-solid fa-file-pdf mr-2 text-red-500 text-lg"></i> View Source Document in Google Drive
-                 </a>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                <h3 class="text-base font-bold text-gray-900 mb-6"><i class="fa-solid fa-route text-indigo-500 mr-2"></i>Inter-Office Routing Logs</h3>
+                <div class="mt-4">${timelineHTML}</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-flag-checkered text-gray-400 mr-2"></i>Destination End-Goal</h3>
+                <div class="space-y-3 text-sm border-t border-gray-100 pt-3">
+                    <div>
+                        <span class="text-xs text-gray-400 block">Target Office</span>
+                        <span class="font-semibold text-gray-800">${doc.destinationOffice || 'N/A'}</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-400 block">Attention Personnel / Signatory</span>
+                        <span class="font-semibold text-gray-800">${doc.destinationPerson || 'Not Specified'}</span>
+                    </div>
+                    <div class="pt-2">
+                         <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
+                             <i class="fa-solid fa-file-pdf mr-1.5 text-red-500"></i> Open Drive File Link
+                         </a>
+                    </div>
+                </div>
             </div>
         </div>`;
 }
 
+// ==========================================
+// 5. STAFF OPERATIONS DATA VIEWER TABLES
+// ==========================================
 function renderAdminTable() {
     const tbody = document.getElementById('admin-table-tbody') || document.querySelector('#shared-dashboard-view table tbody');
     if (!tbody) return;
@@ -637,6 +747,9 @@ function toggleConditionalFields() {
     }
 }
 
+// ==========================================
+// 6. SUPERADMIN ACCOUNT PROVISIONING LEDGER
+// ==========================================
 async function createNewAccount(event) {
     event.preventDefault();
 
@@ -674,9 +787,7 @@ async function createNewAccount(event) {
         document.getElementById('new-user-role').value = 'admin';
         toggleConditionalFields(); 
 
-        if (typeof loadUserLedgerDirectory === "function") {
-            loadUserLedgerDirectory();
-        }
+        loadUserLedgerDirectory();
     } catch (error) {
         alert("Error saving account creation profile values to sheet log.");
         console.error(error);
@@ -686,92 +797,12 @@ async function createNewAccount(event) {
     }
 }
 
-async function handleSecureLogin(event) {
-    event.preventDefault();
-    
-    const usernameInput = document.getElementById('login-username').value.trim();
-    const passwordInput = document.getElementById('login-password').value.trim();
-    const loginBtn = document.getElementById('btn-login-submit');
-    const errorBox = document.getElementById('login-error');
-    
-    if (errorBox) errorBox.classList.add('hidden');
-
-    if (!usernameInput || !passwordInput) {
-        alert("Please provide both login credentials.");
-        return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
-    
-    const authForm = new FormData();
-    authForm.append("action", "login");
-    authForm.append("username", usernameInput);
-    authForm.append("password", passwordInput);
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: authForm 
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            localStorage.setItem('docTrack_session', JSON.stringify({
-                role: result.role,
-                username: result.username,
-                fullName: result.fullName
-            }));
-
-            alert(`Access granted. Welcome, ${result.fullName || result.username}!`);
-            renderTargetDashboard(result.role, result.username, result.fullName);
-            
-            if (typeof initializeUserDashboard === "function") {
-                initializeUserDashboard(result.role, result.fullName);
-            }
-        } else {
-            if (errorBox) {
-                errorBox.innerText = result.message || "Invalid account credentials.";
-                errorBox.classList.remove('hidden');
-            } else {
-                alert(`Authentication Rejected: ${result.message || 'Invalid username or password.'}`);
-            }
-        }
-    } catch (err) {
-        if (errorBox) {
-            errorBox.innerText = "Connection failed. Verify Apps Script configuration permissions.";
-            errorBox.classList.remove('hidden');
-        } else {
-            alert("Connection failed. Verify Apps Script configuration permissions.");
-        }
-        console.error("Auth Transmission Fault:", err);
-    } finally {
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = `Sign In`;
-    }
-}
-
-function togglePasswordVisibility() {
-    const passwordInput = document.getElementById('login-password');
-    const toggleIcon = document.getElementById('password-toggle-icon');
-
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-    }
-}
-
 function switchSidebarTab(targetTab) {
     const opsCenter = document.getElementById('shared-dashboard-view');
     const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
     const clientTracking = document.getElementById('client-view');
     const clientSubmission = document.getElementById('client-submission-view'); 
+    const receiverPanel = document.getElementById('office-receiver-view');
 
     const navLinks = document.querySelectorAll('#dashboard-sidebar nav a');
     navLinks.forEach(link => {
@@ -788,22 +819,24 @@ function switchSidebarTab(targetTab) {
     if (ledgerCenter) ledgerCenter.classList.add('hidden');
     if (clientTracking) clientTracking.classList.add('hidden');
     if (clientSubmission) clientSubmission.classList.add('hidden');
+    if (receiverPanel && (currentLoggedUserRole === 'admin' || currentLoggedUserRole === 'superadmin')) {
+        receiverPanel.classList.add('hidden');
+    }
 
     if (targetTab === 'main-dash') {
-        opsCenter.classList.remove('hidden');
-        if (typeof renderAdminTable === 'function') renderAdminTable();
+        if (opsCenter) opsCenter.classList.remove('hidden');
+        if (receiverPanel) receiverPanel.classList.remove('hidden');
+        renderAdminTable();
     } 
     else if (targetTab === 'user-ledger') {
-        ledgerCenter.classList.remove('hidden');
-        if (typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory();
+        if (ledgerCenter) ledgerCenter.classList.remove('hidden');
+        loadUserLedgerDirectory();
     } 
     else if (targetTab === 'client-tracking') {
-        clientTracking.classList.remove('hidden');
+        if (clientTracking) clientTracking.classList.remove('hidden');
     } 
     else if (targetTab === 'client-submission') {
-        if (clientSubmission) {
-            clientSubmission.classList.remove('hidden');
-        }
+        if (clientSubmission) clientSubmission.classList.remove('hidden');
     }
 }
 
@@ -811,13 +844,7 @@ async function loadUserLedgerDirectory() {
     const tbody = document.getElementById('user-ledger-tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="4" class="p-8 text-center text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
-            </td>
-        </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching user matrix directory...</td></tr>`;
 
     try {
         const response = await fetch(API_URL, {
@@ -837,7 +864,6 @@ async function loadUserLedgerDirectory() {
         users.forEach(user => {
             const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
                                    user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
-
             const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
 
             tbody.innerHTML += `
@@ -852,76 +878,62 @@ async function loadUserLedgerDirectory() {
                         <span class="text-gray-400 block">${metaInfo}</span>
                     </td>
                     <td class="p-4 text-right space-x-1 whitespace-nowrap">
-                        <button onclick="promptEditPassword('${user.username}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 p-2 rounded-lg text-xs transition" title="Change Account Password">
+                        <button onclick="promptEditPassword('${user.username}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 p-2 rounded-lg text-xs transition">
                             <i class="fa-solid fa-key"></i> Pass
                         </button>
-                        <button onclick="confirmDeleteUser('${user.username}')" class="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 p-2 rounded-lg text-xs transition" title="Revoke Account Access">
+                        <button onclick="confirmDeleteUser('${user.username}')" class="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 p-2 rounded-lg text-xs transition">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50 font-medium">Failed to establish sync pathway with global user ledger directory.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50">Failed to establish directory synchronization.</td></tr>`;
     }
 }
 
 async function promptEditPassword(username) {
-    const newPassword = prompt(`Enter a new access password or security PIN key for context account [ ${username} ]:`);
-
+    const newPassword = prompt(`Enter a new access password for context account [ ${username} ]:`);
     if (newPassword === null) return;
-    if (newPassword.trim() === "") {
-        alert("Password cannot be blank.");
-        return;
-    }
+    if (newPassword.trim() === "") { alert("Password cannot be blank."); return; }
 
     try {
         await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                action: "editPassword",
-                username: username,
-                newPassword: newPassword.trim()
-            })
+            body: JSON.stringify({ action: "editPassword", username: username, newPassword: newPassword.trim() })
         });
-
         alert(`Access credentials for ${username} updated successfully!`);
         loadUserLedgerDirectory();
     } catch (err) {
         alert("Failed to submit key database override operations.");
-        console.error("Password change exception error:", err);
     }
 }
 
 async function confirmDeleteUser(username) {
-    const doubleCheck = confirm(`CRITICAL ACTION: Are you sure you want to permanently delete user [ ${username} ]? This will rescind all spreadsheet login validation clearances and profile logging history contexts instantly.`);
+    const doubleCheck = confirm(`CRITICAL ACTION: Permanently delete user [ ${username} ]?`);
     if (!doubleCheck) return;
 
     try {
         await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                action: "deleteUser", 
-                username: username
-            })
+            body: JSON.stringify({ action: "deleteUser", username: username })
         });
-
-        alert(`Account record identifier [ ${username} ] has been successfully removed from global sheet ledgers.`);
+        alert(`Account record identifier [ ${username} ] has been removed.`);
         loadUserLedgerDirectory(); 
     } catch (err) {
-        alert("Encountered an exception processing row slice operations.");
-        console.error("User deletion error instance:", err);
+        alert("Encountered an exception processing deletion.");
     }
 }
 
+// ==========================================
+// 7. CLIENT TRANSACTION DOCUMENT INTAKE SUBMISSION
+// ==========================================
 function updateFileStatusText() {
     const fileInput = document.getElementById('sub-file-upload');
     const statusText = document.getElementById('sub-file-status-text');
-
     if (fileInput.files.length > 0) {
         statusText.innerText = `Selected File: ${fileInput.files[0].name}`;
         statusText.classList.remove('hidden');
@@ -969,11 +981,7 @@ async function handleDocumentSubmission(event) {
         formData.append("mimeType", targetFile.type);
 
         try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                body: formData
-            });
-
+            const response = await fetch(API_URL, { method: "POST", body: formData });
             const data = await response.json();
 
            if (data.success) {
@@ -987,18 +995,11 @@ async function handleDocumentSubmission(event) {
 
                 document.getElementById('btn-download-voucher').onclick = function() {
                     const targetContainer = document.getElementById('downloadable-voucher-area');
-
-                    html2canvas(targetContainer, {
-                        scale: 2, 
-                        backgroundColor: "#ffffff", 
-                        useCORS: true
-                    }).then(canvas => {
+                    html2canvas(targetContainer, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
                         const imageStreamUrl = canvas.toDataURL("image/png");
-
                         const transferAnchor = document.createElement('a');
                         transferAnchor.href = imageStreamUrl;
                         transferAnchor.download = `Tracking_${data.docId}.png`;
-
                         document.body.appendChild(transferAnchor);
                         transferAnchor.click();
                         document.body.removeChild(transferAnchor);
@@ -1014,37 +1015,33 @@ async function handleDocumentSubmission(event) {
                     modal.classList.add('hidden');
                     switchSidebarTab('client-tracking');
                 };
-
             } else {
-                alert(`Submission error: ${data.error || 'System error processing script entries.'}`);
+                alert(`Submission error: ${data.error || 'System error processing operations.'}`);
             }
         } catch (err) {
-            console.error(err);
-            alert("Network timeout or connection dropped during upload payload transit.");
+            alert("Network timeout or connection dropped during upload transit.");
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package`;
         }
     };
-
     reader.readAsDataURL(targetFile);
 }
 
+// ==========================================
+// 8. LIFECYCLE SEED BOOTSTRAP INITIALIZATION
+// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    if (typeof initializeAppData === 'function') {
-        await initializeAppData(); 
-    } else {
-        try {
-            const res = await fetch(API_URL);
-            documentCache = await res.json();
-        } catch(e) { console.warn("Initial document cache fetch skipped:", e); }
-    }
+    try {
+        const res = await fetch(API_URL);
+        documentCache = await res.json();
+    } catch(e) { console.warn("Initial document cache fetch skipped:", e); }
 
     const savedSession = localStorage.getItem('docTrack_session');
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
-            renderTargetDashboard(user.role, user.username, user.fullName);
+            renderTargetDashboard(user.role, user.username, user.fullName, user.office);
         } catch (e) {
             localStorage.removeItem('docTrack_session');
         }

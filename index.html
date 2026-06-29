@@ -704,53 +704,50 @@ async function createNewAccount(event) {
 }
 async function handleSecureLogin(event) {
     event.preventDefault();
-    
-    const usernameInput = document.getElementById('login-username').value;
-    const passwordInput = document.getElementById('login-password').value;
-    const errorBox = document.getElementById('login-error');
+
+    const usernameInput = document.getElementById('login-username').value.trim();
+    const passwordInput = document.getElementById('login-password').value.trim();
     const loginBtn = document.getElementById('btn-login-submit');
-    
-    errorBox.classList.add('hidden');
+
+    if (!usernameInput || !passwordInput) {
+        alert("Please provide both login credentials.");
+        return;
+    }
+
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
-    
+
+    // UNIFIED FIX: Use FormData payload transit matching our working document uploading schema
+    const authForm = new FormData();
+    authForm.append("action", "login");
+    authForm.append("username", usernameInput);
+    authForm.append("password", passwordInput);
+
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-                action: "login",
-                username: usernameInput,
-                password: passwordInput
-            })
+            body: authForm // Dispatched as structural multi-part form parameters
         });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            localStorage.setItem('docTrack_session', JSON.stringify({
-                role: result.role,
-                username: result.username,
-                fullName: result.fullName
-            }));
 
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = `Sign In`;
+        const data = await response.json();
 
-            renderTargetDashboard(result.role, result.username, result.fullName);
+        if (data.success) {
+            alert(`Access granted. Welcome, ${data.fullName || data.username}!`);
+            
+            // Your existing post-login logic routing:
+            // e.g., switch views, save session cookies, render dashboard elements
+            if (typeof initializeUserDashboard === "function") {
+                initializeUserDashboard(data.role, data.fullName);
+            }
         } else {
-            errorBox.innerText = result.message || "Invalid account credentials.";
-            errorBox.classList.remove('hidden');
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = `Sign In`;
+            alert(`Authentication Rejected: ${data.message || 'Invalid username or password.'}`);
         }
-        
     } catch (err) {
-        errorBox.innerText = "Connection failed. Verify Apps Script configuration permissions.";
-        errorBox.classList.remove('hidden');
+        console.error("Auth Transmission Fault:", err);
+        alert("Connection failed. Verify Apps Script configuration permissions.");
+    } finally {
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
-        console.error(err);
     }
 }
 

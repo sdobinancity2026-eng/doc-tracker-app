@@ -704,20 +704,25 @@ async function createNewAccount(event) {
 }
 async function handleSecureLogin(event) {
     event.preventDefault();
+    
+    const usernameInput = document.getElementById('login-username').value;
+    const passwordInput = document.getElementById('login-password').value;
+    const errorBox = document.getElementById('login-error');
 
     const usernameInput = document.getElementById('login-username').value.trim();
     const passwordInput = document.getElementById('login-password').value.trim();
     const loginBtn = document.getElementById('btn-login-submit');
+    
+    errorBox.classList.add('hidden');
 
     if (!usernameInput || !passwordInput) {
         alert("Please provide both login credentials.");
         return;
     }
 
-    // Modern Loading UI State
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
-    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Verifying Credentials...`;
+    
 
     // UNIFIED FIX: Use FormData payload transit matching our working document uploading schema
     const authForm = new FormData();
@@ -728,101 +733,55 @@ async function handleSecureLogin(event) {
     try {
         const response = await fetch(API_URL, {
             method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "login",
+                username: usernameInput,
+                password: passwordInput
+            })
             body: authForm // Dispatched as structural multi-part form parameters
-            body: authForm
         });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: result.role,
+                username: result.username,
+                fullName: result.fullName
+            }));
 
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In`;
         const data = await response.json();
 
+            renderTargetDashboard(result.role, result.username, result.fullName);
         if (data.success) {
             alert(`Access granted. Welcome, ${data.fullName || data.username}!`);
-            // Modern Custom Toast Notification Injection
-            showModernLoginToast(data.fullName || data.username, data.role);
-
+            
             // Your existing post-login logic routing:
             // e.g., switch views, save session cookies, render dashboard elements
             if (typeof initializeUserDashboard === "function") {
                 initializeUserDashboard(data.role, data.fullName);
             }
-            // Core Session Storage Initialization (helps persistent dashboard rendering)
-            localStorage.setItem('userRole', data.role);
-            localStorage.setItem('userFullName', data.fullName || data.username);
-            localStorage.setItem('username', data.username);
-
-            // FIX: Smooth delay to show toast notification before popping the dashboard workspace open
-            setTimeout(() => {
-                // Clear out login overlay displays
-                const loginScreen = document.getElementById('login-screen-overlay') || document.getElementById('login-section');
-                if (loginScreen) loginScreen.classList.add('hidden');
-                
-                const mainAppWorkspace = document.getElementById('main-app-workspace') || document.getElementById('dashboard-layout');
-                if (mainAppWorkspace) mainAppWorkspace.classList.remove('hidden');
-
-                // Fire your interface builder loops dynamically
-                if (typeof initializeUserDashboard === "function") {
-                    initializeUserDashboard(data.role, data.fullName);
-                } else if (typeof switchSidebarTab === "function") {
-                    // Fallback routing if role-specific tracking tabs control visibility
-                    switchSidebarTab(data.role === 'client' ? 'client-tracking' : 'admin-queue');
-                }
-            }, 1800);
-
         } else {
-            alert(`Authentication Rejected: ${data.message || 'Invalid username or password.'}`);
-            showModernErrorToast(data.message || 'Invalid username or password.');
+            errorBox.innerText = result.message || "Invalid account credentials.";
+            errorBox.classList.remove('hidden');
             loginBtn.disabled = false;
             loginBtn.innerHTML = `Sign In`;
+            alert(`Authentication Rejected: ${data.message || 'Invalid username or password.'}`);
         }
+        
     } catch (err) {
+        errorBox.innerText = "Connection failed. Verify Apps Script configuration permissions.";
+        errorBox.classList.remove('hidden');
         console.error("Auth Transmission Fault:", err);
         alert("Connection failed. Verify Apps Script configuration permissions.");
     } finally {
-        showModernErrorToast("Connection failed. Check network link streams.");
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
+        console.error(err);
     }
-}
-
-// Helper Function: Modern Welcome Toast
-function showModernLoginToast(name, role) {
-    const toast = document.createElement('div');
-    toast.className = "fixed bottom-5 right-5 bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 z-50 transform translate-y-10 opacity-0 transition-all duration-500 border border-slate-800";
-    toast.innerHTML = `
-        <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center text-xl shadow-inner">
-            <i class="fa-solid fa-shield-cat animate-pulse"></i>
-        </div>
-        <div>
-            <h4 class="font-bold text-sm text-slate-100">Access Granted!</h4>
-            <p class="text-xs text-slate-400">Welcome back, ${name} (${role.toUpperCase()})</p>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    // Trigger slide-in animation
-    setTimeout(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-    }, 100);
-    
-    // Fade out automatic cleanup
-    setTimeout(() => {
-        toast.classList.add('translate-y-10', 'opacity-0');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
-}
-
-// Helper Function: Modern Error Toast
-function showModernErrorToast(message) {
-    const toast = document.createElement('div');
-    toast.className = "fixed bottom-5 right-5 bg-rose-950 text-rose-200 px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 z-50 border border-rose-800/60 animate-bounce";
-    toast.innerHTML = `
-        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg"></i>
-        <span class="text-xs font-semibold tracking-wide">${message}</span>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => toast.remove(), 400);
-    }, 4000);
 }
 
 function togglePasswordVisibility() {

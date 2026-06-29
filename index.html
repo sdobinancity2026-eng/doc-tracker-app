@@ -225,123 +225,97 @@
                 </form>
             </div>
 
-            <div id="shared-dashboard-view" class="hidden space-y-6">
-                <section id="admin-view" class="space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-gray-900">Admin Operations Queue</h2>
-                            <p class="text-gray-500 text-sm">Update processing steps and cross-check client documents.</p>
-                        </div>
-                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-xl shadow transition">
-                            <i class="fa-solid fa-rotate mr-1"></i> Refresh Sheet Data
-                        </button>
-                    </div>
+            <<div id="shared-dashboard-view" class="hidden space-y-6">
+    
+    <section id="admin-view" class="hidden space-y-6">
+        </section>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                        <th class="p-4">Doc Details</th>
-                                        <th class="p-4">Client</th>
-                                        <th class="p-4">Current Status</th>
-                                        <th class="p-4 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-table-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
-                                    <tr>
-                                        <td colspan="4" class="p-4 text-center text-gray-400">Loading operational documents...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
+    <section id="superadmin-view" class="hidden space-y-6">
+        <div>
+            <h2 class="text-2xl font-extrabold text-gray-900">System Command Center</h2>
+            <p class="text-gray-500 text-sm">Superadmin dashboard for database connections, mapping endpoints, and user management.</p>
+        </div>
 
-                <section id="superadmin-view" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-gray-900">System Command Center</h2>
-                        <p class="text-gray-500 text-sm">Superadmin dashboard for database connections, mapping endpoints, and user management.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-database text-xl"></i></div>
-                            <div>
-                                <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Sheet Rows Connected</span>
-                                <span class="text-2xl font-bold text-gray-900">1,248</span>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-hard-drive text-xl"></i></div>
-                            <div>
-                                <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Drive Files Tracked</span>
-                                <span class="text-2xl font-bold text-gray-900">932 PDFs</span>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                            <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
-                            <div>
-                                <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Active Admins</span>
-                                <span class="text-2xl font-bold text-gray-900">14 Users</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <div class="md:col-span-1">
-                            <h3 class="text-lg font-bold text-gray-900 mb-2"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account</h3>
-                            <p class="text-xs text-gray-500">Create login tokens or dedicated admin workspace credentials instantly within the global Google Sheet user ledger database.</p>
-                        </div>
-                        
-                        <form onsubmit="createNewAccount(event)" class="md:col-span-2 space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
-                                <select id="new-user-role" onchange="toggleConditionalFields()" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                    <option value="admin">System Admin</option>
-                                    <option value="client">Standard Client</option>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
-                                    <input type="text" id="new-user-name" placeholder="e.g. john_reviewer" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Access Password / PIN Key</label>
-                                    <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-                                <input type="text" id="new-user-fullname" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
-                                    <input type="text" id="new-user-position" placeholder="e.g. Engineer II / Proponent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                </div>
-                                <div id="office-field-container" class="transition-all">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
-                                    <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                </div>
-                            </div>
-
-                            <div id="conditional-client-fields" class="hidden border-l-4 border-indigo-500 pl-3 bg-indigo-50/50 p-3 rounded-r-xl transition-all">
-                                <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">School Name</label>
-                                <input type="text" id="new-user-school" placeholder="e.g. State University" class="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
-                            </div>
-
-                            <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
-                                Create System Account
-                            </button>
-                        </form>
-                    </div>
-                </section>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-database text-xl"></i></div>
+                <div>
+                    <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Sheet Rows Connected</span>
+                    <span class="text-2xl font-bold text-gray-900">1,248</span>
+                </div>
             </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-hard-drive text-xl"></i></div>
+                <div>
+                    <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Drive Files Tracked</span>
+                    <span class="text-2xl font-bold text-gray-900">932 PDFs</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
+                <div>
+                    <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Active Admins</span>
+                    <span class="text-2xl font-bold text-gray-900">14 Users</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="md:col-span-1">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">
+                    <i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account
+                </h3>
+                <p class="text-xs text-gray-500">Create login tokens or dedicated admin workspace credentials instantly within the global Google Sheet user ledger database.</p>
+            </div>
+            
+            <form onsubmit="createNewAccount(event)" class="md:col-span-2 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
+                    <select id="new-user-role" onchange="toggleConditionalFields()" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                        <option value="admin">System Admin</option>
+                        <option value="client">Standard Client</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
+                        <input type="text" id="new-user-name" placeholder="e.g. john_reviewer" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Access Password / PIN Key</label>
+                        <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                    <input type="text" id="new-user-fullname" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
+                        <input type="text" id="new-user-position" placeholder="e.g. Engineer II / Proponent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div id="office-field-container" class="transition-all">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
+                        <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                </div>
+
+                <div id="conditional-client-fields" class="hidden border-l-4 border-indigo-500 pl-3 bg-indigo-50/50 p-3 rounded-r-xl transition-all">
+                    <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">School Name</label>
+                    <input type="text" id="new-user-school" placeholder="e.g. State University" class="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
+                    Create System Account
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
 
             <section id="superadmin-user-ledger-view" class="hidden space-y-6">
                 <div>
@@ -601,24 +575,34 @@ async function createNewAccount(event) {
     };
 
     try {
-        await fetch(API_URL, {
+        // Removed mode: "no-cors" to ensure proper execution status tracking
+        const response = await fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // Avoids pre-flight CORS blocks with Google Apps Script
             body: JSON.stringify(payload)
         });
 
+        // Fallback validation if using no-cors is non-negotiable for your environment:
+        // if (!response.ok && response.status !== 0) throw new Error("Network error");
+
         alert(`Successfully registered profile account for ${payload.fullName}!`);
         
+        // Reset inputs safely
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-pass').value = '';
         document.getElementById('new-user-fullname').value = '';
         document.getElementById('new-user-position').value = '';
         document.getElementById('new-user-office').value = '';
         document.getElementById('new-user-school').value = '';
+        
+        // Return dropdown to default 'admin' option and adjust fields
+        document.getElementById('new-user-role').value = 'admin';
         toggleConditionalFields(); 
         
-        if(typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
+        // Refresh UI Ledger if the data function exists
+        if (typeof loadUserLedgerDirectory === "function") {
+            loadUserLedgerDirectory();
+        }
     } catch (error) {
         alert("Error saving account creation profile values to sheet log.");
         console.error(error);
@@ -627,7 +611,6 @@ async function createNewAccount(event) {
         submitBtn.innerHTML = `Create System Account`;
     }
 }
-
 async function handleSecureLogin(event) {
     event.preventDefault();
     

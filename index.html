@@ -3,400 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocTrack | Document Tracking System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>DocTrack Pro | SDO Biñan</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTML2Canvas for Document Voucher Exports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
-<body class="bg-gray-50 font-sans text-gray-900 min-h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen">
 
-    <aside id="dashboard-sidebar" class="hidden md:flex flex-col w-64 h-screen bg-indigo-900 text-white flex-shrink-0 border-r border-indigo-950 shadow-xl transition-all">
-        <div class="p-5 bg-indigo-950 flex items-center justify-between flex-shrink-0">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-file-invoice text-xl text-yellow-400"></i>
-                <span class="font-bold text-lg tracking-tight">DocTrack Pro</span>
-            </div>
-        </div>
-
-        <div class="p-4 border-b border-indigo-800 bg-indigo-950/30 flex-shrink-0">
-            <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">Active Workspace</p>
-            <h4 id="sidebar-fullname" class="text-sm font-semibold truncate text-white mt-0.5">---</h4>
-            <span id="sidebar-role-pill" class="inline-block mt-1 bg-emerald-600 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase hidden"></span>
-        </div>
-
-        <nav class="flex-grow p-4 space-y-1 text-sm overflow-y-auto">
-            <div id="staff-only-links" class="hidden space-y-1">
-                <button onclick="switchSidebarTab('main-dash')" id="link-main-dash" class="sidebar-link w-full text-left flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-                    <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
-                    <span>Operations Center</span>
-                </button>
-
-                <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
-                    <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
-                    <button onclick="switchSidebarTab('user-ledger')" id="link-user-ledger" class="sidebar-link w-full text-left flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-                        <i class="fa-solid fa-users-gear w-5"></i>
-                        <span>Manage Accounts</span>
-                    </button>
+    <!-- ==========================================
+         DASHBOARD SIDEBAR NAVIGATION PANEL
+         ========================================== -->
+    <aside id="dashboard-sidebar" class="w-64 bg-indigo-900 text-white flex flex-col justify-between hidden shrink-0 shadow-xl">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
+                    <i class="fa-solid fa-folder-tree text-indigo-300"></i>
                 </div>
+                <h1 class="text-lg font-bold tracking-tight">DocTrack Pro</h1>
+            </div>
+            
+            <div class="bg-white/10 rounded-xl p-4 mb-6 border border-white/10">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block tracking-wider mb-1">Active Workspace</span>
+                <span id="sidebar-fullname" class="font-semibold block truncate text-sm">Loading Identity...</span>
+                <span id="sidebar-role-pill" class="inline-block bg-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mt-1.5 text-indigo-100">---</span>
             </div>
 
-            <div id="client-only-links" class="hidden space-y-1">
-                <button onclick="switchSidebarTab('client-tracking')" id="link-client-tracking" class="sidebar-link w-full text-left flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-                    <i class="fa-solid fa-magnifying-glass w-5 text-indigo-300"></i>
-                    <span>Track Document</span>
-                </button>
+            <nav class="space-y-1">
+                <!-- Administrative / Office Staff Navigation Links -->
+                <div id="staff-only-links" class="space-y-1 hidden">
+                    <a onclick="switchSidebarTab('main-dash')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl bg-indigo-800 text-white font-medium text-sm cursor-pointer transition">
+                        <i class="fa-solid fa-table-list w-4"></i>
+                        <span>Operations Center</span>
+                    </a>
+                </div>
+                
+                <!-- Superadmin System Master Ledger Directory Links -->
+                <div id="superadmin-only-links" class="space-y-1 mt-4 pt-4 border-t border-indigo-800 hidden">
+                    <span class="text-[10px] uppercase font-bold text-indigo-400 px-4 block tracking-wider mb-2">Systems Config</span>
+                    <a onclick="switchSidebarTab('user-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <i class="fa-solid fa-users-gear w-4"></i>
+                        <span>User Account Ledger</span>
+                    </a>
+                </div>
 
-                <button onclick="switchSidebarTab('client-submission')" id="link-client-submission" class="sidebar-link w-full text-left flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-                    <i class="fa-solid fa-file-arrow-up w-5"></i>
-                    <span>Document Submission</span>
-                </button>
-            </div>
-        </nav>
+                <!-- Client Submission Workspace Options Links -->
+                <div id="client-only-links" class="space-y-1 hidden">
+                    <a onclick="switchSidebarTab('client-tracking')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl bg-indigo-800 text-white font-medium text-sm cursor-pointer transition">
+                        <i class="fa-solid fa-magnifying-glass-location w-4"></i>
+                        <span>Track My Document</span>
+                    </a>
+                    <a onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <i class="fa-solid fa-file-circle-plus w-4"></i>
+                        <span>Submit Document Package</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
 
-        <div class="p-4 border-t border-indigo-800 flex-shrink-0 bg-indigo-900">
-            <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-200 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-right-from-bracket"></i>
+        <div class="p-4 border-t border-indigo-800">
+            <button onclick="logout()" class="w-full flex items-center justify-center space-x-2 bg-indigo-950/40 hover:bg-red-600/20 hover:text-red-300 text-indigo-200 p-2.5 rounded-xl text-xs font-semibold transition border border-indigo-800/60">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 <span>Exit Session</span>
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 h-screen overflow-y-auto flex flex-col">
+    <!-- ==========================================
+         MAIN APPLICATION VIEW INTERFACE VIEWPORT
+         ========================================== -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
         
-        <nav id="top-navbar" class="bg-indigo-600 text-white shadow-md sticky top-0 z-50 flex-shrink-0">
-            <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-file-invoice text-2xl text-yellow-400"></i>
-                        <span class="font-bold text-xl tracking-tight">DocTrack</span>
-                    </div>
-                    <div id="nav-user-info" class="hidden flex items-center space-x-3 sm:space-x-4">
-                        <span id="user-fullname" class="text-xs sm:text-sm font-medium text-indigo-100 hidden sm:inline border-r border-indigo-400 pr-3 sm:pr-4"></span>
-                        <span id="user-badge" class="bg-indigo-700 px-3 py-1 rounded-full text-xs font-semibold uppercase"></span>
-                        <button onclick="logout()" class="text-sm bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded transition">
-                            <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <div class="flex-grow w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
-            <section id="login-view" class="max-w-md mx-auto mt-12 bg-white p-8 rounded-2xl shadow-xl border border-gray-100 transition-all">
+        <!-- ==========================================
+             AUTHENTICATION ACCESS GATEWAY VIEW
+             ========================================== -->
+        <section id="login-view" class="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-indigo-50/30">
+            <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
                 <div class="text-center mb-8">
-                    <i class="fa-solid fa-shield-halved text-4xl text-indigo-600 mb-2"></i>
-                    <h2 class="text-3xl font-extrabold text-gray-900">Secure Sign In</h2>
-                    <p class="text-gray-500 mt-2 text-sm">Enter credentials to manage or track documents</p>
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-200/50 shadow-inner">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 tracking-tight">DocTrack Portal</h2>
+                    <p class="text-sm text-gray-500 mt-1">Schools Division Office of Biñan Management Suite</p>
                 </div>
 
-                <form onsubmit="handleSecureLogin(event)" class="space-y-5">
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Username / Client ID</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">User Identity Profile</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                                <i class="fa-solid fa-user"></i>
-                            </span>
-                            <input type="text" id="login-username" placeholder="Enter your ID or username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                            <i class="fa-solid fa-user absolute left-4 top-3.5 text-gray-400 text-sm"></i>
+                            <input id="login-username" type="text" placeholder="Username / Account Key" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
                         </div>
                     </div>
-
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password / Access PIN</label>
-                        <div class="relative flex items-center">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
-                                <i class="fa-solid fa-lock"></i>
-                            </span>
-                            <input type="password" id="login-password" placeholder="••••••••" class="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
-                            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-indigo-600 focus:outline-none transition">
-                                <i id="password-toggle-icon" class="fa-solid fa-eye"></i>
-                            </button>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Account Security Key</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-4 top-3.5 text-gray-400 text-sm"></i>
+                            <input id="login-password" type="password" placeholder="••••••••••••" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
                         </div>
                     </div>
-
-                    <div id="login-error" class="hidden text-red-500 text-xs font-semibold bg-red-50 p-3 rounded-lg border border-red-100"></div>
-
-                    <button type="submit" id="btn-login-submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition duration-200">
+                    <button id="btn-login-submit" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-sm hover:shadow transition mt-2">
                         Sign In
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Top Status Bar (Only visible when dashboard is shown) -->
+        <header id="top-navbar" class="bg-indigo-900 text-white px-8 py-4 shadow-md flex items-center justify-between hidden">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-folder-tree text-xl text-indigo-300"></i>
+                <span class="font-bold text-lg tracking-wide">DocTrack</span>
+            </div>
+        </header>
+
+        <!-- ==========================================
+             DASHBOARD WRAPPER CONTAINER
+             ========================================== -->
+        <div class="flex-1 p-8 space-y-8 max-w-7xl w-full mx-auto">
+
+            <!-- ==========================================
+                 ADMIN RECEIVER CONTROL LOGISTICS PANEL
+                 ========================================== -->
+            <section id="office-receiver-view" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hidden">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100"><i class="fa-solid fa-qrcode text-lg"></i></div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Desk Logistics Scanner</h3>
+                        <p class="text-xs text-gray-500">Scan routing QR tokens or insert Tracking IDs to process logs manually.</p>
+                    </div>
+                </div>
+                
+                <form id="form-receive-document" onsubmit="handleReceiveDocument(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Tracking Reference Number</label>
+                        <input id="scan-track-number" type="text" placeholder="e.g., DOC-XXXXX" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Action Routing Disposition</label>
+                        <select id="scan-action-status" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-indigo-500 focus:bg-white transition">
+                            <option value="Received at Office">Received at Office</option>
+                            <option value="In Review">In Review</option>
+                            <option value="Approved / Ready for Release">Approved / Ready for Release</option>
+                            <option value="Released / Forwarded">Released / Forwarded</option>
+                            <option value="For Revision">For Revision</option>
+                            <option value="Returned">Returned</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Descriptive Internal Remarks</label>
+                        <input id="scan-remarks" type="text" placeholder="Add logs or required actions..." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
+                    </div>
+                    <button id="btn-scan-submit" type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-6 rounded-xl font-bold text-sm shadow-sm transition flex items-center justify-center space-x-2 h-[41px]">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>Log Document Entry</span>
                     </button>
                 </form>
             </section>
 
-            <section id="client-view" class="hidden space-y-6 max-w-3xl mx-auto">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <!-- ==========================================
+                 STAFF OPERATIONS CENTER (MAIN MASTER QUEUE)
+                 ========================================== -->
+            <section id="shared-dashboard-view" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Document Live Status</span>
-                        <h2 id="client-track-doc-id" class="text-xl font-bold text-gray-900 mt-1">Doc ID: #DOC-88392-XL</h2>
-                        <p id="client-track-doc-type" class="text-sm text-gray-500">Type: Business Permit Application</p>
+                        <h2 class="text-xl font-bold text-gray-900 tracking-tight">Admin Operations Queue</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">Update processing steps and cross-check real-time active document lifecycles.</p>
                     </div>
-                    <span id="client-track-status-badge" class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">In Review</span>
+                    <button onclick="refreshDocumentCache()" class="inline-flex items-center space-x-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition self-start sm:self-auto">
+                        <i class="fa-solid fa-rotate text-gray-400 text-xs"></i>
+                        <span>Refresh Sheet Data</span>
+                    </button>
                 </div>
 
-                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-900 mb-8"><i class="fa-solid fa-truck-fast text-indigo-500 mr-2"></i>Tracking Progress</h3>
-                    <div id="tracking-timeline-container" class="relative pl-8 border-l-2 border-indigo-200 space-y-8">
-                        <div class="relative">
-                            <div class="absolute -left-[41px] top-0 bg-indigo-600 text-white rounded-full w-5 h-5 flex items-center justify-center ring-4 ring-indigo-100">
-                                <div class="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-indigo-600 text-sm sm:text-base">Under Engineering Review</h4>
-                                <p class="text-xs sm:text-sm text-gray-600 mt-1">Document forwarded to structural verification department.</p>
-                                <span class="text-xs text-gray-400 block mt-1">June 28, 2026 - 02:14 PM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="client-submission-view" class="hidden max-w-2xl mx-auto my-6 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex items-center space-x-3 border-b border-gray-100 pb-4 mb-6">
-                    <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <i class="fa-solid fa-file-arrow-up text-lg"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-gray-900">Document Submission</h2>
-                        <p class="text-xs text-gray-500">Submit a new official document routing package for tracking pipeline processing</p>
-                    </div>
-                </div>
-
-                <form id="form-document-submission" onsubmit="handleDocumentSubmission(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Document Title</label>
-                        <input type="text" id="sub-doc-title" placeholder="e.g. Project Proposal Form B" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Document Type</label>
-                            <select id="sub-doc-type" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                <option value="">Select Type...</option>
-                                <option value="Memorandum">Memorandum</option>
-                                <option value="Letter Request">Letter Request</option>
-                                <option value="Liquidation Report">Liquidation Report</option>
-                                <option value="Purchase Request">Purchase Request</option>
-                                <option value="Other">Other Official Document</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Destination Office</label>
-                            <input type="text" id="sub-dest-office" placeholder="e.g. Office of the SDS / Accounting" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Destination Person / Attention</label>
-                            <input type="text" id="sub-dest-person" placeholder="e.g. Juan Dela Cruz / Superintendent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Submitted By</label>
-                            <input type="text" id="sub-submitted-by" placeholder="Your Full Name" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">School / Office Origin</label>
-                        <input type="text" id="sub-school-office" placeholder="e.g. Binan Elementary School / Supply Section" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Upload PDF Document</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-xl hover:border-indigo-400 transition bg-gray-50/50 relative">
-                            <div class="space-y-1 text-center">
-                                <i class="fa-solid fa-file-pdf text-gray-400 text-3xl mb-2 block"></i>
-                                <div class="flex text-sm text-gray-600 justify-center">
-                                    <label for="sub-file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                                        <span>Select a file</span>
-                                        <input id="sub-file-upload" name="sub-file-upload" type="file" accept="application/pdf" class="sr-only" required onchange="updateFileStatusText()">
-                                    </label>
-                                    <p class="pl-1 text-gray-500">or drag and drop</p>
-                                </div>
-                                <p class="text-xs text-gray-400">PDF files only up to 25MB</p>
-                                <p id="sub-file-status-text" class="text-xs text-emerald-600 font-semibold mt-2 hidden"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-4">
-                        <button type="submit" id="btn-doc-submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl shadow-sm transition flex items-center justify-center">
-                            <i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package
-                        </button>
-                    </div>
-                </form>
-
-                <div id="success-voucher-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-slate-100 transform scale-100 transition-all duration-300">
-                        <div class="text-center p-4 bg-white rounded-lg" id="downloadable-voucher-area">
-                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-slate-800 tracking-tight">Document Registered!</h3>
-                            <p class="text-xs text-slate-400 font-medium mt-1">Tracking Number:</p>
-                            <h2 id="voucher-tracking-id" class="text-2xl font-black text-slate-900 my-2 tracking-wider font-mono bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/60">
-                                DOC-XXXXXXXX
-                            </h2>
-                            <div class="text-left mt-4 space-y-1.5 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-lg">
-                                <div><span class="font-semibold text-slate-400">Title:</span> <span id="v-title" class="text-slate-700"></span></div>
-                                <div><span class="font-semibold text-slate-400">Type:</span> <span id="v-type" class="text-slate-700"></span></div>
-                                <div><span class="font-semibold text-slate-400">From:</span> <span id="v-origin" class="text-slate-700"></span></div>
-                            </div>
-                            <p class="text-[10px] text-slate-400 tracking-widest uppercase font-semibold mt-4">SDO Biñan Tracking System</p>
-                        </div>
-                        <div class="mt-5 grid grid-cols-2 gap-3">
-                            <button id="btn-download-voucher" class="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition py-2.5 px-4 rounded-lg">
-                                <i class="fa-solid fa-download"></i> Download Ticket
-                            </button>
-                            <button id="btn-close-voucher" class="flex items-center justify-center gap-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition py-2.5 px-4 rounded-lg shadow-sm">
-                                Continue <i class="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <div id="shared-dashboard-view" class="hidden space-y-6">
-                <section id="admin-view" class="space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-gray-900">Admin Operations Queue</h2>
-                            <p class="text-gray-500 text-sm">Update processing steps and cross-check client documents.</p>
-                        </div>
-                        <button onclick="syncOperationsQueue()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-xl shadow transition">
-                            <i class="fa-solid fa-rotate mr-1"></i> Refresh Sheet Data
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                        <th class="p-4">Doc Details</th>
-                                        <th class="p-4">Client</th>
-                                        <th class="p-4">Current Status</th>
-                                        <th class="p-4 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-table-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
-                                    <tr>
-                                        <td colspan="4" class="p-4 text-center text-gray-400">Loading operational documents...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-            </div> 
-
-            <section id="superadmin-user-ledger-view" class="hidden space-y-6">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-gray-900">System Command Center</h2>
-                    <p class="text-gray-500 text-sm">Superadmin dashboard for database connections, mapping endpoints, and user management.</p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-database text-xl"></i></div>
-                        <div>
-                            <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Sheet Rows Connected</span>
-                            <span class="text-2xl font-bold text-gray-900">1,248</span>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-hard-drive text-xl"></i></div>
-                        <div>
-                            <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Drive Files Tracked</span>
-                            <span class="text-2xl font-bold text-gray-900">932 PDFs</span>
-                        </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
-                        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
-                        <div>
-                            <span class="text-xs text-gray-400 block font-medium uppercase tracking-wider">Active Admins</span>
-                            <span class="text-2xl font-bold text-gray-900">14 Users</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div class="md:col-span-1">
-                        <h3 class="text-lg font-bold text-gray-900 mb-2"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account</h3>
-                        <p class="text-xs text-gray-500">Create login tokens or dedicated admin workspace credentials instantly within the global Google Sheet user ledger database.</p>
-                    </div>
-
-                    <form onsubmit="createNewAccount(event)" class="md:col-span-2 space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
-                            <select id="new-user-role" onchange="toggleConditionalFields()" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                                <option value="admin">System Admin</option>
-                                <option value="client">Standard Client</option>
-                            </select>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
-                                <input type="text" id="new-user-name" placeholder="e.g. john_reviewer" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Access Password / PIN Key</label>
-                                <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-                            <input type="text" id="new-user-fullname" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
-                                <input type="text" id="new-user-position" placeholder="e.g. Engineer II / Proponent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                            </div>
-                            <div id="office-field-container">
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Office</label>
-                                <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
-                            </div>
-                        </div>
-
-                        <div id="conditional-client-fields" class="hidden border-l-4 border-indigo-500 pl-3 bg-indigo-50/50 p-3 rounded-r-xl transition-all">
-                            <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">School Name</label>
-                            <input type="text" id="new-user-school" placeholder="e.g. State University" class="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
-                        </div>
-
-                        <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
-                            Create System Account
-                        </button>
-                    </form>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-                    <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900">Global User Ledger</h3>
-                            <p class="text-xs text-gray-500">View, modify access credentials, or permanently rescind profile authorizations from the system directory.</p>
-                        </div>
-                        <button onclick="loadUserLedgerDirectory()" class="bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold py-2 px-3 rounded-xl border border-gray-200 transition flex items-center">
-                            <i class="fa-solid fa-rotate mr-1.5"></i> Sync Directory
-                        </button>
-                    </div>
-
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
-                                    <th class="p-4">Profile Details</th>
-                                    <th class="p-4">Username / ID</th>
-                                    <th class="p-4">Workspace Meta</th>
-                                    <th class="p-4 text-right">System Actions</th>
+                                <tr class="border-b border-gray-200 text-xs text-gray-500 uppercase font-bold tracking-wider">
+                                    <th class="p-4">Tracking ID</th>
+                                    <th class="p-4">Document Meta</th>
+                                    <th class="p-4">Client Source</th>
+                                    <th class="p-4">File Copy</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Administrative Routing</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                            <tbody id="admin-table-tbody" class="divide-y divide-gray-100">
                                 <tr>
-                                    <td colspan="4" class="p-8 text-center text-gray-400">
-                                        <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
+                                    <td colspan="6" class="p-8 text-center text-gray-400">
+                                        <i class="fa-solid fa-spinner fa-spin mr-2 text-indigo-500"></i> Connecting pipeline sync...
                                     </td>
                                 </tr>
                             </tbody>
@@ -404,651 +202,901 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ==========================================
+                 CLIENT TRACKING TIMELINE PROFILE INTERFACE
+                 ========================================== -->
+            <section id="client-view" class="space-y-6 hidden">
+                <!-- Injected via JS dynamic render blocks -->
+            </section>
+
+            <!-- ==========================================
+                 CLIENT DOCUMENT SUBMISSION REGISTRATION INTAKE
+                 ========================================== -->
+            <section id="client-submission-view" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hidden">
+                <div class="flex items-center space-x-3 mb-6 pb-6 border-b border-gray-100">
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100"><i class="fa-solid fa-file-invoice text-lg"></i></div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Submit New Document Package</h3>
+                        <p class="text-xs text-gray-500">File digital paperwork entries straight into the division ledger index matrix.</p>
+                    </div>
+                </div>
+
+                <form id="form-document-submission" onsubmit="handleDocumentSubmission(event)" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Document Public Title</label>
+                            <input id="sub-doc-title" type="text" placeholder="e.g., Inventory Request 2026" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Classification Type</label>
+                            <select id="sub-doc-type" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition">
+                                <option value="Memorandum">Memorandum</option>
+                                <option value="Letter Request">Letter Request</option>
+                                <option value="Liquidation Report">Liquidation Report</option>
+                                <option value="Travel Order">Travel Order</option>
+                                <option value="Procurement Form">Procurement Form</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Target Destination Office Unit</label>
+                            <input id="sub-dest-office" type="text" placeholder="e.g., Accounting Division" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Attention Person / Signatory Target</label>
+                            <input id="sub-dest-person" type="text" placeholder="e.g., Juan Dela Cruz Jr." class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Submitted By (Authorized Liaison)</label>
+                            <input id="sub-submitted-by" type="text" placeholder="Your Registered Name" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Originating Institution / School Unit</label>
+                            <input id="sub-school-office" type="text" placeholder="e.g., Biñan Central Elementary" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Digital File Upload attachment (PDF Copies Only)</label>
+                        <div class="border-2 border-dashed border-gray-200 hover:border-indigo-400 rounded-2xl p-6 text-center cursor-pointer bg-gray-50/50 hover:bg-indigo-50/10 transition relative">
+                            <input id="sub-file-upload" type="file" accept="application/pdf" onchange="updateFileStatusText()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required />
+                            <div class="space-y-1">
+                                <i class="fa-solid fa-cloud-arrow-up text-gray-400 text-2xl mb-1 block"></i>
+                                <p class="text-sm font-semibold text-gray-700">Click to browse local file directories</p>
+                                <p class="text-xs text-gray-400">Strictly requires standardized formatting inside PDF containers</p>
+                            </div>
+                        </div>
+                        <p id="sub-file-status-text" class="text-xs text-indigo-600 font-semibold mt-2 hidden"></p>
+                    </div>
+
+                    <button id="btn-doc-submit" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-sm transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Submit Document Package</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- ==========================================
+                 SUPERADMIN PROFILE MANAGED LEDGER ACCOUNTS DIRECTORY
+                 ========================================== -->
+            <section id="superadmin-user-ledger-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                    <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision System Profile</h3>
+                    
+                    <form id="form-create-user" onsubmit="createNewAccount(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Access Authorization Role Base</label>
+                            <select id="new-user-role" onchange="toggleConditionalFields()" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-500 focus:bg-white transition">
+                                <option value="admin">Office Admin Staff</option>
+                                <option value="superadmin">Superadmin Director</option>
+                                <option value="client">Client Liaison</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Unique Identity Account Username</label>
+                            <input id="new-user-name" type="text" placeholder="Unique system identifier key" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Account Security Code Access Password</label>
+                            <input id="new-user-pass" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">User Full Name Descriptor</label>
+                            <input id="new-user-fullname" type="text" placeholder="Firstname Lastname" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Position / Job Rank Designation</label>
+                            <input id="new-user-position" type="text" placeholder="e.g., Administrative Assistant II" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
+                        </div>
+                        
+                        <div id="office-field-container">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Assigned Core Office Base</label>
+                            <input id="new-user-office" type="text" placeholder="e.g., CID, SGOD, Cashier" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                        </div>
+                        
+                        <div id="conditional-client-fields" class="hidden">
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Affiliated School Station Branch Name</label>
+                            <input id="new-user-school" type="text" placeholder="e.g., Biñan National High School" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
+                        </div>
+
+                        <button id="btn-create-account" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-sm transition">
+                            Create System Account
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 space-y-4">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Security Ledger Matrices</h3>
+                        <p class="text-xs text-gray-500">Live operational account authorization entries recorded inside database rows.</p>
+                    </div>
+                    
+                    <div class="border border-gray-100 rounded-xl overflow-hidden">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-gray-50/70 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    <th class="p-4">User Operator</th>
+                                    <th class="p-4">Account ID</th>
+                                    <th class="p-4">Meta Details</th>
+                                    <th class="p-4 text-right">Scope Ops</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100">
+                                <!-- Populated dynamically by script ledger components -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </div>
 
-        <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 mt-auto flex-shrink-0 w-full">
+        <!-- ==========================================
+             MODAL VOUCHER COMPONENT (SUCCESS INTAKE OVERLAYS)
+             ========================================== -->
+        <div id="success-voucher-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 border border-gray-100 transform transition-all space-y-6">
+                
+                <div id="downloadable-voucher-area" class="bg-white p-6 border border-gray-100 rounded-2xl shadow-inner text-center space-y-4">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-emerald-600 uppercase tracking-wider">Transmission Intake Complete</h4>
+                        <p class="text-xs text-gray-400 mt-0.5">SDO Biñan Tracking Pipeline Network</p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 font-mono">
+                        <span class="text-[10px] text-gray-400 block font-sans font-bold uppercase tracking-wide">Tracking System ID Token</span>
+                        <span id="voucher-tracking-id" class="text-2xl font-black text-gray-900 block my-1">DOC-00000</span>
+                    </div>
+
+                    <div class="text-left space-y-2 border-t border-gray-100 pt-4 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-400">Title:</span><strong id="v-title" class="text-gray-800 truncate max-w-[200px]">---</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Class:</span><strong id="v-type" class="text-gray-800">---</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Origin Station:</span><strong id="v-origin" class="text-gray-800 truncate max-w-[200px]">---</strong></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-download-voucher" class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-xs transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-download text-gray-400"></i>
+                        <span>Save Image Voucher</span>
+                    </button>
+                    <button id="btn-close-voucher" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-xs shadow-sm transition">
+                        Proceed to Pipeline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-auto py-6 text-center text-xs text-gray-400 border-t border-gray-100 bg-white">
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
     </main>
 
+    <!-- ==========================================
+         APPLICATION SCRIPT PROCESSOR INFRASTRUCTURE
+         ========================================== -->
+    <script>
+    // Live deployed App Script Web App Endpoint Routing URL Link
+    const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
 
-<script>
-// Replace this placeholder string with your live deployed Apps Script Web App URL!
-const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
+    let documentCache = [];
+    let currentLoggedUserRole = '';
+    let currentLoggedUserOffice = ''; 
+    let currentLoggedFullName = '';
 
-let documentCache = [];
-// Global variables tracking the active session context
-let currentLoggedUserRole = '';
-let currentLoggedUserOffice = ''; 
-let currentLoggedFullName = '';
+    // ==========================================
+    // 1. ADMIN LOGISTICS: ROUTE / SCAN DOCUMENT
+    // ==========================================
+    async function handleReceiveDocument(event) {
+        event.preventDefault();
 
-// ==========================================
-// 1. ADMIN LOGISTICS: ROUTE / SCAN DOCUMENT
-// ==========================================
-async function handleReceiveDocument(event) {
-    event.preventDefault();
+        const trackingNumber = document.getElementById('scan-track-number').value.trim();
+        const actionStatus = document.getElementById('scan-action-status').value; 
+        const remarks = document.getElementById('scan-remarks').value.trim();
+        const receiveBtn = document.getElementById('btn-scan-submit');
 
-    const trackingNumber = document.getElementById('scan-track-number').value.trim();
-    const actionStatus = document.getElementById('scan-action-status').value; 
-    const remarks = document.getElementById('scan-remarks').value.trim();
-    const receiveBtn = document.getElementById('btn-scan-submit');
-
-    if (!trackingNumber) {
-        alert("Please scan a QR Code or enter a tracking number.");
-        return;
-    }
-
-    receiveBtn.disabled = true;
-    receiveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Registering Route Log...`;
-
-    const logPayload = {
-        action: "receiveDocument",
-        docId: trackingNumber,
-        officeLocation: currentLoggedUserOffice, // Auto-tagged from admin's logged profile office
-        receivedBy: currentLoggedFullName,       // Auto-tagged from admin name
-        status: actionStatus,
-        remarks: remarks
-    };
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(logPayload)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert(`Document ${trackingNumber} successfully updated at ${currentLoggedUserOffice}!`);
-            document.getElementById('form-receive-document').reset();
-            
-            // Refresh local application data state
-            if (typeof initializeAppData === 'function') {
-                await initializeAppData();
-            } else {
-                const res = await fetch(API_URL);
-                documentCache = await res.json();
-            }
-            renderAdminTable();
-        } else {
-            alert(`Routing Error: ${result.message}`);
-        }
-    } catch (err) {
-        console.error("Logistics Transmission Failure:", err);
-        alert("Failed to connect to backend sheet router routing matrix.");
-    } finally {
-        receiveBtn.disabled = false;
-        receiveBtn.innerHTML = `<i class="fa-solid fa-qrcode mr-2"></i> Log Document Entry`;
-    }
-}
-
-// ==========================================
-// 2. AUTHENTICATION & LOGIN PROCESSORS
-// ==========================================
-async function handleLogin(event) {
-    event.preventDefault();
-
-    const usernameInput = document.getElementById('login-username').value.trim();
-    const passwordInput = document.getElementById('login-password').value.trim();
-    const loginBtn = document.getElementById('btn-login-submit');
-
-    if (!usernameInput || !passwordInput) {
-        alert("Please enter both your username and password.");
-        return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
-
-    const loginFormData = new FormData();
-    loginFormData.append("action", "login");
-    loginFormData.append("username", usernameInput);
-    loginFormData.append("password", passwordInput);
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            body: loginFormData 
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            alert(`Welcome back, ${data.fullName || data.username}!`);
-            localStorage.setItem('docTrack_session', JSON.stringify({
-                role: data.role,
-                username: data.username,
-                fullName: data.fullName,
-                office: data.office
-            }));
-            renderTargetDashboard(data.role, data.username, data.fullName, data.office); 
-        } else {
-            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
-        }
-    } catch (err) {
-        console.error("Login Network Connection Error:", err);
-        alert("Connection failed. Verify Apps Script configuration permissions.");
-    } finally {
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = `Sign In`;
-    }
-}
-
-async function handleSecureLogin(event) {
-    // Linked as a failsafe configuration fallback mapping
-    await handleLogin(event);
-}
-
-// ==========================================
-// 3. UI DASHBOARD GENERATION & SHELL ROUTING
-// ==========================================
-function renderTargetDashboard(role, targetKey, fullName, office) {
-    currentLoggedUserRole = role;
-    currentLoggedFullName = fullName;
-    currentLoggedUserOffice = office || 'Main Desk';
-
-    document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('dashboard-sidebar').classList.remove('hidden');
-    document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
-    document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
-
-    document.getElementById('staff-only-links').classList.add('hidden');
-    document.getElementById('superadmin-only-links').classList.add('hidden');
-    document.getElementById('client-only-links').classList.add('hidden');
-
-    document.getElementById('shared-dashboard-view').classList.add('hidden');
-    document.getElementById('client-view').classList.add('hidden');
-    document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
-
-    const submissionView = document.getElementById('client-submission-view');
-    if (submissionView) submissionView.classList.add('hidden');
-    
-    const receiverPanel = document.getElementById('office-receiver-view');
-    if (receiverPanel) receiverPanel.classList.add('hidden');
-
-    if (role === 'client') {
-        document.getElementById('client-only-links').classList.remove('hidden');
-        document.getElementById('client-view').classList.remove('hidden');
-
-        const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
-        if (doc) {
-            renderClientView(doc);
-        } else {
-            document.getElementById('client-view').innerHTML = `
-                <div class="max-w-md mx-auto my-12 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-folder-open text-amber-500 text-2xl"></i></div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-1">No Active Documents</h3>
-                    <p class="text-gray-500 text-sm">There are no active tracking pathways mapped to your account ID.</p>
-                </div>`;
-        }
-    } 
-    else if (role === 'admin' || role === 'superadmin') {
-        document.getElementById('staff-only-links').classList.remove('hidden');
-        document.getElementById('shared-dashboard-view').classList.remove('hidden');
-        if (receiverPanel) receiverPanel.classList.remove('hidden'); 
-        
-        renderAdminTable();
-
-        if (role === 'superadmin') {
-            document.getElementById('superadmin-only-links').classList.remove('hidden');
-            loadUserLedgerDirectory();
-        }
-    }
-}
-
-// ==========================================
-// 4. CLIENT INTER-OFFICE PROGRESS TIMELINE
-// ==========================================
-function renderClientView(doc) {
-    const clientView = document.getElementById('client-view');
-    clientView.classList.remove('hidden');
-
-    let timelineHTML = '';
-    
-    if (doc.history && doc.history.length > 0) {
-        doc.history.forEach((step, index) => {
-            const isCurrentLocation = index === 0; 
-            timelineHTML += `
-            <div class="relative pl-6 pb-6 border-l-2 ${isCurrentLocation ? 'border-indigo-600' : 'border-emerald-200'} last:pb-0">
-                <div class="absolute -left-[11px] top-0 ${isCurrentLocation ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-emerald-500'} text-white rounded-full w-5 h-5 flex items-center justify-center">
-                    ${isCurrentLocation ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${step.officeLocation}</span>
-                    <h4 class="${isCurrentLocation ? 'font-bold text-indigo-600 text-base' : 'font-semibold text-gray-800 text-sm'}">${step.status}</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">Processed by: ${step.receivedBy} ${step.remarks ? `— "${step.remarks}"` : ''}</p>
-                    <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${step.timestamp}</span>
-                </div>
-            </div>`;
-        });
-    } else {
-        timelineHTML = `
-            <div class="relative pl-6 border-l-2 border-amber-300">
-                <div class="absolute -left-[11px] top-0 bg-amber-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                    <div class="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-gray-400 uppercase">${doc.originOffice || 'System Record'}</span>
-                    <h4 class="font-bold text-amber-600">Document Initialized</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">Awaiting initial structural office routing scan assignment parameters.</p>
-                </div>
-            </div>`;
-    }
-
-    clientView.innerHTML = `
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:flex justify-between items-center">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">SDO Biñan Tracking Pipeline</span>
-                <h2 class="text-xl font-bold text-gray-900 mt-1">Tracking ID: ${doc.docId}</h2>
-                <p class="text-sm text-gray-500">Classification: <strong>${doc.docType || 'N/A'}</strong> | Owner: ${doc.clientName}</p>
-            </div>
-            <div class="mt-4 md:mt-0 text-left md:text-right">
-                <span class="text-xs text-gray-400 block mb-1">Current Log Status</span>
-                <span class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">${doc.currentStatus}</span>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-                <h3 class="text-base font-bold text-gray-900 mb-6"><i class="fa-solid fa-route text-indigo-500 mr-2"></i>Inter-Office Routing Logs</h3>
-                <div class="mt-4">${timelineHTML}</div>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-flag-checkered text-gray-400 mr-2"></i>Destination End-Goal</h3>
-                <div class="space-y-3 text-sm border-t border-gray-100 pt-3">
-                    <div>
-                        <span class="text-xs text-gray-400 block">Target Office</span>
-                        <span class="font-semibold text-gray-800">${doc.destinationOffice || 'N/A'}</span>
-                    </div>
-                    <div>
-                        <span class="text-xs text-gray-400 block">Attention Personnel / Signatory</span>
-                        <span class="font-semibold text-gray-800">${doc.destinationPerson || 'Not Specified'}</span>
-                    </div>
-                    <div class="pt-2">
-                         <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
-                             <i class="fa-solid fa-file-pdf mr-1.5 text-red-500"></i> Open Drive File Link
-                         </a>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-}
-
-// ==========================================
-// 5. STAFF OPERATIONS DATA VIEWER TABLES
-// ==========================================
-function renderAdminTable() {
-    const tbody = document.getElementById('admin-table-tbody') || document.querySelector('#shared-dashboard-view table tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-
-    if (!documentCache || documentCache.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No operations document items currently queued.</td></tr>`;
-        return;
-    }
-
-    documentCache.forEach(doc => {
-        tbody.innerHTML += `
-            <tr class="hover:bg-gray-50/50 transition border-b border-gray-100 text-sm">
-                <td class="p-4 font-bold text-gray-900">${doc.docId}</td>
-                <td class="p-4">
-                    <span class="font-semibold block text-gray-800">${doc.title || 'Untitled'}</span>
-                    <span class="text-xs text-gray-400 block">${doc.docType || 'N/A'}</span>
-                </td>
-                <td class="p-4 text-gray-600">${doc.clientName || 'N/A'}</td>
-                <td class="p-4">
-                    <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-bold uppercase">${doc.currentStatus}</span>
-                </td>
-                <td class="p-4 text-right whitespace-nowrap">
-                    <button onclick="openActionModal('${doc.docId}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm">
-                        <i class="fa-solid fa-sliders mr-1"></i> Actions
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-function openActionModal(docId) {
-    const nextStatus = prompt(`Update status parameters for Document reference ${docId}:`, "Approved / In Review / Released");
-    if (nextStatus) {
-        alert(`Forwarding update state context "${nextStatus}" to backend engine pipeline for tracking payload ${docId}.`);
-    }
-}
-
-function logout() {
-    localStorage.removeItem('docTrack_session');
-    alert("Session ended safely.");
-    window.location.reload(); 
-}
-
-function toggleConditionalFields() {
-    const selectedRole = document.getElementById('new-user-role').value;
-    const clientBox = document.getElementById('conditional-client-fields');
-    const schoolInput = document.getElementById('new-user-school');
-    const officeContainer = document.getElementById('office-field-container');
-    const officeInput = document.getElementById('new-user-office');
-
-    if (selectedRole === 'client') {
-        clientBox.classList.remove('hidden');
-        schoolInput.required = true;
-        officeContainer.classList.add('hidden');
-        officeInput.required = false;
-        officeInput.value = ''; 
-    } else {
-        clientBox.classList.add('hidden');
-        schoolInput.required = false;
-        schoolInput.value = '';
-        officeContainer.classList.remove('hidden');
-        officeInput.required = true;
-    }
-}
-
-// ==========================================
-// 6. SUPERADMIN ACCOUNT PROVISIONING LEDGER
-// ==========================================
-async function createNewAccount(event) {
-    event.preventDefault();
-
-    const submitBtn = document.getElementById('btn-create-account');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering Data...`;
-
-    const payload = {
-        action: "addUser",
-        role: document.getElementById('new-user-role').value,
-        username: document.getElementById('new-user-name').value.trim(),
-        password: document.getElementById('new-user-pass').value.trim(),
-        fullName: document.getElementById('new-user-fullname').value.trim(),
-        position: document.getElementById('new-user-position').value.trim(),
-        office: document.getElementById('new-user-office').value.trim(),
-        schoolName: document.getElementById('new-user-school').value.trim() 
-    };
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            body: JSON.stringify(payload)
-        });
-
-        alert(`Successfully registered profile account for ${payload.fullName}!`);
-
-        document.getElementById('new-user-name').value = '';
-        document.getElementById('new-user-pass').value = '';
-        document.getElementById('new-user-fullname').value = '';
-        document.getElementById('new-user-position').value = '';
-        document.getElementById('new-user-office').value = '';
-        document.getElementById('new-user-school').value = '';
-
-        document.getElementById('new-user-role').value = 'admin';
-        toggleConditionalFields(); 
-
-        loadUserLedgerDirectory();
-    } catch (error) {
-        alert("Error saving account creation profile values to sheet log.");
-        console.error(error);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `Create System Account`;
-    }
-}
-
-function switchSidebarTab(targetTab) {
-    const opsCenter = document.getElementById('shared-dashboard-view');
-    const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
-    const clientTracking = document.getElementById('client-view');
-    const clientSubmission = document.getElementById('client-submission-view'); 
-    const receiverPanel = document.getElementById('office-receiver-view');
-
-    const navLinks = document.querySelectorAll('#dashboard-sidebar nav a');
-    navLinks.forEach(link => {
-        link.classList.remove('bg-indigo-800', 'text-white');
-        link.classList.add('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
-    });
-
-    if (window.event && window.event.currentTarget) {
-        window.event.currentTarget.classList.remove('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
-        window.event.currentTarget.classList.add('bg-indigo-800', 'text-white');
-    }
-
-    if (opsCenter) opsCenter.classList.add('hidden');
-    if (ledgerCenter) ledgerCenter.classList.add('hidden');
-    if (clientTracking) clientTracking.classList.add('hidden');
-    if (clientSubmission) clientSubmission.classList.add('hidden');
-    if (receiverPanel && (currentLoggedUserRole === 'admin' || currentLoggedUserRole === 'superadmin')) {
-        receiverPanel.classList.add('hidden');
-    }
-
-    if (targetTab === 'main-dash') {
-        if (opsCenter) opsCenter.classList.remove('hidden');
-        if (receiverPanel) receiverPanel.classList.remove('hidden');
-        renderAdminTable();
-    } 
-    else if (targetTab === 'user-ledger') {
-        if (ledgerCenter) ledgerCenter.classList.remove('hidden');
-        loadUserLedgerDirectory();
-    } 
-    else if (targetTab === 'client-tracking') {
-        if (clientTracking) clientTracking.classList.remove('hidden');
-    } 
-    else if (targetTab === 'client-submission') {
-        if (clientSubmission) clientSubmission.classList.remove('hidden');
-    }
-}
-
-async function loadUserLedgerDirectory() {
-    const tbody = document.getElementById('user-ledger-tbody');
-    if (!tbody) return;
-
-    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching user matrix directory...</td></tr>`;
-
-    try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "getUsers" })
-        });
-
-        const users = await response.json();
-        tbody.innerHTML = ''; 
-
-        if (!users || users.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No user accounts found.</td></tr>`;
+        if (!trackingNumber) {
+            alert("Please scan a QR Code or enter a tracking number.");
             return;
         }
 
-        users.forEach(user => {
-            const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
-                                   user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
-            const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
+        receiveBtn.disabled = true;
+        receiveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Registering Route Log...`;
 
-            tbody.innerHTML += `
-                <tr class="hover:bg-gray-50/50 transition border-b border-gray-100">
-                    <td class="p-4">
-                        <span class="font-bold text-gray-900 block">${user.fullName || 'No Name'}</span>
-                        <span class="text-xs ${roleBadgeColor} px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider inline-block mt-1">${user.role}</span>
-                    </td>
-                    <td class="p-4 font-mono text-xs text-gray-500">${user.username}</td>
-                    <td class="p-4 text-xs">
-                        <span class="block text-gray-700 font-medium">${user.position || 'N/A'}</span>
-                        <span class="text-gray-400 block">${metaInfo}</span>
-                    </td>
-                    <td class="p-4 text-right space-x-1 whitespace-nowrap">
-                        <button onclick="promptEditPassword('${user.username}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 p-2 rounded-lg text-xs transition">
-                            <i class="fa-solid fa-key"></i> Pass
-                        </button>
-                        <button onclick="confirmDeleteUser('${user.username}')" class="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 p-2 rounded-lg text-xs transition">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </td>
-                </tr>`;
-        });
-    } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50">Failed to establish directory synchronization.</td></tr>`;
-    }
-}
-
-async function promptEditPassword(username) {
-    const newPassword = prompt(`Enter a new access password for context account [ ${username} ]:`);
-    if (newPassword === null) return;
-    if (newPassword.trim() === "") { alert("Password cannot be blank."); return; }
-
-    try {
-        await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "editPassword", username: username, newPassword: newPassword.trim() })
-        });
-        alert(`Access credentials for ${username} updated successfully!`);
-        loadUserLedgerDirectory();
-    } catch (err) {
-        alert("Failed to submit key database override operations.");
-    }
-}
-
-async function confirmDeleteUser(username) {
-    const doubleCheck = confirm(`CRITICAL ACTION: Permanently delete user [ ${username} ]?`);
-    if (!doubleCheck) return;
-
-    try {
-        await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "deleteUser", username: username })
-        });
-        alert(`Account record identifier [ ${username} ] has been removed.`);
-        loadUserLedgerDirectory(); 
-    } catch (err) {
-        alert("Encountered an exception processing deletion.");
-    }
-}
-
-// ==========================================
-// 7. CLIENT TRANSACTION DOCUMENT INTAKE SUBMISSION
-// ==========================================
-function updateFileStatusText() {
-    const fileInput = document.getElementById('sub-file-upload');
-    const statusText = document.getElementById('sub-file-status-text');
-    if (fileInput.files.length > 0) {
-        statusText.innerText = `Selected File: ${fileInput.files[0].name}`;
-        statusText.classList.remove('hidden');
-    } else {
-        statusText.classList.add('hidden');
-    }
-}
-
-async function handleDocumentSubmission(event) {
-    event.preventDefault();
-
-    const submitBtn = document.getElementById('btn-doc-submit');
-    const docTitle = document.getElementById('sub-doc-title').value.trim();
-    const docType = document.getElementById('sub-doc-type').value;
-    const destOffice = document.getElementById('sub-dest-office').value.trim();
-    const destPerson = document.getElementById('sub-dest-person').value.trim();
-    const submittedBy = document.getElementById('sub-submitted-by').value.trim();
-    const schoolOffice = document.getElementById('sub-school-office').value.trim();
-    const fileInput = document.getElementById('sub-file-upload');
-
-    if (fileInput.files.length === 0) {
-        alert("Please attach a valid PDF document file before proceeding.");
-        return;
-    }
-
-    const targetFile = fileInput.files[0];
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Processing Submission...`;
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const rawLogBytes = e.target.result.split(',')[1];
-        const formattedFileName = `${docTitle}.pdf`;
-
-        const formData = new FormData();
-        formData.append("action", "submitDocument");
-        formData.append("title", docTitle);
-        formData.append("docType", docType);
-        formData.append("destOffice", destOffice);
-        formData.append("destPerson", destPerson);
-        formData.append("submittedBy", submittedBy);
-        formData.append("originOffice", schoolOffice);
-        formData.append("fileData", rawLogBytes);
-        formData.append("fileName", formattedFileName);
-        formData.append("mimeType", targetFile.type);
+        const logPayload = {
+            action: "receiveDocument",
+            docId: trackingNumber,
+            officeLocation: currentLoggedUserOffice, 
+            receivedBy: currentLoggedFullName,       
+            status: actionStatus,
+            remarks: remarks
+        };
 
         try {
-            const response = await fetch(API_URL, { method: "POST", body: formData });
-            const data = await response.json();
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(logPayload)
+            });
 
-           if (data.success) {
-                document.getElementById('voucher-tracking-id').innerText = data.docId;
-                document.getElementById('v-title').innerText = docTitle;
-                document.getElementById('v-type').innerText = docType;
-                document.getElementById('v-origin').innerText = schoolOffice;
+            const result = await response.json();
 
-                const modal = document.getElementById('success-voucher-modal');
-                modal.classList.remove('hidden');
-
-                document.getElementById('btn-download-voucher').onclick = function() {
-                    const targetContainer = document.getElementById('downloadable-voucher-area');
-                    html2canvas(targetContainer, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
-                        const imageStreamUrl = canvas.toDataURL("image/png");
-                        const transferAnchor = document.createElement('a');
-                        transferAnchor.href = imageStreamUrl;
-                        transferAnchor.download = `Tracking_${data.docId}.png`;
-                        document.body.appendChild(transferAnchor);
-                        transferAnchor.click();
-                        document.body.removeChild(transferAnchor);
-                    });
-                };
-
-                document.getElementById('form-document-submission').reset();
-                if(document.getElementById('sub-file-status-text')) {
-                    document.getElementById('sub-file-status-text').classList.add('hidden');
-                }
-
-                document.getElementById('btn-close-voucher').onclick = function() {
-                    modal.classList.add('hidden');
-                    switchSidebarTab('client-tracking');
-                };
+            if (result.success) {
+                alert(`Document ${trackingNumber} successfully updated at ${currentLoggedUserOffice}!`);
+                document.getElementById('form-receive-document').reset();
+                await refreshDocumentCache();
             } else {
-                alert(`Submission error: ${data.error || 'System error processing operations.'}`);
+                alert(`Routing Error: ${result.message}`);
             }
         } catch (err) {
-            alert("Network timeout or connection dropped during upload transit.");
+            console.error("Logistics Transmission Failure:", err);
+            alert("Failed to connect to backend sheet router routing matrix.");
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package`;
-        }
-    };
-    reader.readAsDataURL(targetFile);
-}
-
-// ==========================================
-// 8. LIFECYCLE SEED BOOTSTRAP INITIALIZATION
-// ==========================================
-window.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const res = await fetch(API_URL);
-        documentCache = await res.json();
-    } catch(e) { console.warn("Initial document cache fetch skipped:", e); }
-
-    const savedSession = localStorage.getItem('docTrack_session');
-    if (savedSession) {
-        try {
-            const user = JSON.parse(savedSession);
-            renderTargetDashboard(user.role, user.username, user.fullName, user.office);
-        } catch (e) {
-            localStorage.removeItem('docTrack_session');
+            receiveBtn.disabled = false;
+            receiveBtn.innerHTML = `<i class="fa-solid fa-qrcode mr-2"></i> Log Document Entry`;
         }
     }
-});
-    
-</script>
+
+    async function refreshDocumentCache() {
+        try {
+            const res = await fetch(API_URL);
+            documentCache = await res.json();
+            renderAdminTable();
+        } catch (e) {
+            console.error("Failed to refresh document cache", e);
+        }
+    }
+
+    // ==========================================
+    // 2. AUTHENTICATION & LOGIN PROCESSORS
+    // ==========================================
+    async function handleLogin(event) {
+        event.preventDefault();
+
+        const usernameInput = document.getElementById('login-username').value.trim();
+        const passwordInput = document.getElementById('login-password').value.trim();
+        const loginBtn = document.getElementById('btn-login-submit');
+
+        if (!usernameInput || !passwordInput) {
+            alert("Please enter both your username and password.");
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
+
+        const loginFormData = new FormData();
+        loginFormData.append("action", "login");
+        loginFormData.append("username", usernameInput);
+        loginFormData.append("password", passwordInput);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                body: loginFormData 
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(`Welcome back, ${data.fullName || data.username}!`);
+                localStorage.setItem('docTrack_session', JSON.stringify({
+                    role: data.role,
+                    username: data.username,
+                    fullName: data.fullName,
+                    office: data.office
+                }));
+                renderTargetDashboard(data.role, data.username, data.fullName, data.office); 
+            } else {
+                alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
+            }
+        } catch (err) {
+            console.error("Login Network Connection Error:", err);
+            alert("Connection failed. Verify Apps Script configuration permissions.");
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In`;
+        }
+    }
+
+    // ==========================================
+    // 3. UI DASHBOARD GENERATION & SHELL ROUTING
+    // ==========================================
+    function renderTargetDashboard(role, targetKey, fullName, office) {
+        currentLoggedUserRole = role;
+        currentLoggedFullName = fullName;
+        currentLoggedUserOffice = office || 'Main Desk';
+
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('dashboard-sidebar').classList.remove('hidden');
+        document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
+        document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
+
+        document.getElementById('staff-only-links').classList.add('hidden');
+        document.getElementById('superadmin-only-links').classList.add('hidden');
+        document.getElementById('client-only-links').classList.add('hidden');
+
+        document.getElementById('shared-dashboard-view').classList.add('hidden');
+        document.getElementById('client-view').classList.add('hidden');
+        document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
+
+        const submissionView = document.getElementById('client-submission-view');
+        if (submissionView) submissionView.classList.add('hidden');
+        
+        const receiverPanel = document.getElementById('office-receiver-view');
+        if (receiverPanel) receiverPanel.classList.add('hidden');
+
+        if (role === 'client') {
+            document.getElementById('client-only-links').classList.remove('hidden');
+            document.getElementById('client-view').classList.remove('hidden');
+
+            const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
+            if (doc) {
+                renderClientView(doc);
+            } else {
+                document.getElementById('client-view').innerHTML = `
+                    <div class="max-w-md mx-auto my-12 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-folder-open text-amber-500 text-2xl"></i></div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">No Active Documents</h3>
+                        <p class="text-gray-500 text-sm">There are no active tracking pathways mapped to your account ID.</p>
+                    </div>`;
+            }
+        } 
+        else if (role === 'admin' || role === 'superadmin') {
+            document.getElementById('staff-only-links').classList.remove('hidden');
+            document.getElementById('shared-dashboard-view').classList.remove('hidden');
+            if (receiverPanel) receiverPanel.classList.remove('hidden'); 
+            
+            renderAdminTable();
+
+            if (role === 'superadmin') {
+                document.getElementById('superadmin-only-links').classList.remove('hidden');
+                loadUserLedgerDirectory();
+            }
+        }
+    }
+
+    // ==========================================
+    // 4. CLIENT INTER-OFFICE PROGRESS TIMELINE
+    // ==========================================
+    function renderClientView(doc) {
+        const clientView = document.getElementById('client-view');
+        clientView.classList.remove('hidden');
+
+        let timelineHTML = '';
+        
+        if (doc.history && doc.history.length > 0) {
+            doc.history.forEach((step, index) => {
+                const isCurrentLocation = index === 0; 
+                let statusColorClass = 'text-gray-800';
+                let circleColorClass = 'bg-emerald-500';
+
+                if (step.status.toLowerCase().includes('revision')) {
+                    statusColorClass = 'text-amber-600 font-bold';
+                    circleColorClass = 'bg-amber-500 ring-4 ring-amber-100';
+                } else if (step.status.toLowerCase().includes('returned')) {
+                    statusColorClass = 'text-red-600 font-bold';
+                    circleColorClass = 'bg-red-500 ring-4 ring-red-100';
+                } else if (isCurrentLocation) {
+                    statusColorClass = 'text-indigo-600 font-bold';
+                    circleColorClass = 'bg-indigo-600 ring-4 ring-indigo-100';
+                }
+
+                timelineHTML += `
+                <div class="relative pl-6 pb-6 border-l-2 ${isCurrentLocation ? 'border-indigo-600' : 'border-emerald-200'} last:pb-0">
+                    <div class="absolute -left-[11px] top-0 ${circleColorClass} text-white rounded-full w-5 h-5 flex items-center justify-center">
+                        ${isCurrentLocation ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${step.officeLocation}</span>
+                        <h4 class="${isCurrentLocation ? 'text-base' : 'text-sm'} ${statusColorClass}">${step.status}</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Processed by: <strong>${step.receivedBy}</strong> ${step.remarks ? `— <span class="text-gray-700 italic">"${step.remarks}"</span>` : ''}</p>
+                        <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${step.timestamp}</span>
+                    </div>
+                </div>`;
+            });
+        } else {
+            timelineHTML = `
+                <div class="relative pl-6 border-l-2 border-amber-300">
+                    <div class="absolute -left-[11px] top-0 bg-amber-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">${doc.originOffice || 'System Record'}</span>
+                        <h4 class="font-bold text-amber-600">Document Initialized</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Awaiting initial structural office routing scan assignment parameters.</p>
+                    </div>
+                </div>`;
+        }
+
+        clientView.innerHTML = `
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:flex justify-between items-center">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">SDO Biñan Tracking Pipeline</span>
+                    <h2 class="text-xl font-bold text-gray-900 mt-1">Tracking ID: ${doc.docId}</h2>
+                    <p class="text-sm text-gray-500">Classification: <strong>${doc.docType || 'N/A'}</strong> | Owner: ${doc.clientName}</p>
+                </div>
+                <div class="mt-4 md:mt-0 text-left md:text-right">
+                    <span class="text-xs text-gray-400 block mb-1">Current Log Status</span>
+                    <span class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide">${doc.currentStatus}</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <h3 class="text-base font-bold text-gray-900 mb-6"><i class="fa-solid fa-route text-indigo-500 mr-2"></i>Inter-Office Routing Logs</h3>
+                    <div class="mt-4">${timelineHTML}</div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                    <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-flag-checkered text-gray-400 mr-2"></i>Destination End-Goal</h3>
+                    <div class="space-y-3 text-sm border-t border-gray-100 pt-3">
+                        <div>
+                            <span class="text-xs text-gray-400 block">Target Office</span>
+                            <span class="font-semibold text-gray-800">${doc.destinationOffice || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-400 block">Attention Personnel / Signatory</span>
+                            <span class="font-semibold text-gray-800">${doc.destinationPerson || 'Not Specified'}</span>
+                        </div>
+                        <div class="pt-2">
+                             <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-xs text-indigo-600 font-semibold hover:underline">
+                                 <i class="fa-solid fa-file-pdf mr-1.5 text-red-500"></i> Open Drive File Link
+                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ==========================================
+    // 5. STAFF OPERATIONS DATA VIEWER TABLES
+    // ==========================================
+    function renderAdminTable() {
+        const tbody = document.getElementById('admin-table-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (!documentCache || documentCache.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">No operations document items currently queued.</td></tr>`;
+            return;
+        }
+
+        documentCache.forEach(doc => {
+            let badgeColor = 'bg-amber-100 text-amber-800';
+            if (doc.currentStatus.toLowerCase().includes('revision')) badgeColor = 'bg-orange-100 text-orange-800';
+            if (doc.currentStatus.toLowerCase().includes('returned')) badgeColor = 'bg-red-100 text-red-800';
+            if (doc.currentStatus.toLowerCase().includes('forwarded') || doc.currentStatus.toLowerCase().includes('initialed')) badgeColor = 'bg-blue-100 text-blue-800';
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50/50 transition border-b border-gray-100 text-sm">
+                    <td class="p-4 font-bold text-gray-900">${doc.docId}</td>
+                    <td class="p-4">
+                        <span class="font-semibold block text-gray-800">${doc.title || 'Untitled'}</span>
+                        <span class="text-xs text-gray-400 block">${doc.docType || 'N/A'}</span>
+                    </td>
+                    <td class="p-4 text-gray-600">${doc.clientName || 'N/A'}</td>
+                    <td class="p-4">
+                        <a href="${doc.driveFileUrl}" target="_blank" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium bg-indigo-50 px-2.5 py-1 rounded-md text-xs transition border border-indigo-100">
+                            <i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> View PDF
+                        </a>
+                    </td>
+                    <td class="p-4">
+                        <span class="${badgeColor} text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wide whitespace-nowrap">${doc.currentStatus}</span>
+                    </td>
+                    <td class="p-4 text-right space-x-1 whitespace-nowrap">
+                        <button onclick="executeDirectStatusAction('${doc.docId}', 'For Revision')" class="bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> For Revision
+                        </button>
+                        <button onclick="executeDirectStatusAction('${doc.docId}', 'Returned')" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Return
+                        </button>
+                        <button onclick="openActionModal('${doc.docId}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-route mr-1"></i> Route
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function executeDirectStatusAction(docId, targetStatus) {
+        const remarksPrompt = prompt(`Provide an internal comment/reason for marking document ${docId} as "${targetStatus}":`);
+        if (remarksPrompt === null) return; 
+        
+        if (remarksPrompt.trim() === "") {
+            alert("Action cancelled. You must specify descriptive logs/remarks for revisions or returns.");
+            return;
+        }
+
+        const payload = {
+            action: "receiveDocument",
+            docId: docId,
+            officeLocation: currentLoggedUserOffice,
+            receivedBy: currentLoggedFullName,
+            status: targetStatus,
+            remarks: remarksPrompt.trim()
+        };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                alert(`Document ${docId} state successfully shifted to ${targetStatus}!`);
+                await refreshDocumentCache();
+            } else {
+                alert(`Execution failed: ${data.message}`);
+            }
+        } catch (err) {
+            alert("Network transit failure logging state transaction changes.");
+        }
+    }
+
+    function openActionModal(docId) {
+        const nextStatus = prompt(`Update status routing variables for Document baseline record ${docId}:`, "Forwarded to ASDS for Initial");
+        if (nextStatus) {
+            executeDirectStatusAction(docId, nextStatus);
+        }
+    }
+
+    // ==========================================
+    // 6. MODULE SEPARATORS & INTERACTION UTILS
+    // ==========================================
+    function logout() {
+        localStorage.removeItem('docTrack_session');
+        alert("Session ended safely.");
+        window.location.reload(); 
+    }
+
+    function toggleConditionalFields() {
+        const selectedRole = document.getElementById('new-user-role').value;
+        const clientBox = document.getElementById('conditional-client-fields');
+        const schoolInput = document.getElementById('new-user-school');
+        const officeContainer = document.getElementById('office-field-container');
+        const officeInput = document.getElementById('new-user-office');
+
+        if (selectedRole === 'client') {
+            clientBox.classList.remove('hidden');
+            schoolInput.required = true;
+            officeContainer.classList.add('hidden');
+            officeInput.required = false;
+            officeInput.value = ''; 
+        } else {
+            clientBox.classList.add('hidden');
+            schoolInput.required = false;
+            schoolInput.value = '';
+            officeContainer.classList.remove('hidden');
+            officeInput.required = true;
+        }
+    }
+
+    // ==========================================
+    // 7. SUPERADMIN ACCOUNT PROVISIONING LEDGER
+    // ==========================================
+    async function createNewAccount(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('btn-create-account');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering Data...`;
+
+        const payload = {
+            action: "addUser",
+            role: document.getElementById('new-user-role').value,
+            username: document.getElementById('new-user-name').value.trim(),
+            password: document.getElementById('new-user-pass').value.trim(),
+            fullName: document.getElementById('new-user-fullname').value.trim(),
+            position: document.getElementById('new-user-position').value.trim(),
+            office: document.getElementById('new-user-office').value.trim(),
+            schoolName: document.getElementById('new-user-school').value.trim() 
+        };
+
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                body: JSON.stringify(payload)
+            });
+
+            alert(`Successfully registered profile account for ${payload.fullName}!`);
+
+            document.getElementById('form-create-user').reset();
+            toggleConditionalFields(); 
+            loadUserLedgerDirectory();
+        } catch (error) {
+            alert("Error saving account creation profile values to sheet log.");
+            console.error(error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `Create System Account`;
+        }
+    }
+
+    function switchSidebarTab(targetTab) {
+        const opsCenter = document.getElementById('shared-dashboard-view');
+        const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
+        const clientTracking = document.getElementById('client-view');
+        const clientSubmission = document.getElementById('client-submission-view'); 
+        const receiverPanel = document.getElementById('office-receiver-view');
+
+        const navLinks = document.querySelectorAll('#dashboard-sidebar nav a');
+        navLinks.forEach(link => {
+            link.classList.remove('bg-indigo-800', 'text-white');
+            link.classList.add('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
+        });
+
+        if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.remove('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
+            window.event.currentTarget.classList.add('bg-indigo-800', 'text-white');
+        }
+
+        if (opsCenter) opsCenter.classList.add('hidden');
+        if (ledgerCenter) ledgerCenter.classList.add('hidden');
+        if (clientTracking) clientTracking.classList.add('hidden');
+        if (clientSubmission) clientSubmission.classList.add('hidden');
+        if (receiverPanel && (currentLoggedUserRole === 'admin' || currentLoggedUserRole === 'superadmin')) {
+            receiverPanel.classList.add('hidden');
+        }
+
+        if (targetTab === 'main-dash') {
+            if (opsCenter) opsCenter.classList.remove('hidden');
+            if (receiverPanel) receiverPanel.classList.remove('hidden');
+            renderAdminTable();
+        } 
+        else if (targetTab === 'user-ledger') {
+            if (ledgerCenter) ledgerCenter.classList.remove('hidden');
+            loadUserLedgerDirectory();
+        } 
+        else if (targetTab === 'client-tracking') {
+            if (clientTracking) clientTracking.classList.remove('hidden');
+        } 
+        else if (targetTab === 'client-submission') {
+            if (clientSubmission) clientSubmission.classList.remove('hidden');
+        }
+    }
+
+    async function loadUserLedgerDirectory() {
+        const tbody = document.getElementById('user-ledger-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching user matrix directory...</td></tr>`;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "getUsers" })
+            });
+
+            const users = await response.json();
+            tbody.innerHTML = ''; 
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No user accounts found.</td></tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
+                                       user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
+                const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50/50 transition border-b border-gray-100">
+                        <td class="p-4">
+                            <span class="font-bold text-gray-900 block">${user.fullName || 'No Name'}</span>
+                            <span class="text-xs ${roleBadgeColor} px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider inline-block mt-1">${user.role}</span>
+                        </td>
+                        <td class="p-4 font-mono text-xs text-gray-500">${user.username}</td>
+                        <td class="p-4 text-xs">
+                            <span class="block text-gray-700 font-medium">${user.position || 'N/A'}</span>
+                            <span class="text-gray-400 block">${metaInfo}</span>
+                        </td>
+                        <td class="p-4 text-right space-x-1 whitespace-nowrap">
+                            <button onclick="promptEditPassword('${user.username}')" class="bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 text-gray-600 p-2 rounded-lg text-xs transition cursor-pointer">
+                                <i class="fa-solid fa-key"></i> Pass
+                            </button>
+                            <button onclick="confirmDeleteUser('${user.username}')" class="bg-gray-100 hover:bg-red-50 hover:text-red-600 text-gray-600 p-2 rounded-lg text-xs transition cursor-pointer">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50">Failed to establish directory synchronization.</td></tr>`;
+        }
+    }
+
+    async function promptEditPassword(username) {
+        const newPassword = prompt(`Enter a new access password for context account [ ${username} ]:`);
+        if (newPassword === null) return;
+        if (newPassword.trim() === "") { alert("Password cannot be blank."); return; }
+
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "editPassword", username: username, newPassword: newPassword.trim() })
+            });
+            alert(`Access credentials for ${username} updated successfully!`);
+            loadUserLedgerDirectory();
+        } catch (err) {
+            alert("Failed to submit key database override operations.");
+        }
+    }
+
+    async function confirmDeleteUser(username) {
+        const doubleCheck = confirm(`CRITICAL ACTION: Permanently delete user [ ${username} ]?`);
+        if (!doubleCheck) return;
+
+        try {
+            await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "deleteUser", username: username })
+            });
+            alert(`Account record identifier [ ${username} ] has been removed.`);
+            loadUserLedgerDirectory(); 
+        } catch (err) {
+            alert("Encountered an exception processing deletion.");
+        }
+    }
+
+    // ==========================================
+    // 8. CLIENT TRANSACTION DOCUMENT INTAKE SUBMISSION
+    // ==========================================
+    function updateFileStatusText() {
+        const fileInput = document.getElementById('sub-file-upload');
+        const statusText = document.getElementById('sub-file-status-text');
+        if (fileInput.files.length > 0) {
+            statusText.innerText = `Selected File: ${fileInput.files[0].name}`;
+            statusText.classList.remove('hidden');
+        } else {
+            statusText.classList.add('hidden');
+        }
+    }
+
+    async function handleDocumentSubmission(event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById('btn-doc-submit');
+        const docTitle = document.getElementById('sub-doc-title').value.trim();
+        const docType = document.getElementById('sub-doc-type').value;
+        const destOffice = document.getElementById('sub-dest-office').value.trim();
+        const destPerson = document.getElementById('sub-dest-person').value.trim();
+        const submittedBy = document.getElementById('sub-submitted-by').value.trim();
+        const schoolOffice = document.getElementById('sub-school-office').value.trim();
+        const fileInput = document.getElementById('sub-file-upload');
+
+        if (fileInput.files.length === 0) {
+            alert("Please attach a valid PDF document file before proceeding.");
+            return;
+        }
+
+        const targetFile = fileInput.files[0];
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Processing Submission...`;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const rawLogBytes = e.target.result.split(',')[1];
+            const formattedFileName = `${docTitle}.pdf`;
+
+            const formData = new FormData();
+            formData.append("action", "submitDocument");
+            formData.append("title", docTitle);
+            formData.append("docType", docType);
+            formData.append("destOffice", destOffice);
+            formData.append("destPerson", destPerson);
+            formData.append("submittedBy", submittedBy);
+            formData.append("originOffice", schoolOffice);
+            formData.append("fileData", rawLogBytes);
+            formData.append("fileName", formattedFileName);
+            formData.append("mimeType", targetFile.type);
+
+            try {
+                const response = await fetch(API_URL, { method: "POST", body: formData });
+                const data = await response.json();
+
+               if (data.success) {
+                    document.getElementById('voucher-tracking-id').innerText = data.docId;
+                    document.getElementById('v-title').innerText = docTitle;
+                    document.getElementById('v-type').innerText = docType;
+                    document.getElementById('v-origin').innerText = schoolOffice;
+
+                    const modal = document.getElementById('success-voucher-modal');
+                    modal.classList.remove('hidden');
+
+                    document.getElementById('btn-download-voucher').onclick = function() {
+                        const targetContainer = document.getElementById('downloadable-voucher-area');
+                        html2canvas(targetContainer, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
+                            const imageStreamUrl = canvas.toDataURL("image/png");
+                            const transferAnchor = document.createElement('a');
+                            transferAnchor.href = imageStreamUrl;
+                            transferAnchor.download = `Tracking_${data.docId}.png`;
+                            document.body.appendChild(transferAnchor);
+                            transferAnchor.click();
+                            document.body.removeChild(transferAnchor);
+                        });
+                    };
+
+                    document.getElementById('form-document-submission').reset();
+                    if(document.getElementById('sub-file-status-text')) {
+                        document.getElementById('sub-file-status-text').classList.add('hidden');
+                    }
+
+                    document.getElementById('btn-close-voucher').onclick = function() {
+                        modal.classList.add('hidden');
+                        switchSidebarTab('client-tracking');
+                    };
+                } else {
+                    alert(`Submission error: ${data.error || 'System error processing operations.'}`);
+                }
+            } catch (err) {
+                alert("Network timeout or connection dropped during upload transit.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package`;
+            }
+        };
+        reader.readAsDataURL(targetFile);
+    }
+
+    // ==========================================
+    // 9. LIFECYCLE SEED BOOTSTRAP INITIALIZATION
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch(API_URL);
+            documentCache = await res.json();
+        } catch(e) { console.warn("Initial document cache fetch skipped:", e); }
+
+        const savedSession = localStorage.getItem('docTrack_session');
+        if (savedSession) {
+            try {
+                const user = JSON.parse(savedSession);
+                renderTargetDashboard(user.role, user.username, user.fullName, user.office);
+            } catch (e) {
+                localStorage.removeItem('docTrack_session');
+            }
+        }
+    });
+    </script>
 </body>
 </html>
- 

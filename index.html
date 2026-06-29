@@ -24,33 +24,33 @@
         </div>
 
         <nav class="flex-grow p-4 space-y-1 text-sm">
-    <div id="staff-only-links" class="hidden space-y-1">
-        <a href="#" onclick="switchSidebarTab('main-dash')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-            <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
-            <span>Operations Center</span>
-        </a>
-        
-        <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
-            <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
-            <a href="#" onclick="switchSidebarTab('user-ledger')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-                <i class="fa-solid fa-users-gear w-5"></i>
-                <span>Manage Accounts</span>
-            </a>
-        </div>
-    </div>
+            <div id="staff-only-links" class="hidden space-y-1">
+                <a href="#" onclick="switchSidebarTab('main-dash')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
+                    <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
+                    <span>Operations Center</span>
+                </a>
+                
+                <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
+                    <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
+                    <a href="#" onclick="switchSidebarTab('user-ledger')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
+                        <i class="fa-solid fa-users-gear w-5"></i>
+                        <span>Manage Accounts</span>
+                    </a>
+                </div>
+            </div>
 
-    <div id="client-only-links" class="hidden space-y-1">
-        <a href="#" onclick="switchSidebarTab('client-tracking')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-            <i class="fa-solid fa-magnifying-glass w-5 text-indigo-300"></i>
-            <span>Track Document</span>
-        </a>
+            <div id="client-only-links" class="hidden space-y-1">
+                <a href="#" onclick="switchSidebarTab('client-tracking')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
+                    <i class="fa-solid fa-magnifying-glass w-5 text-indigo-300"></i>
+                    <span>Track Document</span>
+                </a>
 
-        <a href="#" onclick="switchSidebarTab('client-submission')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-            <i class="fa-solid fa-file-arrow-up w-5"></i>
-            <span>Document Submission</span>
-        </a>
-    </div>
-</nav>
+                <a href="#" onclick="switchSidebarTab('client-submission')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-file-arrow-up w-5"></i>
+                    <span>Document Submission</span>
+                </a>
+            </div>
+        </nav>
 
         <div class="p-4 border-t border-indigo-800">
             <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-200 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center space-x-2">
@@ -147,6 +147,83 @@
                     </div>
                 </div>
             </section>
+
+            <div id="client-submission-view" class="hidden max-w-2xl mx-auto my-6 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 animate-fadeIn">
+                <div class="flex items-center space-x-3 border-b border-gray-100 pb-4 mb-6">
+                    <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <i class="fa-solid fa-file-arrow-up text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Document Submission</h2>
+                        <p class="text-xs text-gray-500">Submit a new official document routing package for tracking pipeline processing</p>
+                    </div>
+                </div>
+
+                <form id="form-document-submission" onsubmit="handleDocumentSubmission(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Document Title</label>
+                        <input type="text" id="sub-doc-title" placeholder="e.g. Project Proposal Form B" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Document Type</label>
+                            <select id="sub-doc-type" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">Select Type...</option>
+                                <option value="Memorandum">Memorandum</option>
+                                <option value="Letter Request">Letter Request</option>
+                                <option value="Liquidation Report">Liquidation Report</option>
+                                <option value="Purchase Request">Purchase Request</option>
+                                <option value="Other">Other Official Document</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Destination Office</label>
+                            <input type="text" id="sub-dest-office" placeholder="e.g. Office of the SDS / Accounting" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Destination Person / Attention</label>
+                            <input type="text" id="sub-dest-person" placeholder="e.g. Juan Dela Cruz / Superintendent" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Submitted By</label>
+                            <input type="text" id="sub-submitted-by" placeholder="Your Full Name" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">School / Office Origin</label>
+                        <input type="text" id="sub-school-office" placeholder="e.g. Binan Elementary School / Supply Section" class="w-full bg-gray-50 border border-gray-200 px-3 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Upload PDF Document</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-xl hover:border-indigo-400 transition bg-gray-50/50">
+                            <div class="space-y-1 text-center">
+                                <i class="fa-solid fa-file-pdf text-gray-400 text-3xl mb-2 block"></i>
+                                <div class="flex text-sm text-gray-600 justify-center">
+                                    <label for="sub-file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                        <span>Select a file</span>
+                                        <input id="sub-file-upload" name="sub-file-upload" type="file" accept="application/pdf" class="sr-only" required onchange="updateFileStatusText()">
+                                    </label>
+                                    <p class="pl-1 text-gray-500">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-400">PDF files only up to 25MB</p>
+                                <p id="sub-file-status-text" class="text-xs text-emerald-600 font-semibold mt-2 hidden"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" id="btn-doc-submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl shadow-sm transition flex items-center justify-center">
+                            <i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div id="shared-dashboard-view" class="hidden space-y-6">
                 
@@ -292,9 +369,8 @@
                                     <th class="p-4">Organization Metadata</th>
                                     <th class="p-4 text-right">System Action Auth Flags</th>
                                 </tr>
-                            </thead>
-                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
-                                </tbody>
+                            </table>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600"></tbody>
                         </table>
                     </div>
                 </div>
@@ -717,6 +793,95 @@ function switchSidebarTab(targetTab) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50 font-medium">Failed to establish sync pathway with global user ledger directory.</td></tr>`;
     }
+}
+
+        // Updates the UI text indicator when a PDF is selected
+function updateFileStatusText() {
+    const fileInput = document.getElementById('sub-file-upload');
+    const statusText = document.getElementById('sub-file-status-text');
+    
+    if (fileInput.files.length > 0) {
+        statusText.innerText = `Selected File: ${fileInput.files[0].name}`;
+        statusText.classList.remove('hidden');
+    } else {
+        statusText.classList.add('hidden');
+    }
+}
+
+// Intercepts submission, transforms the uploaded PDF asset file, and maps parameters
+async function handleDocumentSubmission(event) {
+    event.preventDefault();
+
+    const submitBtn = document.getElementById('btn-doc-submit');
+    const docTitle = document.getElementById('sub-doc-title').value.trim();
+    const docType = document.getElementById('sub-doc-type').value;
+    const destOffice = document.getElementById('sub-dest-office').value.trim();
+    const destPerson = document.getElementById('sub-dest-person').value.trim();
+    const submittedBy = document.getElementById('sub-submitted-by').value.trim();
+    const schoolOffice = document.getElementById('sub-school-office').value.trim();
+    const fileInput = document.getElementById('sub-file-upload');
+
+    if (fileInput.files.length === 0) {
+        alert("Please attach a valid PDF document file before proceeding.");
+        return;
+    }
+
+    const targetFile = fileInput.files[0];
+    
+    // Set UI to loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Processing Submission...`;
+
+    // Read the PDF as Base64 to transmit via Web API
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const rawLogBytes = e.target.result.split(',')[1];
+        
+        // Formulate named structure explicitly matching user's requested instruction rules
+        // forcing file name suffix to equal the exact customized document title
+        const formattedFileName = `${docTitle}.pdf`;
+
+        const payload = {
+            action: "submitDocument",
+            title: docTitle,
+            type: docType,
+            destinationOffice: destOffice,
+            destinationPerson: destPerson,
+            submittedBy: submittedBy,
+            schoolOffice: schoolOffice,
+            fileBytes: rawLogBytes,
+            fileName: formattedFileName
+        };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(`Document submitted successfully! Tracking ID generated: ${data.docId}`);
+                document.getElementById('form-document-submission').reset();
+                document.getElementById('sub-file-status-text').classList.add('hidden');
+                
+                // Return user right back to their list trackers
+                switchSidebarTab('client-tracking');
+            } else {
+                alert(`Submission error: ${data.message || 'System error processing script entries.'}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network timeout or connection dropped during upload payload transit.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2 text-xs"></i> Submit Document Package`;
+        }
+    };
+
+    reader.readAsDataURL(targetFile);
 }
         
         

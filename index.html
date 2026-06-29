@@ -382,11 +382,13 @@
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
     </div>
-    <script>
+   <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
 const API_URL = "https://script.google.com/macros/s/AKfycbxzZbTcsVy8OEKFW_2izeP-5aNM78rYp-MKoYUXScURPkUhXvzbrf-Ks5b1ZAWfv746/exec"; 
 
 let documentCache = [];
+// Global variable tracking the active session role context
+let currentLoggedUserRole = '';
 
 async function handleLogin(event) {
     event.preventDefault();
@@ -401,7 +403,7 @@ async function handleLogin(event) {
         documentCache = await response.json();
         
         // Restore login form UI structure internally for future logouts
-        location.reload; 
+        location.reload(); 
         
         renderTargetDashboard(role, targetKey);
     } catch (error) {
@@ -409,9 +411,6 @@ async function handleLogin(event) {
         console.error(error);
     }
 }
-
-// Global variable tracking the active session role context
-let currentLoggedUserRole = '';
 
 function renderTargetDashboard(role, targetKey, fullName) {
     currentLoggedUserRole = role;
@@ -461,20 +460,22 @@ function renderTargetDashboard(role, targetKey, fullName) {
         // Expose Staff Links
         document.getElementById('staff-only-links').classList.remove('hidden');
         document.getElementById('shared-dashboard-view').classList.remove('hidden');
-        document.getElementById(`${role}-view`).classList.remove('hidden');
         
-        if (role === 'admin' && typeof renderAdminTable === "function") renderAdminTable();
+        if (typeof renderAdminTable === "function") renderAdminTable();
+        
         if (role === 'superadmin') {
             document.getElementById('superadmin-only-links').classList.remove('hidden');
+            // Route directly into the user ledger directory view panel
+            document.getElementById('superadmin-user-ledger-view').classList.remove('hidden');
             if (typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
         }
     }
 }
+
 function renderClientView(doc) {
     const clientView = document.getElementById('client-view');
     clientView.classList.remove('hidden');
     
-    // Dynamic Shopee Timeline Generation Engine
     let timelineHTML = '';
     if(doc.history && doc.history.length > 0) {
         doc.history.forEach((step, index) => {
@@ -504,7 +505,7 @@ function renderClientView(doc) {
             </div>
             <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase">${doc.currentStatus}</span>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-6">
             <h3 class="text-lg font-bold text-gray-900 mb-8"><i class="fa-solid fa-truck-fast text-indigo-500 mr-2"></i>Logistics Workflow</h3>
             <div class="relative pl-8 border-l-2 border-indigo-200 space-y-8">${timelineHTML}</div>
             <div class="mt-6 pt-4 border-t border-gray-100">
@@ -515,52 +516,77 @@ function renderClientView(doc) {
         </div>`;
 }
 
+// FIX: Populates the Operations Queue table rows dynamically with context action updates
 function renderAdminTable() {
-    // This functions loops through the live documentCache array to populate 
-    // the admin dashboard table rows dynamically and binds action items to update tracking states!
+    const tbody = document.getElementById('admin-table-tbody') || document.querySelector('#shared-dashboard-view table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (!documentCache || documentCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No operations document items currently queued.</td></tr>`;
+        return;
+    }
+
+    documentCache.forEach(doc => {
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50/50 transition border-b border-gray-100 text-sm">
+                <td class="p-4 font-bold text-gray-900">${doc.docId}</td>
+                <td class="p-4">
+                    <span class="font-semibold block text-gray-800">${doc.title || 'Untitled'}</span>
+                    <span class="text-xs text-gray-400 block">${doc.docType || 'N/A'}</span>
+                </td>
+                <td class="p-4 text-gray-600">${doc.clientName || 'N/A'}</td>
+                <td class="p-4">
+                    <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-bold uppercase">${doc.currentStatus}</span>
+                </td>
+                <td class="p-4 text-right whitespace-nowrap">
+                    <button onclick="openActionModal('${doc.docId}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm">
+                        <i class="fa-solid fa-sliders mr-1"></i> Actions
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// Helper stub for processing actions on an operations document element 
+function openActionModal(docId) {
+    const nextStatus = prompt(`Update status parameters for Document reference ${docId}:`, "Approved / In Review / Released");
+    if (nextStatus) {
+        alert(`Forwarding update state context "${nextStatus}" to backend engine pipeline for tracking payload ${docId}.`);
+        // Add your fetch call to API_URL here if you wish to write status mutations back to sheets!
+    }
 }
 
 function logout() {
-    // 1. Clear the persistent storage token
     localStorage.removeItem('docTrack_session');
-    
-    // 2. Perform your standard view teardown and reload
     alert("Session ended safely.");
     window.location.reload(); 
 }
 
-        // Toggle display state of school inputs based on dropdown selection
 function toggleConditionalFields() {
     const selectedRole = document.getElementById('new-user-role').value;
-    
     const clientBox = document.getElementById('conditional-client-fields');
     const schoolInput = document.getElementById('new-user-school');
-    
     const officeContainer = document.getElementById('office-field-container');
     const officeInput = document.getElementById('new-user-office');
 
     if (selectedRole === 'client') {
-        // Show School field and require it
         clientBox.classList.remove('hidden');
         schoolInput.required = true;
-        
-        // Hide Office field and disable requirements
         officeContainer.classList.add('hidden');
         officeInput.required = false;
-        officeInput.value = ''; // Clean old entries out
+        officeInput.value = ''; 
     } else {
-        // Hide School field and disable requirements
         clientBox.classList.add('hidden');
         schoolInput.required = false;
         schoolInput.value = '';
-        
-        // Show Office field and require it
         officeContainer.classList.remove('hidden');
         officeInput.required = true;
     }
 }
 
-// Update your submit pipeline function 
 async function createNewAccount(event) {
     event.preventDefault();
     
@@ -576,7 +602,7 @@ async function createNewAccount(event) {
         fullName: document.getElementById('new-user-fullname').value.trim(),
         position: document.getElementById('new-user-position').value.trim(),
         office: document.getElementById('new-user-office').value.trim(),
-        schoolName: document.getElementById('new-user-school').value.trim() // Sends blank if admin
+        schoolName: document.getElementById('new-user-school').value.trim() 
     };
 
     try {
@@ -589,15 +615,15 @@ async function createNewAccount(event) {
 
         alert(`Successfully registered profile account for ${payload.fullName}!`);
         
-        // Reset inputs cleanly
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-pass').value = '';
         document.getElementById('new-user-fullname').value = '';
         document.getElementById('new-user-position').value = '';
         document.getElementById('new-user-office').value = '';
         document.getElementById('new-user-school').value = '';
-        toggleConditionalFields(); // Re-hide fields if necessary
+        toggleConditionalFields(); 
         
+        if(typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
     } catch (error) {
         alert("Error saving account creation profile values to sheet log.");
         console.error(error);
@@ -607,7 +633,7 @@ async function createNewAccount(event) {
     }
 }
 
-       async function handleSecureLogin(event) {
+async function handleSecureLogin(event) {
     event.preventDefault();
     
     const usernameInput = document.getElementById('login-username').value;
@@ -615,18 +641,14 @@ async function createNewAccount(event) {
     const errorBox = document.getElementById('login-error');
     const loginBtn = document.getElementById('btn-login-submit');
     
-    // Reset UI elements and start loading spinner
     errorBox.classList.add('hidden');
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
     
     try {
-        // Fetch credentials matching check from Apps Script
         const response = await fetch(API_URL, {
             method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8" 
-            },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({
                 action: "login",
                 username: usernameInput,
@@ -637,24 +659,17 @@ async function createNewAccount(event) {
         const result = await response.json();
         
         if (result.success) {
-            // 💡 FIX: Removed the documentCache restriction completely! 
-            // If the Apps Script successfully verified the user account, we log them in directly.
-
-            // Save session details securely to localStorage
             localStorage.setItem('docTrack_session', JSON.stringify({
                 role: result.role,
                 username: result.username,
                 fullName: result.fullName
             }));
 
-            // Reset the login button state
             loginBtn.disabled = false;
             loginBtn.innerHTML = `Sign In`;
 
-            // Route user directly to their respective role dashboard view
             renderTargetDashboard(result.role, result.username, result.fullName);
         } else {
-            // Display normal incorrect password/username message feedback from backend
             errorBox.innerText = result.message || "Invalid account credentials.";
             errorBox.classList.remove('hidden');
             loginBtn.disabled = false;
@@ -669,53 +684,47 @@ async function createNewAccount(event) {
         console.error(err);
     }
 }
-        function togglePasswordVisibility() {
+
+function togglePasswordVisibility() {
     const passwordInput = document.getElementById('login-password');
     const toggleIcon = document.getElementById('password-toggle-icon');
     
-    // Check current state and flip it
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        // Change icon to eye-slash (slashed out)
         toggleIcon.classList.remove('fa-eye');
         toggleIcon.classList.add('fa-eye-slash');
     } else {
         passwordInput.type = 'password';
-        // Change icon back to open eye
         toggleIcon.classList.remove('fa-eye-slash');
         toggleIcon.classList.add('fa-eye');
     }
 }
-        // Handles tab view transitions within the active workspace sidebar layout
+
 function switchSidebarTab(targetTab) {
-    // Collect all main workspace views
     const opsCenter = document.getElementById('shared-dashboard-view');
     const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
     const clientTracking = document.getElementById('client-view');
-    const clientSubmission = document.getElementById('client-submission-view'); // Make sure your HTML submission form container has this ID!
+    const clientSubmission = document.getElementById('client-submission-view'); 
 
-    // Reset layout highlighting classes across all sidebar anchors
     const navLinks = document.querySelectorAll('#dashboard-sidebar nav a');
     navLinks.forEach(link => {
         link.classList.remove('bg-indigo-800', 'text-white');
         link.classList.add('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
     });
 
-    // Apply active class style to the clicked target
     if (window.event && window.event.currentTarget) {
         window.event.currentTarget.classList.remove('hover:bg-indigo-800/50', 'text-indigo-200', 'hover:text-white');
         window.event.currentTarget.classList.add('bg-indigo-800', 'text-white');
     }
 
-    // Hide all views globally before switching
     if (opsCenter) opsCenter.classList.add('hidden');
     if (ledgerCenter) ledgerCenter.classList.add('hidden');
     if (clientTracking) clientTracking.classList.add('hidden');
     if (clientSubmission) clientSubmission.classList.add('hidden');
 
-    // Tab Activation Logic Router
     if (targetTab === 'main-dash') {
         opsCenter.classList.remove('hidden');
+        if (typeof renderAdminTable === 'function') renderAdminTable();
     } 
     else if (targetTab === 'user-ledger') {
         ledgerCenter.classList.remove('hidden');
@@ -727,16 +736,14 @@ function switchSidebarTab(targetTab) {
     else if (targetTab === 'client-submission') {
         if (clientSubmission) {
             clientSubmission.classList.remove('hidden');
-        } else {
-            console.warn("Element #client-submission-view container not found in HTML index DOM structure yet.");
         }
     }
 }
-        async function loadUserLedgerDirectory() {
+
+async function loadUserLedgerDirectory() {
     const tbody = document.getElementById('user-ledger-tbody');
     if (!tbody) return;
 
-    // Set a loading indicator row while waiting for API
     tbody.innerHTML = `
         <tr>
             <td colspan="4" class="p-8 text-center text-gray-400">
@@ -753,14 +760,13 @@ function switchSidebarTab(targetTab) {
         });
         
         const users = await response.json();
-        tbody.innerHTML = ''; // Clear loading row
+        tbody.innerHTML = ''; 
 
         if (!users || users.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No user accounts found.</td></tr>`;
             return;
         }
 
-        // Build HTML table rows dynamically
         users.forEach(user => {
             const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
                                    user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
@@ -795,7 +801,6 @@ function switchSidebarTab(targetTab) {
     }
 }
 
-        // Updates the UI text indicator when a PDF is selected
 function updateFileStatusText() {
     const fileInput = document.getElementById('sub-file-upload');
     const statusText = document.getElementById('sub-file-status-text');
@@ -808,7 +813,6 @@ function updateFileStatusText() {
     }
 }
 
-// Intercepts submission, transforms the uploaded PDF asset file, and maps parameters
 async function handleDocumentSubmission(event) {
     event.preventDefault();
 
@@ -827,18 +831,12 @@ async function handleDocumentSubmission(event) {
     }
 
     const targetFile = fileInput.files[0];
-    
-    // Set UI to loading state
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Processing Submission...`;
 
-    // Read the PDF as Base64 to transmit via Web API
     const reader = new FileReader();
     reader.onload = async function(e) {
         const rawLogBytes = e.target.result.split(',')[1];
-        
-        // Formulate named structure explicitly matching user's requested instruction rules
-        // forcing file name suffix to equal the exact customized document title
         const formattedFileName = `${docTitle}.pdf`;
 
         const payload = {
@@ -866,8 +864,6 @@ async function handleDocumentSubmission(event) {
                 alert(`Document submitted successfully! Tracking ID generated: ${data.docId}`);
                 document.getElementById('form-document-submission').reset();
                 document.getElementById('sub-file-status-text').classList.add('hidden');
-                
-                // Return user right back to their list trackers
                 switchSidebarTab('client-tracking');
             } else {
                 alert(`Submission error: ${data.message || 'System error processing script entries.'}`);
@@ -883,25 +879,20 @@ async function handleDocumentSubmission(event) {
 
     reader.readAsDataURL(targetFile);
 }
-        
-        
-        
-        
-        
-        
-        
-        // Automatically check session state on page refresh
-// Make sure this is placed at the very bottom of your script file
+
 window.addEventListener('DOMContentLoaded', async () => {
-    // 1. FIRST: Wait for your existing application data initialization function to finish loading documents!
-    // (Replace 'initializeAppData' with whatever function name you use to fetch your Documents sheet records into documentCache)
+    // Attempt load if application caching hook exists
     if (typeof initializeAppData === 'function') {
         await initializeAppData(); 
+    } else {
+        // Fallback fetch setup to preload document queue data if initializeAppData isn't globally declared
+        try {
+            const res = await fetch(API_URL);
+            documentCache = await res.json();
+        } catch(e) { console.warn("Initial document cache pre-fetch paused:", e); }
     }
 
-    // 2. SECOND: Now that documentCache is fully loaded, check if a valid session exists
     const savedSession = localStorage.getItem('docTrack_session');
-    
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
@@ -911,6 +902,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-    </script>
+</script>
 </body>
 </html>

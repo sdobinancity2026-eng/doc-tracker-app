@@ -740,23 +740,36 @@ async function handleSecureLogin(event) {
             localStorage.setItem('userFullName', data.fullName || data.username);
             localStorage.setItem('username', data.username);
 
-            // FIX: Smooth delay to show toast notification before popping the dashboard workspace open
+            // FIX: Smooth delay to show toast notification before popping the workspace open
             setTimeout(() => {
-                // Clear out login overlay displays
-                const loginScreen = document.getElementById('login-screen-overlay') || document.getElementById('login-section');
-                if (loginScreen) loginScreen.classList.add('hidden');
-                
-                const mainAppWorkspace = document.getElementById('main-app-workspace') || document.getElementById('dashboard-layout');
-                if (mainAppWorkspace) mainAppWorkspace.classList.remove('hidden');
+                // 1. Find and hide the login box/card container itself
+                // We will try standard class/ID wrappers commonly used for forms
+                const loginCard = document.getElementById('login-card') || 
+                                  loginBtn.closest('div.bg-white') || 
+                                  document.querySelector('form').parentElement;
+                                  
+                if (loginCard) {
+                    loginCard.classList.add('hidden');
+                }
 
-                // Fire your interface builder loops dynamically
+                // 2. Clear out any parent login section wrappers if they exist
+                const loginSection = document.getElementById('login-section');
+                if (loginSection) loginSection.classList.add('hidden');
+
+                // 3. Fire your interface dynamic builder loops
                 if (typeof initializeUserDashboard === "function") {
                     initializeUserDashboard(data.role, data.fullName);
-                } else if (typeof switchSidebarTab === "function") {
-                    // Fallback routing if role-specific tracking tabs control visibility
-                    switchSidebarTab(data.role === 'client' ? 'client-tracking' : 'admin-queue');
+                } 
+                
+                // 4. Force a sidebar navigation switch so the dashboard contents load up instantly
+                if (typeof switchSidebarTab === "function") {
+                    if (data.role === 'superadmin' || data.role === 'admin') {
+                        switchSidebarTab('admin-queue'); // Opens your admin operations view
+                    } else {
+                        switchSidebarTab('client-tracking'); // Opens client view
+                    }
                 }
-            }, 1800);
+            }, 1500);
 
         } else {
             showModernErrorToast(data.message || 'Invalid username or password.');

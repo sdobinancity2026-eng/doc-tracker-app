@@ -429,26 +429,49 @@ let currentLoggedUserRole = '';
 
 async function handleLogin(event) {
     event.preventDefault();
-    const role = document.getElementById('login-role').value;
-    const targetKey = document.getElementById('login-key').value.trim();
-    
-    // Show loading state
-    document.getElementById('login-view').innerHTML = `<p class="text-center text-indigo-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Contacting Sheet Server...</p>`;
-    
+
+    const usernameInput = document.getElementById('login-username').value.trim();
+    const passwordInput = document.getElementById('login-password').value.trim();
+    const loginBtn = document.getElementById('btn-login-submit');
+
+    if (!usernameInput || !passwordInput) {
+        alert("Please enter both your username and password.");
+        return;
+    }
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
+
+    // FIX: Pack login data into FormData so the backend parses it smoothly
+    const loginFormData = new FormData();
+    loginFormData.append("action", "login");
+    loginFormData.append("username", usernameInput);
+    loginFormData.append("password", passwordInput);
+
     try {
-        const response = await fetch(API_URL);
-        documentCache = await response.json();
-        
-        // Restore login form UI structure internally for future logouts
-        location.reload(); 
-        
-        renderTargetDashboard(role, targetKey);
-    } catch (error) {
-        alert("Failed to connect to Google Sheets API. Check deployment configurations.");
-        console.error(error);
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: loginFormData // Send as form data stream instead of JSON.stringify
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Your existing successful login code logic goes here:
+            // e.g., save session variables, show dashboard, set user roles
+            alert(`Welcome back, ${data.fullName || data.username}!`);
+            initializeUserDashboard(data.role, data.fullName); 
+        } else {
+            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
+        }
+    } catch (err) {
+        console.error("Login Network Connection Error:", err);
+        alert("Connection failed. Verify Apps Script configuration permissions.");
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `Sign In`;
     }
 }
-
 function renderTargetDashboard(role, targetKey, fullName) {
     currentLoggedUserRole = role;
     

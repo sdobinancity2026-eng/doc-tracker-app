@@ -9,56 +9,64 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen flex flex-col md:flex-row">
     
-<aside id="dashboard-sidebar" class="hidden md:flex flex-col w-64 h-full bg-indigo-900 text-white flex-shrink-0 border-r border-indigo-950 shadow-xl transition-all">
-    <div class="p-5 bg-indigo-950 flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-file-invoice text-xl text-yellow-400"></i>
-            <span class="font-bold text-lg tracking-tight">DocTrack Pro</span>
-        </div>
-    </div>
-    
-    <div class="p-4 border-b border-indigo-800 bg-indigo-950/30">
-        <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">Active Workspace</p>
-        <h4 id="sidebar-fullname" class="text-sm font-semibold truncate text-white mt-0.5">---</h4>
-        <span id="sidebar-role-pill" class="inline-block mt-1 bg-emerald-600 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"></span>
-    </div>
+<div class="flex h-screen w-full bg-gray-50 overflow-hidden">
 
-    <nav class="flex-grow p-4 space-y-1 text-sm overflow-y-auto">
-        <div id="staff-only-links" class="hidden space-y-1">
-            <a href="#" onclick="switchSidebarTab('main-dash')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-                <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
-                <span>Operations Center</span>
-            </a>
-            
-            <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
-                <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
-                <a href="#" onclick="switchSidebarTab('user-ledger')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-                    <i class="fa-solid fa-users-gear w-5"></i>
-                    <span>Manage Accounts</span>
-                </a>
+    <aside id="dashboard-sidebar" class="hidden md:flex flex-col w-64 h-full bg-indigo-900 text-white flex-shrink-0 border-r border-indigo-950 shadow-xl transition-all">
+        
+        <div class="p-5 bg-indigo-950 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-file-invoice text-xl text-yellow-400"></i>
+                <span class="font-bold text-lg tracking-tight">DocTrack Pro</span>
             </div>
         </div>
-
-        <div id="client-only-links" class="hidden space-y-1">
-            <a href="#" onclick="switchSidebarTab('client-tracking')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
-                <i class="fa-solid fa-magnifying-glass w-5 text-indigo-300"></i>
-                <span>Track Document</span>
-            </a>
-
-            <a href="#" onclick="switchSidebarTab('client-submission')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
-                <i class="fa-solid fa-file-arrow-up w-5"></i>
-                <span>Document Submission</span>
-            </a>
+        
+        <div class="p-4 border-b border-indigo-800 bg-indigo-950/30 flex-shrink-0">
+            <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">Active Workspace</p>
+            <h4 id="sidebar-fullname" class="text-sm font-semibold truncate text-white mt-0.5">---</h4>
+            <span id="sidebar-role-pill" class="inline-block mt-1 bg-emerald-600 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"></span>
         </div>
-    </nav>
 
-    <div class="p-4 border-t border-indigo-800">
-        <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-200 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center space-x-2">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Exit Session</span>
-        </button>
-    </div>
-</aside>
+        <nav class="flex-grow p-4 space-y-1 text-sm overflow-y-auto custom-sidebar-scrollbar">
+            <div id="staff-only-links" class="hidden space-y-1">
+                <a href="#" onclick="switchSidebarTab('main-dash')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
+                    <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
+                    <span>Operations Center</span>
+                </a>
+                
+                <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
+                    <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
+                    <a href="#" onclick="switchSidebarTab('user-ledger')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
+                        <i class="fa-solid fa-users-gear w-5"></i>
+                        <span>Manage Accounts</span>
+                    </a>
+                </div>
+            </div>
+
+            <div id="client-only-links" class="hidden space-y-1">
+                <a href="#" onclick="switchSidebarTab('client-tracking')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-indigo-800 text-white font-medium transition">
+                    <i class="fa-solid fa-magnifying-glass w-5 text-indigo-300"></i>
+                    <span>Track Document</span>
+                </a>
+
+                <a href="#" onclick="switchSidebarTab('client-submission')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
+                    <i class="fa-solid fa-file-arrow-up w-5"></i>
+                    <span>Document Submission</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-indigo-800 flex-shrink-0 bg-indigo-900">
+            <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-200 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Exit Session</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto flex flex-col">
+        </main>
+
+</div>
     
     <div class="flex-grow flex flex-col min-h-screen">
         

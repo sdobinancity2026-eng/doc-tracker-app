@@ -9,18 +9,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-900 min-h-screen flex flex-col md:flex-row">
-    
+
 <div class="flex h-screen w-full bg-gray-50 overflow-hidden">
 
     <aside id="dashboard-sidebar" class="hidden md:flex flex-col w-64 h-full bg-indigo-900 text-white flex-shrink-0 border-r border-indigo-950 shadow-xl transition-all">
-        
+
         <div class="p-5 bg-indigo-950 flex items-center justify-between flex-shrink-0">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-file-invoice text-xl text-yellow-400"></i>
                 <span class="font-bold text-lg tracking-tight">DocTrack Pro</span>
             </div>
         </div>
-        
+
         <div class="p-4 border-b border-indigo-800 bg-indigo-950/30 flex-shrink-0">
             <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">Active Workspace</p>
             <h4 id="sidebar-fullname" class="text-sm font-semibold truncate text-white mt-0.5">---</h4>
@@ -33,7 +33,7 @@
                     <i class="fa-solid fa-chart-pie w-5 text-indigo-300"></i>
                     <span>Operations Center</span>
                 </a>
-                
+
                 <div id="superadmin-only-links" class="hidden pt-2 space-y-1 border-t border-indigo-800 mt-2">
                     <p class="text-[10px] uppercase font-bold text-indigo-400 px-3 mb-1">System Controls</p>
                     <a href="#" onclick="switchSidebarTab('user-ledger')" class="sidebar-link flex items-center space-x-3 px-3 py-2.5 rounded-xl hover:bg-indigo-800/50 text-indigo-200 hover:text-white transition">
@@ -65,7 +65,7 @@
     </aside>
 
   <main class="flex-1 h-full overflow-y-auto flex flex-col">
-        
+
         <nav id="top-navbar" class="bg-indigo-600 text-white shadow-md sticky top-0 z-50 flex-shrink-0">
             <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
@@ -92,7 +92,7 @@
                     <h2 class="text-3xl font-extrabold text-gray-900">Secure Sign In</h2>
                     <p class="text-gray-500 mt-2 text-sm">Enter credentials to manage or track documents</p>
                 </div>
-                
+
                 <form onsubmit="handleSecureLogin(event)" class="space-y-5">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Username / Client ID</label>
@@ -103,7 +103,7 @@
                             <input type="text" id="login-username" placeholder="Enter your ID or username" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" required>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Password / Access PIN</label>
                         <div class="relative flex items-center">
@@ -230,27 +230,27 @@
 
                 <div id="success-voucher-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
                         <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-slate-100 transform scale-95 transition-all duration-300">
-                            
+
                             <div class="text-center p-4 bg-white rounded-lg" id="downloadable-voucher-area">
                                 <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
                                     <i class="fa-solid fa-circle-check"></i>
                                 </div>
                                 <h3 class="text-2xl font-bold text-slate-800 tracking-tight">Document Registered!</h3>
                                 <p class="text-xs text-slate-400 font-medium mt-1">Tracking Number:</p>
-                                
+
                                 <h2 id="voucher-tracking-id" class="text-2xl font-black text-slate-900 my-2 tracking-wider font-mono bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/60">
                                     DOC-XXXXXXXX
                                 </h2>
-                                
+
                                 <div class="text-left mt-4 space-y-1.5 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-lg">
                                     <div><span class="font-semibold text-slate-400">Title:</span> <span id="v-title" class="text-slate-700"></span></div>
                                     <div><span class="font-semibold text-slate-400">Type:</span> <span id="v-type" class="text-slate-700"></span></div>
                                     <div><span class="font-semibold text-slate-400">From:</span> <span id="v-origin" class="text-slate-700"></span></div>
                                 </div>
-                    
+
                                 <p class="text-[10px] text-slate-400 tracking-widest uppercase font-semibold mt-4">SDO Biñan Tracking System</p>
                             </div>
-                    
+
                             <div class="mt-5 grid grid-cols-2 gap-3">
                                 <button id="btn-download-voucher" class="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition py-2.5 px-4 rounded-lg">
                                     <i class="fa-solid fa-download"></i> Download Ticket
@@ -274,7 +274,7 @@
                             <i class="fa-solid fa-rotate mr-1"></i> Refresh Sheet Data
                         </button>
                     </div>
-            
+
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
@@ -296,13 +296,13 @@
                     </div>
                 </section>
             </div> 
-            
+
             <section id="superadmin-user-ledger-view" class="hidden space-y-6">
                 <div>
                     <h2 class="text-2xl font-extrabold text-gray-900">System Command Center</h2>
                     <p class="text-gray-500 text-sm">Superadmin dashboard for database connections, mapping endpoints, and user management.</p>
                 </div>
-            
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
                         <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i class="fa-solid fa-database text-xl"></i></div>
@@ -326,13 +326,13 @@
                         </div>
                     </div>
                 </div>
-            
+
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                     <div class="md:col-span-1">
                         <h3 class="text-lg font-bold text-gray-900 mb-2"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision New Account</h3>
                         <p class="text-xs text-gray-500">Create login tokens or dedicated admin workspace credentials instantly within the global Google Sheet user ledger database.</p>
                     </div>
-                    
+
                     <form onsubmit="createNewAccount(event)" class="md:col-span-2 space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Account Role</label>
@@ -341,7 +341,7 @@
                                 <option value="client">Standard Client</option>
                             </select>
                         </div>
-            
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username / Unique ID</label>
@@ -352,12 +352,12 @@
                                 <input type="password" id="new-user-pass" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
                             </div>
                         </div>
-            
+
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
                             <input type="text" id="new-user-fullname" placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
                         </div>
-            
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
@@ -368,12 +368,12 @@
                                 <input type="text" id="new-user-office" placeholder="e.g. Accounting Dept" class="w-full bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" required>
                             </div>
                         </div>
-            
+
                         <div id="conditional-client-fields" class="hidden border-l-4 border-indigo-500 pl-3 bg-indigo-50/50 p-3 rounded-r-xl transition-all">
                             <label class="block text-xs font-bold text-indigo-700 uppercase mb-1">School Name</label>
                             <input type="text" id="new-user-school" placeholder="e.g. State University" class="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
                         </div>
-            
+
                         <button type="submit" id="btn-create-account" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm shadow transition duration-150">
                             Create System Account
                         </button>
@@ -390,7 +390,7 @@
                             <i class="fa-solid fa-rotate mr-1.5"></i> Sync Directory
                         </button>
                     </div>
-                
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -421,7 +421,7 @@
 </body>
   <script>
 // Replace this placeholder string with your live deployed Apps Script Web App URL!
-const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbz0MEp6nCpWWaVG9lXI-ZvRKoyF0z_eWsJK9qyjyaWNG-zwoZvTN857J0QWbg2x6v3Q/exec"; 
 
 let documentCache = [];
 // Global variable tracking the active session role context
@@ -429,6 +429,12 @@ let currentLoggedUserRole = '';
 
 async function handleLogin(event) {
     event.preventDefault();
+    const role = document.getElementById('login-role').value;
+    const targetKey = document.getElementById('login-key').value.trim();
+    
+    // Show loading state
+    document.getElementById('login-view').innerHTML = `<p class="text-center text-indigo-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Contacting Sheet Server...</p>`;
+    
 
     const usernameInput = document.getElementById('login-username').value.trim();
     const passwordInput = document.getElementById('login-password').value.trim();
@@ -449,6 +455,16 @@ async function handleLogin(event) {
     loginFormData.append("password", passwordInput);
 
     try {
+        const response = await fetch(API_URL);
+        documentCache = await response.json();
+        
+        // Restore login form UI structure internally for future logouts
+        location.reload(); 
+        
+        renderTargetDashboard(role, targetKey);
+    } catch (error) {
+        alert("Failed to connect to Google Sheets API. Check deployment configurations.");
+        console.error(error);
         const response = await fetch(API_URL, {
             method: "POST",
             body: loginFormData // Send as form data stream instead of JSON.stringify
@@ -472,12 +488,13 @@ async function handleLogin(event) {
         loginBtn.innerHTML = `Sign In`;
     }
 }
+
 function renderTargetDashboard(role, targetKey, fullName) {
     currentLoggedUserRole = role;
-    
+
     // Always hide login screen
     document.getElementById('login-view').classList.add('hidden');
-    
+
     // Unhide universal dashboard shell components
     document.getElementById('dashboard-sidebar').classList.remove('hidden');
     document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
@@ -487,12 +504,12 @@ function renderTargetDashboard(role, targetKey, fullName) {
     document.getElementById('staff-only-links').classList.add('hidden');
     document.getElementById('superadmin-only-links').classList.add('hidden');
     document.getElementById('client-only-links').classList.add('hidden');
-    
+
     // Reset view panels
     document.getElementById('shared-dashboard-view').classList.add('hidden');
     document.getElementById('client-view').classList.add('hidden');
     document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
-    
+
     // Optional: Hide custom client submission container if it exists yet
     const submissionView = document.getElementById('client-submission-view');
     if (submissionView) submissionView.classList.add('hidden');
@@ -502,7 +519,7 @@ function renderTargetDashboard(role, targetKey, fullName) {
         // Expose Client Links only
         document.getElementById('client-only-links').classList.remove('hidden');
         document.getElementById('client-view').classList.remove('hidden');
-        
+
         // Load the document card tracking records
         const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
         if (doc) {
@@ -519,15 +536,15 @@ function renderTargetDashboard(role, targetKey, fullName) {
     else if (role === 'admin' || role === 'superadmin') {
         // Expose Staff Links (Visible to both Admin and Superadmin)
         document.getElementById('staff-only-links').classList.remove('hidden');
-        
+
         // FIX: Ensure Operations Center is unhidden and rendered by default for both roles
         document.getElementById('shared-dashboard-view').classList.remove('hidden');
         if (typeof renderAdminTable === "function") renderAdminTable();
-        
+
         if (role === 'superadmin') {
             // Expose Superadmin Specific Sidebar Navigation Options
             document.getElementById('superadmin-only-links').classList.remove('hidden');
-            
+
             // Pre-fetch and prime the data from the Users table so it is ready when clicked
             if (typeof loadUserLedgerDirectory === "function") loadUserLedgerDirectory();
         }
@@ -537,7 +554,7 @@ function renderTargetDashboard(role, targetKey, fullName) {
 function renderClientView(doc) {
     const clientView = document.getElementById('client-view');
     clientView.classList.remove('hidden');
-    
+
     let timelineHTML = '';
     if(doc.history && doc.history.length > 0) {
         doc.history.forEach((step, index) => {
@@ -649,7 +666,7 @@ function toggleConditionalFields() {
 
 async function createNewAccount(event) {
     event.preventDefault();
-    
+
     const submitBtn = document.getElementById('btn-create-account');
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>Registering Data...`;
@@ -677,7 +694,7 @@ async function createNewAccount(event) {
         // if (!response.ok && response.status !== 0) throw new Error("Network error");
 
         alert(`Successfully registered profile account for ${payload.fullName}!`);
-        
+
         // Reset inputs safely
         document.getElementById('new-user-name').value = '';
         document.getElementById('new-user-pass').value = '';
@@ -685,11 +702,11 @@ async function createNewAccount(event) {
         document.getElementById('new-user-position').value = '';
         document.getElementById('new-user-office').value = '';
         document.getElementById('new-user-school').value = '';
-        
+
         // Return dropdown to default 'admin' option and adjust fields
         document.getElementById('new-user-role').value = 'admin';
         toggleConditionalFields(); 
-        
+
         // Refresh UI Ledger if the data function exists
         if (typeof loadUserLedgerDirectory === "function") {
             loadUserLedgerDirectory();
@@ -705,150 +722,59 @@ async function createNewAccount(event) {
 async function handleSecureLogin(event) {
     event.preventDefault();
 
-    const usernameInput = document.getElementById('login-username').value.trim();
-    const passwordInput = document.getElementById('login-password').value.trim();
+    const usernameInput = document.getElementById('login-username').value;
+    const passwordInput = document.getElementById('login-password').value;
+    const errorBox = document.getElementById('login-error');
     const loginBtn = document.getElementById('btn-login-submit');
 
-    if (!usernameInput || !passwordInput) {
-        alert("Please provide both login credentials.");
-        return;
-    }
-
+    errorBox.classList.add('hidden');
     loginBtn.disabled = true;
-    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Verifying Credentials...`;
-
-    const authForm = new FormData();
-    authForm.append("action", "login");
-    authForm.append("username", usernameInput);
-    authForm.append("password", passwordInput);
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Verifying...`;
 
     try {
         const response = await fetch(API_URL, {
             method: "POST",
-            body: authForm
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "login",
+                username: usernameInput,
+                password: passwordInput
+            })
         });
 
-        const data = await response.json();
+        const result = await response.json();
 
-        if (data.success) {
-            // Display modern toast confirmation
-            showModernLoginToast(data.fullName || data.username, data.role);
-            
-            // Set persistent data streams
-            localStorage.setItem('userRole', data.role);
-            localStorage.setItem('userFullName', data.fullName || data.username);
-            localStorage.setItem('username', data.username);
+        if (result.success) {
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: result.role,
+                username: result.username,
+                fullName: result.fullName
+            }));
 
-            // FIX: Smooth transition delay
-            setTimeout(() => {
-                // 1. Hide the entire login wrapper container from line 427
-                const loginScreen = document.getElementById('login-ledger-body');
-                if (loginScreen) {
-                    loginScreen.classList.add('hidden');
-                }
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In`;
 
-                // 2. Initialize the view layout panels
-                initializeUserDashboard(data.role, data.fullName || data.username);
-                
-            }, 1500);
-
+            renderTargetDashboard(result.role, result.username, result.fullName);
         } else {
-            showModernErrorToast(data.message || 'Invalid username or password.');
+            errorBox.innerText = result.message || "Invalid account credentials.";
+            errorBox.classList.remove('hidden');
             loginBtn.disabled = false;
             loginBtn.innerHTML = `Sign In`;
         }
+
     } catch (err) {
-        console.error("Auth Transmission Fault:", err);
-        showModernErrorToast("Connection failed. Check network link streams.");
+        errorBox.innerText = "Connection failed. Verify Apps Script configuration permissions.";
+        errorBox.classList.remove('hidden');
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
+        console.error(err);
     }
-}
-      function initializeUserDashboard(role, fullName) {
-    console.log(`Initializing workspace panels for: ${role}`);
-
-    // 1. Target the text container element right below ACTIVE WORKSPACE in your sidebar
-    // This removes the "---" placeholder seen in your screenshot
-    const workspaceIndicator = document.querySelector('aside .text-slate-400.font-medium + div') || 
-                                 document.querySelector('aside div.text-emerald-400');
-    
-    if (workspaceIndicator) {
-        workspaceIndicator.innerText = role.toUpperCase();
-        workspaceIndicator.className = "text-xs font-bold text-emerald-400 tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 w-fit mt-1";
-    }
-
-    // 2. Handle structural workflow panel routing
-    const adminPanel = document.getElementById('superadmin-ledger-choice'); // Matches line 297 from your video layout grid
-    const docSubmissionSection = document.getElementById('client-document-submission-view'); // Matches your input forms section
-
-    if (role === 'superadmin' || role === 'admin') {
-        // Unhide admin controls dashboard grid layout
-        if (adminPanel) adminPanel.classList.remove('hidden');
-        
-        // Unhide admin only navigation links in sidebar menu
-        const adminLinks = document.querySelectorAll('.admin-only, [onclick*="admin-queue"], [onclick*="user-ledger"]');
-        adminLinks.forEach(el => el.classList.remove('hidden'));
-
-        // Automatically load data logs into the system active queues
-        if (typeof switchSidebarTab === "function") {
-            switchSidebarTab('admin-queue');
-        }
-    } else {
-        // Fallback layout routing sequence for clients/guests
-        if (adminPanel) adminPanel.classList.add('hidden');
-        
-        if (typeof switchSidebarTab === "function") {
-            switchSidebarTab('client-tracking');
-        }
-    }
-}
-
-// Helper Function: Modern Welcome Toast
-function showModernLoginToast(name, role) {
-    const toast = document.createElement('div');
-    toast.className = "fixed bottom-5 right-5 bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 z-50 transform translate-y-10 opacity-0 transition-all duration-500 border border-slate-800";
-    toast.innerHTML = `
-        <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center text-xl shadow-inner">
-            <i class="fa-solid fa-shield-cat animate-pulse"></i>
-        </div>
-        <div>
-            <h4 class="font-bold text-sm text-slate-100">Access Granted!</h4>
-            <p class="text-xs text-slate-400">Welcome back, ${name} (${role.toUpperCase()})</p>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    // Trigger slide-in animation
-    setTimeout(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-    }, 100);
-    
-    // Fade out automatic cleanup
-    setTimeout(() => {
-        toast.classList.add('translate-y-10', 'opacity-0');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
-}
-
-// Helper Function: Modern Error Toast
-function showModernErrorToast(message) {
-    const toast = document.createElement('div');
-    toast.className = "fixed bottom-5 right-5 bg-rose-950 text-rose-200 px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 z-50 border border-rose-800/60 animate-bounce";
-    toast.innerHTML = `
-        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg"></i>
-        <span class="text-xs font-semibold tracking-wide">${message}</span>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => toast.remove(), 400);
-    }, 4000);
 }
 
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('login-password');
     const toggleIcon = document.getElementById('password-toggle-icon');
-    
+
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         toggleIcon.classList.remove('fa-eye');
@@ -919,7 +845,7 @@ async function loadUserLedgerDirectory() {
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "getUsers" })
         });
-        
+
         const users = await response.json();
         tbody.innerHTML = ''; 
 
@@ -931,7 +857,7 @@ async function loadUserLedgerDirectory() {
         users.forEach(user => {
             const roleBadgeColor = user.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 
                                    user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800';
-            
+
             const metaInfo = user.role === 'client' ? `School: ${user.schoolName || 'N/A'}` : `Office: ${user.office || 'N/A'}`;
 
             tbody.innerHTML += `
@@ -964,7 +890,7 @@ async function loadUserLedgerDirectory() {
       // Action Handler: Prompt and Change User Password
 async function promptEditPassword(username) {
     const newPassword = prompt(`Enter a new access password or security PIN key for context account [ ${username} ]:`);
-    
+
     // Guard clause against cancellation or empty submission strings
     if (newPassword === null) return;
     if (newPassword.trim() === "") {
@@ -1017,7 +943,7 @@ async function confirmDeleteUser(username) {
 function updateFileStatusText() {
     const fileInput = document.getElementById('sub-file-upload');
     const statusText = document.getElementById('sub-file-status-text');
-    
+
     if (fileInput.files.length > 0) {
         statusText.innerText = `Selected File: ${fileInput.files[0].name}`;
         statusText.classList.remove('hidden');
@@ -1086,7 +1012,7 @@ async function handleDocumentSubmission(event) {
                 // NATIVE IMAGE DOWNLOAD CONTROLLER
                 document.getElementById('btn-download-voucher').onclick = function() {
                     const targetContainer = document.getElementById('downloadable-voucher-area');
-                    
+
                     // Render the HTML block directly into a downloadable graphic canvas
                     html2canvas(targetContainer, {
                         scale: 2, // Doubles resolution clarity for crisp mobile/desktop viewing
@@ -1094,12 +1020,12 @@ async function handleDocumentSubmission(event) {
                         useCORS: true
                     }).then(canvas => {
                         const imageStreamUrl = canvas.toDataURL("image/png");
-                        
+
                         // Create a temporary link element to trigger the download stream
                         const transferAnchor = document.createElement('a');
                         transferAnchor.href = imageStreamUrl;
                         transferAnchor.download = `Tracking_${data.docId}.png`;
-                        
+
                         document.body.appendChild(transferAnchor);
                         transferAnchor.click();
                         document.body.removeChild(transferAnchor);
@@ -1132,7 +1058,7 @@ async function handleDocumentSubmission(event) {
 
     reader.readAsDataURL(targetFile);
 }
-      
+
 
 window.addEventListener('DOMContentLoaded', async () => {
     if (typeof initializeAppData === 'function') {

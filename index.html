@@ -341,6 +341,38 @@
                         </button>
                     </form>
                 </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                        <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Global User Ledger</h3>
+                                <p class="text-xs text-gray-500">View, modify access credentials, or permanently rescind profile authorizations from the system directory.</p>
+                            </div>
+                            <button onclick="if(typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory()" class="bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold py-2 px-3 rounded-xl border border-gray-200 transition flex items-center">
+                                <i class="fa-solid fa-rotate mr-1.5"></i> Sync Directory
+                            </button>
+                        </div>
+                    
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                                        <th class="p-4">Profile Details</th>
+                                        <th class="p-4">Username / ID</th>
+                                        <th class="p-4">Workspace Meta</th>
+                                        <th class="p-4 text-right">System Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-ledger-tbody" class="divide-y divide-gray-100 text-sm text-gray-600">
+                                    <tr>
+                                        <td colspan="4" class="p-8 text-center text-gray-400">
+                                            <i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-500"></i> Fetching active directory user ledger...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
             </section>
 
         </main>
@@ -776,6 +808,58 @@ async function loadUserLedgerDirectory() {
     } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 bg-red-50 font-medium">Failed to establish sync pathway with global user ledger directory.</td></tr>`;
+    }
+}
+      // Action Handler: Prompt and Change User Password
+async function promptEditPassword(username) {
+    const newPassword = prompt(`Enter a new access password or security PIN key for context account [ ${username} ]:`);
+    
+    // Guard clause against cancellation or empty submission strings
+    if (newPassword === null) return;
+    if (newPassword.trim() === "") {
+        alert("Password cannot be blank.");
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "editPassword", // Ensure your Google Apps Script has a matching condition block for this action
+                username: username,
+                newPassword: newPassword.trim()
+            })
+        });
+
+        alert(`Access credentials for ${username} updated successfully!`);
+        loadUserLedgerDirectory(); // Refresh the table UI directory matrices
+    } catch (err) {
+        alert("Failed to submit key database override operations.");
+        console.error("Password change exception error:", err);
+    }
+}
+
+// Action Handler: Remove/Revoke Global User Permissions
+async function confirmDeleteUser(username) {
+    const doubleCheck = confirm(`CRITICAL ACTION: Are you sure you want to permanently delete user [ ${username} ]? This will rescind all spreadsheet login validation clearances and profile logging history contexts instantly.`);
+    if (!doubleCheck) return;
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "deleteUser", // Maps directly down towards array indexing routines on backend scripts
+                username: username
+            })
+        });
+
+        alert(`Account record identifier [ ${username} ] has been successfully removed from global sheet ledgers.`);
+        loadUserLedgerDirectory(); // Re-sync view context state
+    } catch (err) {
+        alert("Encountered an exception processing row slice operations.");
+        console.error("User deletion error instance:", err);
     }
 }
 

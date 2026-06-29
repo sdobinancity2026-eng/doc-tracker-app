@@ -903,22 +903,24 @@ async function handleDocumentSubmission(event) {
         const rawLogBytes = e.target.result.split(',')[1];
         const formattedFileName = `${docTitle}.pdf`;
 
+        // FIXED: Key names rewritten to match your Google Apps Script schema exactly
         const payload = {
             action: "submitDocument",
             title: docTitle,
-            type: docType,
-            destinationOffice: destOffice,
-            destinationPerson: destPerson,
-            submittedBy: submittedBy,
-            schoolOffice: schoolOffice,
-            fileBytes: rawLogBytes,
-            fileName: formattedFileName
+            docType: docType,               // Matched backend params.docType
+            destOffice: destOffice,         // Matched backend params.destOffice
+            destPerson: destPerson,         // Matched backend params.destPerson
+            submittedBy: submittedBy,       // Matched backend params.submittedBy
+            originOffice: schoolOffice,     // Matched backend params.originOffice
+            fileData: rawLogBytes,          // Matched backend params.fileData
+            fileName: formattedFileName,    // Matched backend params.fileName
+            mimeType: targetFile.type       // Added to ensure DriveApp converts blob perfectly
         };
 
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                // Removed headers restriction so the browser doesn't preflight request it aggressively
                 body: JSON.stringify(payload)
             });
 
@@ -930,7 +932,7 @@ async function handleDocumentSubmission(event) {
                 document.getElementById('sub-file-status-text').classList.add('hidden');
                 switchSidebarTab('client-tracking');
             } else {
-                alert(`Submission error: ${data.message || 'System error processing script entries.'}`);
+                alert(`Submission error: ${data.error || 'System error processing script entries.'}`);
             }
         } catch (err) {
             console.error(err);

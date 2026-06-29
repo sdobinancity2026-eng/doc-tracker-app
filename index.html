@@ -226,6 +226,39 @@
                         </button>
                     </div>
                 </form>
+
+                <div id="success-voucher-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-slate-100 transform scale-95 transition-all duration-300" id="voucher-card-content">
+                    <div class="text-center pb-4 border-b border-dashed border-slate-200" id="printable-voucher-area">
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800 tracking-tight">Document Registered!</h3>
+                        <p class="text-xs text-slate-400 font-medium mt-1">Tracking Number:</p>
+                        
+                        <h2 id="voucher-tracking-id" class="text-2xl font-black text-slate-900 my-2 tracking-wider font-mono bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/60 select-all">
+                            DOC-XXXXXXXX
+                        </h2>
+                        
+                        <div class="text-left mt-4 space-y-1.5 text-xs text-slate-600 bg-slate-50/50 p-3 rounded-lg">
+                            <div><span class="font-semibold text-slate-400">Title:</span> <span id="v-title" class="text-slate-700"></span></div>
+                            <div><span class="font-semibold text-slate-400">Type:</span> <span id="v-type" class="text-slate-700"></span></div>
+                            <div><span class="font-semibold text-slate-400">From:</span> <span id="v-origin" class="text-slate-700"></span></div>
+                        </div>
+            
+                        <p class="text-[10px] text-slate-400 tracking-widest uppercase font-semibold mt-4">SDO Biñan Tracking System</p>
+                    </div>
+            
+                    <div class="mt-5 grid grid-cols-2 gap-3">
+                        <button onclick="window.print()" class="flex items-center justify-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition py-2.5 px-4 rounded-lg">
+                            <i class="fa-solid fa-print"></i> Print Receipt
+                        </button>
+                        <button id="btn-close-voucher" class="flex items-center justify-center gap-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition py-2.5 px-4 rounded-lg shadow-sm">
+                            Continue <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+</div>
             </div>
 
             <div id="shared-dashboard-view" class="hidden space-y-6">
@@ -903,34 +936,49 @@ async function handleDocumentSubmission(event) {
         const rawLogBytes = e.target.result.split(',')[1];
         const formattedFileName = `${docTitle}.pdf`;
 
-        // FIXED: Key names rewritten to match your Google Apps Script schema exactly
-        const payload = {
-            action: "submitDocument",
-            title: docTitle,
-            docType: docType,               // Matched backend params.docType
-            destOffice: destOffice,         // Matched backend params.destOffice
-            destPerson: destPerson,         // Matched backend params.destPerson
-            submittedBy: submittedBy,       // Matched backend params.submittedBy
-            originOffice: schoolOffice,     // Matched backend params.originOffice
-            fileData: rawLogBytes,          // Matched backend params.fileData
-            fileName: formattedFileName,    // Matched backend params.fileName
-            mimeType: targetFile.type       // Added to ensure DriveApp converts blob perfectly
-        };
+        const formData = new FormData();
+        formData.append("action", "submitDocument");
+        formData.append("title", docTitle);
+        formData.append("docType", docType);
+        formData.append("destOffice", destOffice);
+        formData.append("destPerson", destPerson);
+        formData.append("submittedBy", submittedBy);
+        formData.append("originOffice", schoolOffice);
+        formData.append("fileData", rawLogBytes);
+        formData.append("fileName", formattedFileName);
+        formData.append("mimeType", targetFile.type);
 
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                // Removed headers restriction so the browser doesn't preflight request it aggressively
-                body: JSON.stringify(payload)
+                body: formData
             });
 
             const data = await response.json();
 
             if (data.success) {
-                alert(`Document submitted successfully! Tracking ID generated: ${data.docId}`);
+                // Populate Voucher Data Elements
+                document.getElementById('voucher-tracking-id').innerText = data.docId;
+                document.getElementById('v-title').innerText = docTitle;
+                document.getElementById('v-type').innerText = docType;
+                document.getElementById('v-origin').innerText = schoolOffice;
+
+                // Reveal Voucher Card Modal Notification Frame
+                const modal = document.getElementById('success-voucher-modal');
+                modal.classList.remove('hidden');
+
+                // Clear structural forms out 
                 document.getElementById('form-document-submission').reset();
-                document.getElementById('sub-file-status-text').classList.add('hidden');
-                switchSidebarTab('client-tracking');
+                if(document.getElementById('sub-file-status-text')) {
+                    document.getElementById('sub-file-status-text').classList.add('hidden');
+                }
+
+                // Handle Close Event routing
+                document.getElementById('btn-close-voucher').onclick = function() {
+                    modal.classList.add('hidden');
+                    switchSidebarTab('client-tracking');
+                };
+
             } else {
                 alert(`Submission error: ${data.error || 'System error processing script entries.'}`);
             }

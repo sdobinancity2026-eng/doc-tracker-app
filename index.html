@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="https://sdobinancity2026-eng.github.io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://sdobinancity2026-eng.github.io/favicon-16x16.png">
+    <link rel="shortcut icon" href="https://sdobinancity2026-eng.github.io/favicon.ico">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="https://sdobinancity2026-eng.github.io/apple-touch-icon.png">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DocTrack Pro">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#312e81">
+    <meta name="theme-color" content="#312e81">
+    
 
    <style>
         /* =========================================================
@@ -110,9 +121,9 @@
 }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen relative">
+<body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen relative overflow-x-hidden">
 
-    <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-indigo-900 text-white flex flex-col justify-between hidden lg:flex lg:static shrink-0 shadow-xl transition-all duration-300">
+    <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-indigo-900 text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl shrink-0">
         <div class="p-6">
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center space-x-3">
@@ -121,7 +132,7 @@
                     </div>
                     <h1 class="text-lg font-bold tracking-tight">DocTrack Pro</h1>
                 </div>
-                <button onclick="toggleMobileSidebar()" class="lg:hidden text-indigo-200 hover:text-white cursor-pointer text-lg">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden text-indigo-200 hover:text-white cursor-pointer text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -169,11 +180,21 @@
         </div>
     </aside>
 
-    <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-900/40 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+    <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-900/40 backdrop-blur-xs z-40 hidden"></div>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <main class="flex-1 flex flex-col min-w-0 lg:pl-64 pt-16">
         
-        <section id="login-view" class="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-indigo-50/30">
+        <header id="top-navbar" class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-indigo-900 text-white px-6 shadow-md flex items-center justify-between z-30 hidden">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-folder-tree text-xl text-indigo-300"></i>
+                <span class="font-bold text-lg tracking-wide">DocTrack</span>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden text-white bg-indigo-800 hover:bg-indigo-700 w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer text-sm transition">
+                <i class="fa-solid fa-bars text-base"></i>
+            </button>
+        </header>
+
+        <section id="login-view" class="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-indigo-50/30 min-h-[calc(100vh-4rem)]">
             <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
                 <div class="text-center mb-8">
                     <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-200/50 shadow-inner">
@@ -532,17 +553,19 @@
     // RESPONSIVE INTERACTION: TOGGLE MOBILE SIDEBAR
     // ==========================================
     function toggleMobileSidebar() {
-        const sidebar = document.getElementById('dashboard-sidebar');
-        const backdrop = document.getElementById('sidebar-backdrop');
-        
-        if (sidebar.classList.contains('hidden')) {
-            sidebar.classList.remove('hidden', '-translate-x-full');
-            backdrop.classList.remove('hidden');
-        } else {
-            sidebar.classList.add('hidden');
-            backdrop.classList.add('hidden');
-        }
+    const sidebar = document.getElementById("dashboard-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    
+    if (sidebar.classList.contains("-translate-x-full")) {
+        // Open Slide out Navigation Drawers
+        sidebar.classList.remove("-translate-x-full");
+        backdrop.classList.remove("hidden");
+    } else {
+        // Shut Slide drawer panels
+        sidebar.classList.add("-translate-x-full");
+        backdrop.classList.add("hidden");
     }
+}
 
     async function handleReceiveDocument(event) {
         event.preventDefault();
@@ -1090,6 +1113,26 @@
             renderTargetDashboard(user.role, user.username, user.fullName, user.office);
         }
     });
+
+        document.addEventListener("DOMContentLoaded", function() {
+    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+    const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+    const sidebar = document.getElementById("dashboard-sidebar");
+
+    // Open Sidebar on Mobile
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener("click", () => {
+            sidebar.classList.remove("-translate-x-full");
+        });
+    }
+
+    // Close Sidebar on Mobile
+    if (closeSidebarBtn && sidebar) {
+        closeSidebarBtn.addEventListener("click", () => {
+            sidebar.classList.add("-translate-x-full");
+        });
+    }
+});
     </script>
 </body>
 </html>

@@ -756,14 +756,49 @@
 
     async function triggerApprovalFlow(docId) {
         const doc = documentCache.find(d => d.docId === docId);
-        if (!doc) return;
+        if (!doc) {
+            alert("Error: Document not found in local cache.");
+            return;
+        }
+        
         if (!confirm(`Confirm approval for Document ${docId}?`)) return;
 
+        // 1. Prepare and display the modal immediately so the user can print without waiting for the network
+        try {
+            const now = new Date();
+            const timestampStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('print-slip-id').innerText = doc.docId;
+            document.getElementById('print-slip-title').innerText = doc.title || 'Untitled Document';
+            // Fallbacks in case property names differ (destinationOffice vs destOffice)
+            document.getElementById('print-slip-office').innerText = doc.destinationOffice || doc.destOffice || 'N/A';
+            document.getElementById('print-slip-person').innerText = doc.destinationPerson || doc.destPerson || 'N/A';
+            document.getElementById('print-slip-datetime').innerText = timestampStr;
+
+            const qrTarget = document.getElementById('print-qr-target');
+            if (qrTarget) {
+                qrTarget.innerHTML = '';
+                if (typeof QRCode !== 'undefined') {
+                    activeQrInstance = new QRCode(qrTarget, { text: doc.docId, width: 110, height: 110 });
+                } else {
+                    qrTarget.innerHTML = `<span class="text-[9px] text-red-500 font-bold">QR Lib Missing</span>`;
+                    console.warn("QRCode library is not loaded.");
+                }
+            }
+
+            // Show the modal right away!
+            document.getElementById('approval-slip-modal').classList.remove('hidden');
+        } catch (modalErr) {
+            alert("Frontend Rendering Error: " + modalErr.message);
+            console.error(modalErr);
+        }
+
+        // 2. Process the spreadsheet update in the background
         const payload = {
             action: "receiveDocument",
             docId: docId,
-            officeLocation: currentLoggedUserOffice,
-            receivedBy: currentLoggedFullName,
+            officeLocation: currentLoggedUserOffice || "Main Desk",
+            receivedBy: currentLoggedFullName || "Admin Operator",
             status: "Approved / Ready for Release",
             remarks: "Document officially cleared, processed and approved."
         };
@@ -776,23 +811,12 @@
             });
             const data = await response.json();
             if (data.success) {
-                const now = new Date();
-                const timestampStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                document.getElementById('print-slip-id').innerText = doc.docId;
-                document.getElementById('print-slip-title').innerText = doc.title || 'Untitled Document';
-                document.getElementById('print-slip-office').innerText = doc.destinationOffice || 'N/A';
-                document.getElementById('print-slip-person').innerText = doc.destinationPerson || 'N/A';
-                document.getElementById('print-slip-datetime').innerText = timestampStr;
-
-                const qrTarget = document.getElementById('print-qr-target');
-                qrTarget.innerHTML = '';
-                activeQrInstance = new QRCode(qrTarget, { text: doc.docId, width: 110, height: 110 });
-
-                document.getElementById('approval-slip-modal').classList.remove('hidden');
                 await refreshDocumentCache();
+            } else {
+                alert("Database Update Notice: The slip is visible, but the sheet status failed to update: " + data.message);
             }
         } catch (err) {
+            alert("Network Sync Notice: The slip is visible, but the status couldn't sync to Google Sheets (Check CORS or network connection).");
             console.error(err);
         }
     }

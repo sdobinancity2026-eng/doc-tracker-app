@@ -9,16 +9,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <style>
+   <style>
         /* =========================================================
            THERMAL XPRINTER (XP-58IIH) 58mm PRINT SPECIFIC LAYOUT 
            ========================================================= */
         @media print {
-            body *, #dashboard-sidebar, #top-navbar, main, section, div:not(#approval-slip-modal):not(#thermal-print-area), button {
-                display: none !important;
+            /* 1. Hide all main layout containers completely */
+            #dashboard-sidebar, 
+            #top-navbar, 
+            main > section, 
+            header, 
+            footer, 
+            button,
+            .fixed.inset-0.bg-gray-900\/60 { 
+                display: none !important; 
             }
-            
-            #approval-slip-modal, #thermal-print-area, #thermal-print-area * {
+
+            /* 2. Position the parent modal wrapper cleanly for printing */
+            #approval-slip-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 58mm !important;
+                background: white !important;
+                display: block !important;
+                visibility: visible !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* 3. Force the specific 58mm layout print area to show up */
+            #thermal-print-area, 
+            #thermal-print-area * {
                 display: block !important;
                 visibility: visible !important;
             }

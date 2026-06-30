@@ -98,6 +98,16 @@
                 height: 110px !important;
             }
         }
+       @media print {
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+    }
+    #approval-slip-modal {
+        page-break-inside: avoid !important;
+        max-height: 100%;
+    }
+}
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen relative">
@@ -777,73 +787,94 @@
         });
     }
 
-    async function triggerApprovalFlow(docId) {
+   async function triggerApprovalFlow(docId) {
         const doc = documentCache.find(d => d.docId === docId);
         if (!doc) {
             alert("Error: Document not found in local cache.");
             return;
         }
         
-        if (!confirm(`Confirm approval for Document ${docId}?`)) return;
+        // 1. Prompt the Admin for custom status remarks/disposition text
+        const defaultStatus = "Approved / Ready for Release";
+        const adminRemarks = prompt(
+            `Confirm approval for Document ${docId}.\n\nEnter the Action Routing Disposition (Status update):`, 
+            defaultStatus
+        );
+        
+        // If the admin clicks "Cancel" on the prompt box, abort the operation safely
+        if (adminRemarks === null) return; 
+        
+        // Use the admin's input if they typed something, otherwise fall back to default text
+        const finalStatus = adminRemarks.trim() !== "" ? adminRemarks.trim() : defaultStatus;
 
-        // 1. Prepare and display the modal immediately so the user can print without waiting for the network
+        // 2. Prepare and display the printable modal layout with the new dynamic status
         try {
             const now = new Date();
             const timestampStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             document.getElementById('print-slip-id').innerText = doc.docId;
             document.getElementById('print-slip-title').innerText = doc.title || 'Untitled Document';
-            // Fallbacks in case property names differ (destinationOffice vs destOffice)
             document.getElementById('print-slip-office').innerText = doc.destinationOffice || doc.destOffice || 'N/A';
             document.getElementById('print-slip-person').innerText = doc.destinationPerson || doc.destPerson || 'N/A';
             document.getElementById('print-slip-datetime').innerText = timestampStr;
 
+            // Clear container before drawing to completely prevent duplicate QR Codes
             const qrTarget = document.getElementById('print-qr-target');
             if (qrTarget) {
-                qrTarget.innerHTML = '';
+                qrTarget.innerHTML = ''; 
                 if (typeof QRCode !== 'undefined') {
-                    activeQrInstance = new QRCode(qrTarget, { text: doc.docId, width: 110, height: 110 });
+                    activeQrInstance = new QRCode(qrTarget, { 
+                        text: doc.docId, 
+                        width: 100, 
+                        height: 100,
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
                 } else {
                     qrTarget.innerHTML = `<span class="text-[9px] text-red-500 font-bold">QR Lib Missing</span>`;
-                    console.warn("QRCode library is not loaded.");
                 }
             }
 
-            // Show the modal right away!
+            // Unhide the print view modal frame
             document.getElementById('approval-slip-modal').classList.remove('hidden');
         } catch (modalErr) {
             alert("Frontend Rendering Error: " + modalErr.message);
             console.error(modalErr);
         }
 
-        // 2. Process the spreadsheet update in the background
-        const payload = {
-            action: "receiveDocument",
-            docId: docId,
-            officeLocation: currentLoggedUserOffice || "Main Desk",
-            receivedBy: currentLoggedFullName || "Admin Operator",
-            status: "Approved / Ready for Release",
-            remarks: "Document officially cleared, processed and approved."
-        };
+        // 3. Set up a listener that waits until the print dialogue finishes successfully
+        window.onafterprint = async function() {
+            // Remove the listener immediately so it doesn't fire repeatedly on other prints
+            window.onafterprint = null; 
+            
+            console.log("Print dialogue completed. Sycing new status to Google Sheets...");
 
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (data.success) {
-                await refreshDocumentCache();
-            } else {
-                alert("Database Update Notice: The slip is visible, but the sheet status failed to update: " + data.message);
+            // 4. Construct FormData to seamlessly update your Google Sheet backend tracking grid
+            const syncFormData = new FormData();
+            syncFormData.append("action", "receiveDocument");
+            syncFormData.append("docId", docId);
+            syncFormData.append("officeLocation", currentLoggedUserOffice || "Main Desk");
+            syncFormData.append("receivedBy", currentLoggedFullName || "Admin Operator");
+            syncFormData.append("status", finalStatus); // Dynamically applies your prompt text as the primary status
+            syncFormData.append("remarks", "Official processing print receipt voucher generated.");
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: syncFormData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Update main table rows in real time 
+                    await refreshDocumentCache();
+                } else {
+                    alert("Database Update Notice: Slip printed, but status sync failed: " + data.message);
+                }
+            } catch (err) {
+                console.error("Tracking sheet sync trace:", err);
+                alert("Network Sync Error: Could not update status parameters on Google Sheets. Please check your deployment settings.");
             }
-        } catch (err) {
-            alert("Network Sync Notice: The slip is visible, but the status couldn't sync to Google Sheets (Check CORS or network connection).");
-            console.error(err);
-        }
+        };
     }
-
     function closeApprovalModal() {
         document.getElementById('approval-slip-modal').classList.add('hidden');
     }

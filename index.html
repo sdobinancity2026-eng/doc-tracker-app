@@ -637,47 +637,57 @@
     }
 
     async function handleLogin(event) {
-        event.preventDefault();
-        const usernameInput = document.getElementById('login-username').value.trim();
-        const passwordInput = document.getElementById('login-password').value.trim();
-        const loginBtn = document.getElementById('btn-login-submit');
+    event.preventDefault();
+    const usernameInput = document.getElementById('login-username').value.trim();
+    const passwordInput = document.getElementById('login-password').value.trim();
+    const loginBtn = document.getElementById('btn-login-submit');
 
-        if (!usernameInput || !passwordInput) {
-            alert("Please enter both your username and password.");
-            return;
-        }
-
-        loginBtn.disabled = true;
-        loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
-
-        const loginFormData = new FormData();
-        loginFormData.append("action", "login");
-        loginFormData.append("username", usernameInput);
-        loginFormData.append("password", passwordInput);
-
-        try {
-            const response = await fetch(API_URL, { method: "POST", body: loginFormData });
-            const data = await response.json();
-
-            if (data.success) {
-                alert(`Welcome back, ${data.fullName || data.username}!`);
-                localStorage.setItem('docTrack_session', JSON.stringify({
-                    role: data.role,
-                    username: data.username,
-                    fullName: data.fullName,
-                    office: data.office
-                }));
-                renderTargetDashboard(data.role, data.username, data.fullName, data.office); 
-            } else {
-                alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
-            }
-        } catch (err) {
-            alert("Connection failed. Verify Apps Script configuration permissions.");
-        } finally {
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = `Sign In`;
-        }
+    if (!usernameInput || !passwordInput) {
+        alert("Please enter both your username and password.");
+        return;
     }
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
+
+    const loginFormData = new FormData();
+    loginFormData.append("action", "login");
+    loginFormData.append("username", usernameInput);
+    loginFormData.append("password", passwordInput);
+
+    try {
+        const response = await fetch(API_URL, { method: "POST", body: loginFormData });
+        
+        // Read response text first to make sure it's valid JSON
+        const rawText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseError) {
+            console.error("Malformed JSON received from backend:", rawText);
+            throw new Error("Invalid backend format response string.");
+        }
+
+        if (data.success) {
+            alert(`Welcome back, ${data.fullName || data.username}!`);
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: data.role,
+                username: data.username,
+                fullName: data.fullName,
+                office: data.office || 'N/A'
+            }));
+            renderTargetDashboard(data.role, data.username, data.fullName, data.office || 'N/A'); 
+        } else {
+            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
+        }
+    } catch (err) {
+        console.error("Login trace execution error details:", err);
+        alert("Connection failed. Verify Apps Script configuration permissions.");
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `Sign In`;
+    }
+}
 
     function renderTargetDashboard(role, targetKey, fullName, office) {
         currentLoggedUserRole = role;

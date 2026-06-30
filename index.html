@@ -130,8 +130,8 @@
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen relative overflow-x-hidden">
 
-    <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-indigo-900 text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl shrink-0">
-        <div class="p-6">
+    <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-indigo-900 text-white flex-col justify-between hidden lg:flex shrink-0 shadow-xl border-r border-indigo-950">
+        <div class="p-6 overflow-y-auto flex-1">
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center border border-white/20">
@@ -143,7 +143,7 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-
+            
             <div class="bg-white/10 rounded-xl p-4 mb-6 border border-white/10">
                 <span class="text-[10px] uppercase font-bold text-indigo-300 block tracking-wider mb-1">Active Workspace</span>
                 <span id="sidebar-fullname" class="font-semibold block truncate text-sm">Loading Identity...</span>
@@ -157,7 +157,7 @@
                         <span>Operations Center</span>
                     </a>
                 </div>
-
+                
                 <div id="superadmin-only-links" class="space-y-1 mt-4 pt-4 border-t border-indigo-800 hidden">
                     <span class="text-[10px] uppercase font-bold text-indigo-400 px-4 block tracking-wider mb-2">Systems Config</span>
                     <a onclick="switchSidebarTab('user-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
@@ -179,7 +179,7 @@
             </nav>
         </div>
 
-        <div class="p-4 border-t border-indigo-800">
+        <div class="p-4 border-t border-indigo-800 bg-indigo-950/30">
             <button onclick="logout()" class="w-full flex items-center justify-center space-x-2 bg-indigo-950/40 hover:bg-red-600/20 hover:text-red-300 text-indigo-200 p-2.5 rounded-xl text-xs font-semibold transition border border-indigo-800/60 cursor-pointer">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 <span>Exit Session</span>
@@ -190,13 +190,13 @@
     <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-900/40 backdrop-blur-xs z-40 hidden"></div>
 
     <main class="flex-1 flex flex-col min-w-0 lg:pl-64 pt-16">
-
+        
         <header id="top-navbar" class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-indigo-900 text-white px-6 shadow-md flex items-center justify-between z-30 hidden">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-folder-tree text-xl text-indigo-300"></i>
                 <span class="font-bold text-lg tracking-wide">DocTrack</span>
             </div>
-            <button onclick="toggleMobileSidebar()" class="lg:hidden text-white bg-indigo-800 hover:bg-indigo-700 w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer text-sm transition">
+            <button onclick="toggleMobileSidebar()" class="lg:hidden text-white bg-indigo-800 hover:bg-indigo-700 w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer transition">
                 <i class="fa-solid fa-bars text-base"></i>
             </button>
         </header>
@@ -562,15 +562,21 @@
     function toggleMobileSidebar() {
     const sidebar = document.getElementById("dashboard-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
+    
+    if (!sidebar || !backdrop) return;
 
-    if (sidebar.classList.contains("-translate-x-full")) {
-        // Open Slide out Navigation Drawers
-        sidebar.classList.remove("-translate-x-full");
+    // Toggle logic that plays nicely with responsive layout classes
+    if (sidebar.classList.contains("hidden")) {
+        sidebar.classList.remove("hidden");
+        sidebar.classList.add("flex");
         backdrop.classList.remove("hidden");
     } else {
-        // Shut Slide drawer panels
-        sidebar.classList.add("-translate-x-full");
-        backdrop.classList.add("hidden");
+        // On desktop, do not let mobile toggle hide the permanent layout element
+        if (window.innerWidth < 1024) {
+            sidebar.classList.add("hidden");
+            sidebar.classList.remove("flex");
+            backdrop.classList.add("hidden");
+        }
     }
 }
 

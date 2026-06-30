@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocTrack Pro | SDO Biñan</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <script src="https://cdn.tailwindcss.com/3.4.15"></script>
     
@@ -23,7 +24,9 @@
     <meta name="apple-mobile-web-app-title" content="DocTrack Pro">
     <meta name="apple-mobile-web-app-status-bar-style" content="#312e81">
     <meta name="theme-color" content="#312e81">
+    
 
+   <style>
     <style>
         /* =========================================================
            THERMAL XPRINTER (XP-58IIH) 58mm PRINT SPECIFIC LAYOUT 
@@ -126,7 +129,8 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased flex min-h-screen relative overflow-x-hidden">
-   <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-indigo-900 text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl shrink-0">
+
+    <aside id="dashboard-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-indigo-900 text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl shrink-0">
         <div class="p-6">
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center space-x-3">
@@ -139,7 +143,7 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            
+
             <div class="bg-white/10 rounded-xl p-4 mb-6 border border-white/10">
                 <span class="text-[10px] uppercase font-bold text-indigo-300 block tracking-wider mb-1">Active Workspace</span>
                 <span id="sidebar-fullname" class="font-semibold block truncate text-sm">Loading Identity...</span>
@@ -153,7 +157,7 @@
                         <span>Operations Center</span>
                     </a>
                 </div>
-                
+
                 <div id="superadmin-only-links" class="space-y-1 mt-4 pt-4 border-t border-indigo-800 hidden">
                     <span class="text-[10px] uppercase font-bold text-indigo-400 px-4 block tracking-wider mb-2">Systems Config</span>
                     <a onclick="switchSidebarTab('user-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
@@ -186,7 +190,7 @@
     <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-900/40 backdrop-blur-xs z-40 hidden"></div>
 
     <main class="flex-1 flex flex-col min-w-0 lg:pl-64 pt-16">
-        
+
         <header id="top-navbar" class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-indigo-900 text-white px-6 shadow-md flex items-center justify-between z-30 hidden">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-folder-tree text-xl text-indigo-300"></i>
@@ -249,7 +253,7 @@
                         <p class="text-xs text-gray-500">Scan routing QR tokens or insert Tracking IDs to process logs manually.</p>
                     </div>
                 </div>
-                
+
                 <form id="form-receive-document" onsubmit="handleReceiveDocument(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Tracking Reference Number</label>
@@ -389,7 +393,7 @@
             <section id="superadmin-user-ledger-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                     <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision System Profile</h3>
-                    
+
                     <form id="form-create-user" onsubmit="createNewAccount(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Access Authorization Role Base</label>
@@ -415,12 +419,12 @@
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Position / Job Rank Designation</label>
                             <input id="new-user-position" type="text" placeholder="e.g., Administrative Assistant II" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
                         </div>
-                        
+
                         <div id="office-field-container">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Assigned Core Office Base</label>
                             <input id="new-user-office" type="text" placeholder="e.g., CID, SGOD, Cashier" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
                         </div>
-                        
+
                         <div id="conditional-client-fields" class="hidden">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Affiliated School Station Branch Name</label>
                             <input id="new-user-school" type="text" placeholder="e.g., Biñan National High School" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
@@ -437,7 +441,7 @@
                         <h3 class="text-base font-bold text-gray-900">Security Ledger Matrices</h3>
                         <p class="text-xs text-gray-500">Live operational account authorization entries recorded inside database rows.</p>
                     </div>
-                    
+
                     <div class="border border-gray-100 rounded-xl overflow-hidden">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
@@ -497,7 +501,7 @@
                         <div class="print-divider border-t border-dashed my-1"></div>
                         <div class="font-bold text-[11px] my-1">APPROVAL SLIP</div>
                         <div class="print-divider border-t border-dashed my-1"></div>
-                        
+
                         <div class="print-meta-row flex justify-between text-left text-[9px] mb-1">
                             <span>TRACK NO:</span>
                             <span id="print-slip-id" class="font-bold">DOC-0000</span>
@@ -518,7 +522,7 @@
                             <span class="block">APPROVED DATE/TIME:</span>
                             <span id="print-slip-datetime" class="font-bold block">---</span>
                         </div>
-                        
+
                         <div class="print-divider border-t border-dashed my-1"></div>
                         <div id="print-qr-target" class="flex justify-center my-2"></div>
                         <div class="print-divider border-t border-dashed my-1"></div>
@@ -558,16 +562,13 @@
     function toggleMobileSidebar() {
     const sidebar = document.getElementById("dashboard-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
-    
-    if (!sidebar || !backdrop) return;
 
-    // Check if the sidebar is currently tucked away off-screen
     if (sidebar.classList.contains("-translate-x-full")) {
-        // Slide it INTO view and show the dimming backdrop overlay
+        // Open Slide out Navigation Drawers
         sidebar.classList.remove("-translate-x-full");
         backdrop.classList.remove("hidden");
     } else {
-        // Tuck it back out of view and hide the backdrop
+        // Shut Slide drawer panels
         sidebar.classList.add("-translate-x-full");
         backdrop.classList.add("hidden");
     }
@@ -679,11 +680,11 @@
 
         document.getElementById('login-view').classList.add('hidden');
         document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
-        
+
         // Ensure standard desktop classes remain intact while hiding mobile views
         const sidebar = document.getElementById('dashboard-sidebar');
         sidebar.classList.add('hidden'); 
-        
+
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
         document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
 
@@ -696,7 +697,7 @@
 
         const submissionView = document.getElementById('client-submission-view');
         if (submissionView) submissionView.classList.add('hidden');
-        
+
         const receiverPanel = document.getElementById('office-receiver-view');
         if (receiverPanel) receiverPanel.classList.add('hidden');
 
@@ -722,7 +723,7 @@
         const clientView = document.getElementById('client-view');
         clientView.classList.remove('hidden');
         let timelineHTML = '';
-        
+
         if (doc.history && doc.history.length > 0) {
             doc.history.forEach((step, index) => {
                 const isCurrentLocation = index === 0; 
@@ -822,17 +823,17 @@
             alert("Error: Document not found in local cache.");
             return;
         }
-        
+
         // 1. Prompt the Admin for custom status remarks/disposition text
         const defaultStatus = "Approved / Ready for Release";
         const adminRemarks = prompt(
             `Confirm approval for Document ${docId}.\n\nEnter the Action Routing Disposition (Status update):`, 
             defaultStatus
         );
-        
+
         // If the admin clicks "Cancel" on the prompt box, abort the operation safely
         if (adminRemarks === null) return; 
-        
+
         // Use the admin's input if they typed something, otherwise fall back to default text
         const finalStatus = adminRemarks.trim() !== "" ? adminRemarks.trim() : defaultStatus;
 
@@ -874,7 +875,7 @@
         window.onafterprint = async function() {
             // Remove the listener immediately so it doesn't fire repeatedly on other prints
             window.onafterprint = null; 
-            
+
             console.log("Print dialogue completed. Sycing new status to Google Sheets...");
 
             // 4. Construct FormData to seamlessly update your Google Sheet backend tracking grid
@@ -1022,7 +1023,7 @@
         } else if (targetTab === 'client-submission') {
             if (clientSubmission) clientSubmission.classList.remove('hidden');
         }
-        
+
         // Auto-close drawer overlay after selection on mobile devices
         if (window.innerWidth < 1024) {
             toggleMobileSidebar();

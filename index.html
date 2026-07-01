@@ -1207,20 +1207,22 @@
     let timelineHTML = "";
 
     if (Array.isArray(historyArray) && historyArray.length > 0) {
-        // 🌟 FORCE EXPLICIT TIMESTAMP SORTING: Newest (Most recent Date) down to Oldest Date
+        // Sort explicitly by date descending (Newest first at the top)
         const sortedHistory = [...historyArray].sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
             const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-            return timeB - timeA; // Descending Sort Equation
+            return timeB - timeA;
         });
 
         sortedHistory.forEach((entry, index) => {
-            // Since it's sorted descending, the very first element (index 0) is guaranteed to be the Newest!
             const isLatest = index === 0; 
             
             const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.desc || "";
             const logTime = entry.timestamp || entry.time || entry.date || "";
+            
+            // 🌟 EXTRACT OFFICE: Looks inside the history entry properties for office metadata
+            const logOffice = entry.office || entry.location || entry.currentOffice || "";
 
             timelineHTML += `
                 <div class="relative pl-6">
@@ -1235,7 +1237,13 @@
                         
                         <h5 class="text-xs font-bold text-gray-800 mt-0.5">${logTitle}</h5>
                         
-                        ${logDesc ? `<p class="text-xs text-gray-600 mt-0.5 leading-relaxed font-normal whitespace-pre-line">${logDesc}</p>` : ''}
+                        ${logOffice ? `
+                            <div class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-semibold">
+                                <i class="fa-solid fa-location-dot text-[9px] text-indigo-500"></i> ${logOffice}
+                            </div>
+                        ` : ''}
+                        
+                        ${logDesc ? `<p class="text-xs text-gray-600 ${logOffice ? 'mt-1.5' : 'mt-0.5'} leading-relaxed font-normal whitespace-pre-line">${logDesc}</p>` : ''}
                         
                         ${logTime ? `<span class="text-[10px] font-medium text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1 text-[9px]"></i> ${logTime}</span>` : ''}
                     </div>
@@ -1250,7 +1258,8 @@
                 <div class="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/40">
                     <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">🌟 Latest Movement Activity</span>
                     <h5 class="text-xs font-semibold text-gray-900 mt-0.5">${doc.currentStatus || doc.status || 'In Review'}</h5>
-                    <p class="text-xs text-gray-600 mt-0.5">Document successfully registered in system pipeline processing queues.</p>
+                    ${doc.office ? `<p class="text-[11px] font-medium text-gray-500 mt-0.5"><i class="fa-solid fa-location-dot mr-1 text-indigo-500"></i> ${doc.office}</p>` : ''}
+                    <p class="text-xs text-gray-600 mt-1">Document successfully registered in system pipeline processing queues.</p>
                 </div>
             </div>
         `;

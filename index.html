@@ -1356,7 +1356,7 @@ function executeClientPackageSearch() {
     `;
 }
 
-    async function handleSubmitDocumentPackage(event) {
+   async function handleSubmitDocumentPackage(event) {
     event.preventDefault();
     
     const submitBtn = document.getElementById('btn-submit-package');
@@ -1364,11 +1364,18 @@ function executeClientPackageSearch() {
     const docTypeInput = document.getElementById('doc-type').value;
 
     if (!docTitleInput) {
-        alert("Please enter a document title.");
+        // Subtle inline button feedback instead of an alert window
+        submitBtn.className = "bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition cursor-pointer shrink-0 animate-pulse";
+        submitBtn.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-2"></i> Please enter a title!`;
+        
+        setTimeout(() => {
+            submitBtn.className = "bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg text-xs hover:bg-indigo-700 transition cursor-pointer shrink-0";
+            submitBtn.innerHTML = `Submit Document Package`;
+        }, 3000);
         return;
     }
 
-    // 1. Retrieve the active logged-in session profile data
+    // 1. Retrieve active session details
     const savedSession = localStorage.getItem('docTrack_session');
     let username = "anonymous";
     let originLocation = "External Client Station";
@@ -1377,48 +1384,61 @@ function executeClientPackageSearch() {
         try {
             const user = JSON.parse(savedSession);
             username = user.username || username;
-            
-            // If they are a client, use their School Name as the origin point
-            if (user.role === 'client') {
-                originLocation = user.schoolName || "External Client Station";
-            } else {
-                originLocation = user.office || "Main Desk";
-            }
+            originLocation = user.role === 'client' ? (user.schoolName || "External Client Station") : (user.office || "Main Desk");
         } catch (e) {
-            console.error("Failed to parse session during document submission:", e);
+            console.error("Failed to parse session:", e);
         }
     }
 
+    // Lock button and show step 1: Contacting backend
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Submitting...`;
+    submitBtn.className = "bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition shrink-0 cursor-not-allowed";
+    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Connecting to Server...`;
 
-    // 2. Package the submission payloads
+    // 2. Package payloads
     const formData = new FormData();
-    formData.append("action", "submitDocument"); // Adjust this action text to match your Code.gs setup
+    formData.append("action", "submitDocument");
     formData.append("title", docTitleInput);
     formData.append("docType", docTypeInput);
     formData.append("submittedBy", username);
-    formData.append("origin", originLocation); // Maps directly to your sheet's Column H ("origin")
+    formData.append("origin", originLocation);
 
     try {
+        // Change button message right before the upload stream hits the network
+        setTimeout(() => {
+            if(submitBtn.disabled) {
+                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce mr-2"></i> Writing to Database...`;
+            }
+        }, 1200);
+
         const response = await fetch(API_URL, { method: "POST", body: formData });
         const data = await response.json();
 
         if (data.success) {
-            alert(`Document Package successfully registered! Tracking ID: ${data.docId}`);
+            // Success State UI Transformation
+            submitBtn.className = "bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition shrink-0";
+            submitBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Registered: ${data.docId}!`;
+            
             if (document.getElementById('doc-submission-form')) {
                 document.getElementById('doc-submission-form').reset();
             }
-            // Optional: Refresh local views or navigate back
         } else {
-            alert(`Submission Error: ${data.message || 'Could not register package.'}`);
+            // Server rejected parameters but didn't crash
+            submitBtn.className = "bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition shrink-0";
+            submitBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Submission Rejected`;
         }
     } catch (err) {
         console.error("Submission pipeline error:", err);
-        alert("Network processing failure. Please try again.");
+        // Network execution crashed completely
+        submitBtn.className = "bg-red-700 text-white font-semibold px-5 py-2 rounded-lg text-xs transition shrink-0";
+        submitBtn.innerHTML = `<i class="fa-solid fa-wifi mr-2"></i> Network Error`;
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `Submit Document Package`;
+        // Smoothly return the button to its normal ready state after 4 seconds
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.className = "bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg text-xs hover:bg-indigo-700 transition cursor-pointer shrink-0";
+            submitBtn.innerHTML = `Submit Document Package`;
+        }, 4000);
     }
 }
     // ==========================================

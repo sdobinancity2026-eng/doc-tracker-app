@@ -634,7 +634,7 @@
         }
     }
 
-    async function handleLogin(event) {
+   async function handleLogin(event) {
     event.preventDefault();
     const usernameInput = document.getElementById('login-username').value.trim();
     const passwordInput = document.getElementById('login-password').value.trim();
@@ -652,9 +652,6 @@
     loginFormData.append("password", passwordInput);
     try {
         const response = await fetch(API_URL, { method: "POST", body: loginFormData });
-
-        // Read response text first to make sure it's valid JSON
-
         const rawText = await response.text();
         let data;
         try {
@@ -666,13 +663,18 @@
 
         if (data.success) {
             alert(`Welcome back, ${data.fullName || data.username}!`);
+            
+            // Save role, position, and office directly from Google Sheets rows
             localStorage.setItem('docTrack_session', JSON.stringify({
                 role: data.role,
+                position: data.position || data.role, // Grab Position column
                 username: data.username,
                 fullName: data.fullName,
-                office: data.office || 'N/A'
+                office: data.office || 'N/A'          // Grab Office column
             }));
-            renderTargetDashboard(data.role, data.username, data.fullName, data.office || 'N/A'); 
+            
+            // Pass the custom role/position data down to the UI renderer
+            renderTargetDashboard(data.role, data.username, data.fullName, data.office, data.position); 
         } else {
             alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
         }
@@ -685,19 +687,17 @@
     }
 }
 
-   function renderTargetDashboard(role, targetKey, fullName, office) {
-    // 1. Normalize case comparison variables safely
+   function renderTargetDashboard(role, targetKey, fullName, office, position) {
     const lowerRole = String(role).toLowerCase();
     
     currentLoggedUserRole = role;
     currentLoggedFullName = fullName;
-    currentLoggedUserOffice = office && office !== 'N/A' ? office : 'Main Desk';
+    // Fall back to a blank string if it's not provided yet, instead of hardcoding 'Main Desk'
+    currentLoggedUserOffice = office && office !== 'N/A' ? office : ''; 
     
-    // 2. Manage master layout screen transitions
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('top-navbar').classList.remove('hidden');
 
-    // Adaptive sidebar layout sizing configurations
     const sidebar = document.getElementById('dashboard-sidebar');
     if (window.innerWidth < 1024) {
         if (sidebar) sidebar.classList.add('hidden');
@@ -705,28 +705,26 @@
         if (sidebar) sidebar.classList.remove('hidden');
     }
 
-    // =========================================================
-    // 3. SIDEBAR TEXT MODIFICATIONS (Full Name, Position, Office)
-    // =========================================================
+    // Display actual sheet values in your sidebar layout elements
     if (document.getElementById('sidebar-fullname')) {
-        // Displays user's complete actual name
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
     }
     
     if (document.getElementById('sidebar-role-pill')) {
+        // Fall back to standard role naming text if the position sheet cell is empty
+        const userPosition = position || role; 
+        
         if (lowerRole === 'admin' || lowerRole === 'superadmin') {
-            // Renders cleanly as: "Admin / Superadmin" on line 1, and "Office Name" directly under it
             document.getElementById('sidebar-role-pill').innerHTML = `
-                <div class="font-bold text-indigo-400 uppercase tracking-wider text-[11px]">${role}</div>
-                <div class="text-xs text-gray-400 font-medium mt-0.5"><i class="fa-solid fa-building text-[10px] mr-1 text-gray-500"></i> ${currentLoggedUserOffice}</div>
+                <div class="text-xs text-gray-400 font-bold lowercase tracking-normal mb-0.5">${userPosition}</div>
+                <div class="text-[11px] text-gray-500 font-medium">${currentLoggedUserOffice}</div>
             `;
         } else {
-            // Fallback default style handling for clients
-            document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
+            document.getElementById('sidebar-role-pill').innerText = `${userPosition} (${currentLoggedUserOffice})`;
         }
     }
 
-    // 4. Reset display nodes visibility
+    // Reset visibility layouts
     const viewIds = [
         'staff-only-links', 'superadmin-only-links', 'client-only-links', 
         'shared-dashboard-view', 'client-view', 'superadmin-user-ledger-view', 
@@ -739,17 +737,13 @@
 
     const submissionView = document.getElementById('client-submission-view');
     if (submissionView) submissionView.classList.add('hidden');
-    
     const receiverPanel = document.getElementById('office-receiver-view');
     if (receiverPanel) receiverPanel.classList.add('hidden');
 
-    // 5. Evaluate role privileges
     if (lowerRole === 'client') {
-        if (document.getElementById('client-only-links')) {
-            document.getElementById('client-only-links').classList.remove('hidden');
-        }
-        const clientView = document.getElementById('client-view');
-        if (clientView) {
+        if (document.getElementById('client-only-links')) document.getElementById('client-only-links').classList.remove('hidden');
+        if (document.getElementById('client-view')) {
+            const clientView = document.getElementById('client-view');
             clientView.classList.remove('hidden');
             clientView.innerHTML = `
                 <div class="max-w-2xl mx-auto px-4 py-8">
@@ -780,33 +774,23 @@
         }
 
         if (targetKey && targetKey !== 'client') {
-            const clientInput = document.getElementById('client-search-input');
-            if (clientInput) clientInput.value = targetKey;
-            if (typeof executeClientPackageSearch === 'function') executeClientPackageSearch();
+            const searchInput = document.getElementById('client-search-input');
+            if (searchInput) {
+                searchInput.value = targetKey;
+                executeClientPackageSearch();
+            }
         }
     } 
     else if (lowerRole === 'admin' || lowerRole === 'superadmin') {
-        if (document.getElementById('staff-only-links')) {
-            document.getElementById('staff-only-links').classList.remove('hidden');
-        }
-        if (document.getElementById('shared-dashboard-view')) {
-            document.getElementById('shared-dashboard-view').classList.remove('hidden');
-        }
-        if (receiverPanel) {
-            receiverPanel.classList.remove('hidden'); 
-        }
+        if (document.getElementById('staff-only-links')) document.getElementById('staff-only-links').classList.remove('hidden');
+        if (document.getElementById('shared-dashboard-view')) document.getElementById('shared-dashboard-view').classList.remove('hidden');
+        if (receiverPanel) receiverPanel.classList.remove('hidden'); 
         
-        if (typeof renderAdminTable === 'function') {
-            renderAdminTable();
-        }
+        if (typeof renderAdminTable === 'function') renderAdminTable();
         
         if (lowerRole === 'superadmin') {
-            if (document.getElementById('superadmin-only-links')) {
-                document.getElementById('superadmin-only-links').classList.remove('hidden');
-            }
-            if (typeof loadUserLedgerDirectory === 'function') {
-                loadUserLedgerDirectory();
-            }
+            if (document.getElementById('superadmin-only-links')) document.getElementById('superadmin-only-links').classList.remove('hidden');
+            if (typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory();
         }
     }
 }

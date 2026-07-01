@@ -635,62 +635,74 @@
         }
     }
 
-    async function handleLogin(event) {
-    event.preventDefault();
-    const usernameInput = document.getElementById('login-username').value.trim();
-    const passwordInput = document.getElementById('login-password').value.trim();
-    const loginBtn = document.getElementById('btn-login-submit');
+   async function handleSystemLogin(event) {
+    if (event) event.preventDefault();
 
-    if (!usernameInput || !passwordInput) {
-        alert("Please enter both your username and password.");
+    const userInput = document.getElementById('login-username');
+    const passwordInput = document.getElementById('login-password');
+    const loginBtn = document.getElementById('login-submit-btn');
+    const errorMessage = document.getElementById('login-error-msg');
+
+    if (!userInput || !passwordInput) return;
+
+    const username = userInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!username || !password) {
+        if (errorMessage) {
+            errorMessage.textContent = "Please fill out both username and password fields.";
+            errorMessage.classList.remove('hidden');
+        }
         return;
     }
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
 
-    const loginFormData = new FormData();
-    loginFormData.append("action", "login");
-    loginFormData.append("username", usernameInput);
-    loginFormData.append("password", passwordInput);
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Authenticating...`;
+    }
+    if (errorMessage) errorMessage.classList.add('hidden');
+
     try {
-        const response = await fetch(API_URL, { method: "POST", body: loginFormData });
+        const payload = {
+            action: 'loginVerification',
+            username: username,
+            password: password
+        };
 
-        // Read response text first to make sure it's valid JSON
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-        const rawText = await response.text();
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (parseError) {
-            console.error("Malformed JSON received from backend:", rawText);
-            throw new Error("Invalid backend format response string.");
-        }
+        const data = await response.json();
 
-        if (data.success) {
-            alert(`Welcome back, ${data.fullName || data.username}!`);
-            localStorage.setItem('docTrack_session', JSON.stringify({
-                role: data.role,
-                username: data.username,
-                fullName: data.fullName,
-                office: data.office || 'N/A'
-            }));
-            renderTargetDashboard(data.role, data.username, data.fullName, data.office || 'N/A'); 
+        if (data && data.success) {
+            const sessionPayload = {
+                username: data.username || username,
+                role: data.role || 'Staff',
+                fullName: data.fullName || 'Authorized User',
+                office: data.office || 'Main Headquarters'
+            };
+            
+            localStorage.setItem('docTrack_session', JSON.stringify(sessionPayload));
+            renderTargetDashboard(sessionPayload.role, sessionPayload.username, sessionPayload.fullName, sessionPayload.office);
         } else {
-
-            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
-
+            throw new Error(data.message || "Invalid authentication credentials matched.");
         }
 
-    } catch (err) {
-
-        console.error("Login trace execution error details:", err);
-
-        alert("Connection failed. Verify Apps Script configuration permissions.");
-
+    } catch (error) {
+        console.error("Authentication Request Exception:", error);
+        if (errorMessage) {
+            errorMessage.textContent = error.message || "Network authentication failure. Verify credentials.";
+            errorMessage.classList.remove('hidden');
+        }
     } finally {
-
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = `Sign In`;
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Sign In to Workspace <i class="fa-solid fa-arrow-right-to-bracket ml-1.5 text-xs opacity-80"></i>`;
+        }
     }
 }
 

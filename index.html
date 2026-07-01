@@ -542,7 +542,8 @@
         </footer>
     </main>
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
+
+    const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
 
     let documentCache = [];
     let currentLoggedUserRole = '';
@@ -557,7 +558,6 @@
     function toggleMobileSidebar() {
     const sidebar = document.getElementById("dashboard-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
-
     if (!sidebar || !backdrop) return;
 
     // Toggle logic that plays nicely with responsive layout classes
@@ -568,6 +568,7 @@
         backdrop.classList.remove("hidden");
 
     } else {
+
         // On desktop, do not let mobile toggle hide the permanent layout element
         if (window.innerWidth < 1024) {
             sidebar.classList.add("hidden");
@@ -578,6 +579,7 @@
 }
 
     async function handleReceiveDocument(event) {
+
         event.preventDefault();
         const trackingNumber = document.getElementById('scan-track-number').value.trim();
         const actionStatus = document.getElementById('scan-action-status').value; 
@@ -588,12 +590,10 @@
             alert("Please scan a QR Code or enter a tracking number.");
             return;
         }
-
         receiveBtn.disabled = true;
         receiveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Registering Route Log...`;
 
         const logPayload = {
-
             action: "receiveDocument",
             docId: trackingNumber,
             office: currentLoggedUserOffice, 
@@ -601,6 +601,7 @@
             status: actionStatus,
             remarks: remarks
         };
+
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
@@ -638,7 +639,6 @@
     const usernameInput = document.getElementById('login-username').value.trim();
     const passwordInput = document.getElementById('login-password').value.trim();
     const loginBtn = document.getElementById('btn-login-submit');
-
     if (!usernameInput || !passwordInput) {
         alert("Please enter both your username and password.");
         return;
@@ -674,79 +674,57 @@
             }));
             renderTargetDashboard(data.role, data.username, data.fullName, data.office || 'N/A'); 
         } else {
-
             alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
-
         }
-
     } catch (err) {
-
         console.error("Login trace execution error details:", err);
-
         alert("Connection failed. Verify Apps Script configuration permissions.");
-
     } finally {
-
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
     }
 }
 
-   function renderTargetDashboard(role, targetKey, fullName, office) {
-    const lowerRole = String(role).toLowerCase();
-    
-    currentLoggedUserRole = role;
-    currentLoggedFullName = fullName;
-    currentLoggedUserOffice = office || 'Main Desk';
-    
-    document.getElementById('login-view').classList.add('hidden');
-    document.getElementById('top-navbar').classList.remove('hidden');
+    function renderTargetDashboard(role, targetKey, fullName, office) {
+        currentLoggedUserRole = role;
+        currentLoggedFullName = fullName;
+        currentLoggedUserOffice = office || 'Main Desk';
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
 
-    const sidebar = document.getElementById('dashboard-sidebar');
-    if (window.innerWidth < 1024) {
-        if (sidebar) sidebar.classList.add('hidden');
-    } else {
-        if (sidebar) sidebar.classList.remove('hidden');
-    }
-    
-    if (document.getElementById('sidebar-fullname')) {
+              // Ensure sidebar handles its display adaptively across mobile & desktop platforms
+        const sidebar = document.getElementById('dashboard-sidebar');
+        if (window.innerWidth < 1024) {
+            sidebar.classList.add('hidden'); // Keep hidden on mobile by default
+        } else {
+            sidebar.classList.remove('hidden'); // Force layout visible on desktop
+        }
+
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
-    }
-    if (document.getElementById('sidebar-role-pill')) {
         document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
-    }
+        document.getElementById('staff-only-links').classList.add('hidden');
+        document.getElementById('superadmin-only-links').classList.add('hidden');
+        document.getElementById('client-only-links').classList.add('hidden');
+        document.getElementById('shared-dashboard-view').classList.add('hidden');
+        document.getElementById('client-view').classList.add('hidden');
+        document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
 
-    // Reset visibility structures safely
-    const viewIds = [
-        'staff-only-links', 
-        'superadmin-only-links', 
-        'client-only-links', 
-        'shared-dashboard-view', 
-        'client-view', 
-        'superadmin-user-ledger-view', 
-        'client-submission-view', 
-        'office-receiver-view'
-    ];
-    
-    viewIds.forEach(function(id) {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
+        const submissionView = document.getElementById('client-submission-view');
 
-    if (lowerRole === 'client') {
-        const clientView = document.getElementById('client-view');
-        const clientLinks = document.getElementById('client-only-links');
-        
-        if (clientLinks) clientLinks.classList.remove('hidden');
-        if (clientView) {
-            clientView.classList.remove('hidden');
-            // Template strings are perfectly backtick enclosed here to eliminate parsing crashes
-            clientView.innerHTML = `
+        if (submissionView) submissionView.classList.add('hidden');
+        const receiverPanel = document.getElementById('office-receiver-view');
+        if (receiverPanel) receiverPanel.classList.add('hidden');
+       if (role === 'client') {
+            document.getElementById('client-only-links').classList.remove('hidden');
+            document.getElementById('client-view').classList.remove('hidden');
+
+            // Build the Shopee-style tracking layout search engine base
+
+            document.getElementById('client-view').innerHTML = `
                 <div class="max-w-2xl mx-auto px-4 py-8">
                     <div class="bg-indigo-900 rounded-2xl p-6 shadow-lg text-white mb-6">
                         <h3 class="text-lg font-bold mb-2">Track Your Document Package</h3>
                         <p class="text-xs text-indigo-200 mb-4">Enter your tracking reference number below to check its real-time logistics routing lifecycle status.</p>
-                    
                         <div class="flex gap-2 bg-white/10 p-1.5 rounded-xl border border-white/20">
                             <div class="flex items-center pl-3 text-indigo-200">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -759,7 +737,6 @@
                             </button>
                         </div>
                     </div>
-
                     <div id="tracker-result-output">
                         <div class="text-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
                             <i class="fa-solid fa-receipt text-gray-300 text-4xl mb-3 block"></i>
@@ -769,38 +746,92 @@
                     </div>
                 </div>
             `;
-        }
 
-        if (targetKey && targetKey !== 'client') {
-            const searchInput = document.getElementById('client-search-input');
-            if (searchInput) {
-                searchInput.value = targetKey;
+            // Auto-populate and fire if a targetKey was passed during initialization
+
+            if (targetKey && targetKey !== 'client') {
+                document.getElementById('client-search-input').value = targetKey;
                 executeClientPackageSearch();
             }
         }
-    } 
-    else if (lowerRole === 'admin' || lowerRole === 'superadmin') {
-        const staffLinks = document.getElementById('staff-only-links');
-        const sharedDashboard = document.getElementById('shared-dashboard-view');
-        const receiverPanel = document.getElementById('office-receiver-view');
-        const superadminLinks = document.getElementById('superadmin-only-links');
 
-        if (staffLinks) staffLinks.classList.remove('hidden');
-        if (sharedDashboard) sharedDashboard.classList.remove('hidden');
-        if (receiverPanel) receiverPanel.classList.remove('hidden');
-        
-        if (typeof renderAdminTable === 'function') {
+        else if (role === 'admin' || role === 'superadmin') {
+            document.getElementById('staff-only-links').classList.remove('hidden');
+            document.getElementById('shared-dashboard-view').classList.remove('hidden');
+            if (receiverPanel) receiverPanel.classList.remove('hidden'); 
             renderAdminTable();
-        }
-        
-        if (lowerRole === 'superadmin') {
-            if (superadminLinks) superadminLinks.classList.remove('hidden');
-            if (typeof loadUserLedgerDirectory === 'function') {
+            if (role === 'superadmin') {
+                document.getElementById('superadmin-only-links').classList.remove('hidden');
                 loadUserLedgerDirectory();
             }
         }
     }
-}
+
+
+    function renderClientView(doc) {
+        const clientView = document.getElementById('client-view');
+        clientView.classList.remove('hidden');
+        let timelineHTML = '';
+
+        if (doc.history && doc.history.length > 0) {
+            doc.history.forEach((step, index) => {
+                const isCurrentLocation = index === 0; 
+                let statusColorClass = 'text-gray-800';
+                let circleColorClass = 'bg-emerald-500';
+
+                if (step.status.toLowerCase().includes('revision')) {
+                    statusColorClass = 'text-amber-600 font-bold';
+                    circleColorClass = 'bg-amber-500 ring-4 ring-amber-100';
+                } else if (step.status.toLowerCase().includes('returned')) {
+                    statusColorClass = 'text-red-600 font-bold';
+                    circleColorClass = 'bg-red-500 ring-4 ring-red-100';
+                } else if (isCurrentLocation) {
+                    statusColorClass = 'text-indigo-600 font-bold';
+                    circleColorClass = 'bg-indigo-600 ring-4 ring-indigo-100';
+                }
+
+                timelineHTML += `
+                <div class="relative pl-6 pb-6 border-l-2 ${isCurrentLocation ? 'border-indigo-600' : 'border-emerald-200'} last:pb-0">
+                    <div class="absolute -left-[11px] top-0 ${circleColorClass} text-white rounded-full w-5 h-5 flex items-center justify-center">
+                        ${isCurrentLocation ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${step.officeLocation}</span>
+                        <h4 class="${isCurrentLocation ? 'text-base' : 'text-sm'} ${statusColorClass}">${step.status}</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Processed by: <strong>${step.receivedBy}</strong> ${step.remarks ? `— <span class="text-gray-700 italic">"${step.remarks}"</span>` : ''}</p>
+                        <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${step.timestamp}</span>
+                    </div>
+                </div>`;
+            });
+        }
+
+        clientView.innerHTML = `
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:flex justify-between items-center gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">SDO Biñan Tracking Pipeline</span>
+                    <h2 class="text-xl font-bold text-gray-900 mt-1">Tracking ID: ${doc.docId}</h2>
+                    <p class="text-sm text-gray-500">Classification: <strong>${doc.docType || 'N/A'}</strong></p>
+                </div>
+                <div class="text-left md:text-right">
+                    <span class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide inline-block">${doc.currentStatus}</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <h3 class="text-base font-bold text-gray-900 mb-6"><i class="fa-solid fa-route text-indigo-500 mr-2"></i>Inter-Office Routing Logs</h3>
+                    <div class="mt-4">${timelineHTML}</div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                    <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-flag-checkered text-gray-400 mr-2"></i>Destination End-Goal</h3>
+                    <div class="space-y-3 text-sm border-t border-gray-100 pt-3">
+                        <div><span class="text-xs text-gray-400 block">Target Office</span><span class="font-semibold text-gray-800">${doc.destinationOffice || 'N/A'}</span></div>
+                        <div><span class="text-xs text-gray-400 block">Attention Personnel</span><span class="font-semibold text-gray-800">${doc.destinationPerson || 'Not Specified'}</span></div>
+                        <div class="pt-2"><a href="${doc.driveFileUrl}" target="_blank" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> Open Drive PDF</a></div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
     function renderAdminTable() {
         const tbody = document.getElementById('admin-table-tbody');
         if (!tbody) return;
@@ -817,7 +848,6 @@
             if (doc.currentStatus.toLowerCase().includes('returned')) badgeColor = 'bg-red-100 text-red-800';
             if (doc.currentStatus.toLowerCase().includes('approved')) badgeColor = 'bg-emerald-100 text-emerald-800 font-bold';
             if (doc.currentStatus.toLowerCase().includes('forwarded')) badgeColor = 'bg-blue-100 text-blue-800';
-
             tbody.innerHTML += `
                 <tr class="hover:bg-gray-50/50 transition border-b border-gray-100 text-sm">
                     <td class="p-4 font-bold text-gray-900">${doc.docId}</td>
@@ -843,6 +873,7 @@
         }
 
         // 1. Prompt the Admin for custom status remarks/disposition text
+
         const defaultStatus = "Approved / Ready for Release";
         const adminRemarks = prompt(
             `Confirm approval for Document ${docId}.\n\nEnter the Action Routing Disposition (Status update):`, 
@@ -852,7 +883,9 @@
         // If the admin clicks "Cancel" on the prompt box, abort the operation safely
 
         if (adminRemarks === null) return; 
+
         // Use the admin's input if they typed something, otherwise fall back to default text
+
         const finalStatus = adminRemarks.trim() !== "" ? adminRemarks.trim() : defaultStatus;
 
         // 2. Prepare and display the printable modal layout with the new dynamic status
@@ -860,6 +893,7 @@
         try {
             const now = new Date();
             const timestampStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
             document.getElementById('print-slip-id').innerText = doc.docId;
             document.getElementById('print-slip-title').innerText = doc.title || 'Untitled Document';
             document.getElementById('print-slip-office').innerText = doc.destinationOffice || doc.destOffice || 'N/A';
@@ -878,6 +912,7 @@
                         height: 100,
                         correctLevel: QRCode.CorrectLevel.H
                     });
+
                 } else {
                     qrTarget.innerHTML = `<span class="text-[9px] text-red-500 font-bold">QR Lib Missing</span>`;
                 }
@@ -887,6 +922,7 @@
 
             document.getElementById('approval-slip-modal').classList.remove('hidden');
         } catch (modalErr) {
+
             alert("Frontend Rendering Error: " + modalErr.message);
             console.error(modalErr);
         }
@@ -894,8 +930,10 @@
         // 3. Set up a listener that waits until the print dialogue finishes successfully
 
         window.onafterprint = async function() {
+
             // Remove the listener immediately so it doesn't fire repeatedly on other prints
             window.onafterprint = null; 
+
             console.log("Print dialogue completed. Sycing new status to Google Sheets...");
 
             // 4. Construct FormData to seamlessly update your Google Sheet backend tracking grid
@@ -915,7 +953,9 @@
                 });
                 const data = await response.json();
                 if (data.success) {
+
                     // Update main table rows in real time 
+
                     await refreshDocumentCache();
                 } else {
                     alert("Database Update Notice: Slip printed, but status sync failed: " + data.message);
@@ -930,6 +970,7 @@
     function closeApprovalModal() {
         document.getElementById('approval-slip-modal').classList.add('hidden');
     }
+
     async function executeDirectStatusAction(docId, targetStatus) {
         const remarksPrompt = prompt(`Provide comments for marking ${docId} as "${targetStatus}":`);
         if (remarksPrompt === null) return;
@@ -942,11 +983,13 @@
             status: targetStatus,
             remarks: remarksPrompt.trim()
         };
+
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
+
             });
             const data = await response.json();
             if (data.success) {
@@ -994,7 +1037,9 @@
         event.preventDefault();
         const submitBtn = document.getElementById('btn-create-account');
         submitBtn.disabled = true;
+
         const payload = {
+
             action: "addUser",
             role: document.getElementById('new-user-role').value,
             username: document.getElementById('new-user-name').value.trim(),
@@ -1003,7 +1048,6 @@
             position: document.getElementById('new-user-position').value.trim(),
             office: document.getElementById('new-user-office').value.trim(),
             schoolName: document.getElementById('new-user-school').value.trim() 
-
         };
 
         try {
@@ -1029,6 +1073,7 @@
         const clientTracking = document.getElementById('client-view');
         const clientSubmission = document.getElementById('client-submission-view'); 
         const receiverPanel = document.getElementById('office-receiver-view');
+
 
         if (opsCenter) opsCenter.classList.add('hidden');
         if (ledgerCenter) ledgerCenter.classList.add('hidden');
@@ -1065,8 +1110,10 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "getUsers" })
             });
+
             const users = await response.json();
             users.forEach(user => {
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50/50 transition border-b border-gray-100 text-xs">
                         <td class="p-4 font-bold text-gray-900">${user.fullName || 'No Name'}</td>
@@ -1077,6 +1124,7 @@
                         </td>
                     </tr>`;
             });
+
         } catch (err) {
             console.error(err);
         }
@@ -1085,6 +1133,7 @@
     function updateFileStatusText() {
         const fileInput = document.getElementById('sub-file-upload');
         const statusText = document.getElementById('sub-file-status-text');
+
         if (fileInput.files.length > 0) {
             statusText.innerText = `Selected: ${fileInput.files[0].name}`;
             statusText.classList.remove('hidden');
@@ -1093,10 +1142,13 @@
 
     async function handleDocumentSubmission(event) {
         event.preventDefault();
+
         const submitBtn = document.getElementById('btn-doc-submit');
         const fileInput = document.getElementById('sub-file-upload');
+
         if (fileInput.files.length === 0) return;
         submitBtn.disabled = true;
+
         const targetFile = fileInput.files[0];
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -1104,7 +1156,7 @@
             const formData = new FormData();
             formData.append("action", "submitDocument");
             formData.append("title", document.getElementById('sub-doc-title').value.trim());
-            formDaa.append("docType", document.getElementById('sub-doc-type').value);
+            formData.append("docType", document.getElementById('sub-doc-type').value);
             formData.append("destOffice", document.getElementById('sub-dest-office').value.trim());
             formData.append("destPerson", document.getElementById('sub-dest-person').value.trim());
             formData.append("submittedBy", document.getElementById('sub-submitted-by').value.trim());
@@ -1112,10 +1164,12 @@
             formData.append("fileData", rawBytes);
             formData.append("fileName", `${document.getElementById('sub-doc-title').value}.pdf`);
             formData.append("mimeType", targetFile.type);
+
             try {
                 const response = await fetch(API_URL, { method: "POST", body: formData });
                 const data = await response.json();
                 if (data.success) {
+
                     alert("Document successfully submitted!");
                     document.getElementById('form-document-submission').reset();
                     switchSidebarTab('client-tracking');
@@ -1129,6 +1183,7 @@
         reader.readAsDataURL(targetFile);
     } 
 
+
 // ==========================================
 // 4. CLIENT REAL-TIME PACKAGE TRACKING
 // ==========================================
@@ -1136,7 +1191,6 @@ function executeClientPackageSearch() {
     const searchInput = document.getElementById('client-search-input');
     const outputArea = document.getElementById('tracker-result-output');
     if (!searchInput || !outputArea) return;
-
     const query = searchInput.value.trim().toUpperCase();
     if (!query) {
         alert("Please enter a Document ID to perform tracking.");
@@ -1144,6 +1198,7 @@ function executeClientPackageSearch() {
     }
 
     // 1. Find the matching document entry from your document cache
+
     const doc = documentCache.find(d => d?.docId?.toUpperCase() === query);
 
     if (!doc) {
@@ -1157,21 +1212,16 @@ function executeClientPackageSearch() {
     }
 
     // 2. Determine Status Badge Colors
-    const currentStatusText = doc.currentStatus || doc.status || 'In Review';
+
     let statusClass = "bg-amber-100 text-amber-800 border-amber-200";
     if (doc.status?.toLowerCase().includes("approved")) statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
     if (doc.status?.toLowerCase().includes("return") || doc.status?.toLowerCase().includes("reject")) statusClass = "bg-rose-100 text-rose-800 border-rose-200";
+
     // 3. Extract and Process the JSON History Array from Column F
     let historyRaw = doc.history || doc.History || doc.historyLog || "";
-    if (currentStatusText.toLowerCase().includes("approved") || currentStatusText.toLowerCase().includes("ready")) {
-        statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
-    }
-    if (currentStatusText.toLowerCase().includes("return") || currentStatusText.toLowerCase().includes("reject")) {
-        statusClass = "bg-rose-100 text-rose-800 border-rose-200";
-    }
 
     // Check fallback arrays if the mapped property is raw
-    let historyRaw = doc.history || doc.History || doc.historyLog || "";
+
     if (!historyRaw && doc._raw && Array.isArray(doc._raw)) historyRaw = doc._raw[5];
     if (!historyRaw && Array.isArray(doc)) historyRaw = doc[5];
 
@@ -1181,7 +1231,6 @@ function executeClientPackageSearch() {
             historyArray = typeof historyRaw === 'string' ? JSON.parse(historyRaw) : historyRaw;
         } catch (e) {
             console.warn("History log is plain text rather than formal JSON array format:", historyRaw);
-            console.warn("Parsing error on timeline entry logs:", e);
             historyArray = String(historyRaw).split(/\n|\||;/).map(str => ({ description: str.trim() })).filter(item => item.description);
         }
     }
@@ -1190,7 +1239,6 @@ function executeClientPackageSearch() {
     if (Array.isArray(historyArray) && historyArray.length > 0) {
 
         // Sort explicitly by date descending (Newest first at the top)
-    if (Array.isArray(historyArray) && historyArray.length > 0) {
         const sortedHistory = [...historyArray].sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
             const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
@@ -1201,11 +1249,7 @@ function executeClientPackageSearch() {
             const isLatest = index === 0; 
             const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.desc || "";
-            const isLatest = index === 0;
-            const logTitle = entry.title || entry.status || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
-            const logDesc = entry.description || entry.remarks || entry.desc || "";
             const logTime = entry.timestamp || entry.time || entry.date || "";
-            const logOffice = entry.office || entry.officeLocation || entry.location || "";
 
             // 🌟 EXTRACT OFFICE: Looks inside the history entry properties for office metadata
 
@@ -1215,30 +1259,28 @@ function executeClientPackageSearch() {
                     <div class="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm transition-all
                         ${isLatest ? 'bg-indigo-600 ring-4 ring-indigo-100 scale-110 z-10' : 'bg-gray-300'}">
                     </div>
-                    
                     <div class="${isLatest ? 'bg-indigo-50/60 p-4 rounded-xl border border-indigo-100/40' : 'pt-1 pb-2'}">
                         <span class="text-[10px] font-bold ${isLatest ? 'text-indigo-600' : 'text-gray-400'} uppercase tracking-wider block">
                             ${isLatest ? '🌟 Latest Movement Activity' : 'Past Routing Location Event'}
                         </span>
-                        
+
                         <h5 class="text-xs font-bold text-gray-800 mt-0.5">${logTitle}</h5>
-                        
                         ${logOffice ? `
                             <div class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-semibold">
                                 <i class="fa-solid fa-location-dot text-[9px] text-indigo-500"></i> ${logOffice}
                             </div>
                         ` : ''}
+
                         ${logDesc ? `<p class="text-xs text-gray-600 ${logOffice ? 'mt-1.5' : 'mt-0.5'} leading-relaxed font-normal whitespace-pre-line">${logDesc}</p>` : ''}
-                        
-                        ${logDesc ? `<p class="text-xs text-gray-600 mt-1 leading-relaxed font-normal italic">"${logDesc}"</p>` : ''}
-                        
                         ${logTime ? `<span class="text-[10px] font-medium text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1 text-[9px]"></i> ${logTime}</span>` : ''}
                     </div>
                 </div>
             `;
         });
     } else {
+
         // Fallback interface layout if history logs are completely empty
+
         timelineHTML = `
             <div class="relative pl-6">
                 <div class="absolute -left-[5px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow-sm ring-4 ring-indigo-100"></div>
@@ -1246,14 +1288,12 @@ function executeClientPackageSearch() {
                     <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">🌟 Latest Movement Activity</span>
                     <h5 class="text-xs font-semibold text-gray-900 mt-0.5">${doc.currentStatus || doc.status || 'In Review'}</h5>
                     ${doc.office ? `<p class="text-[11px] font-medium text-gray-500 mt-0.5"><i class="fa-solid fa-location-dot mr-1 text-indigo-500"></i> ${doc.office}</p>` : ''}
-                    <h5 class="text-xs font-semibold text-gray-900 mt-0.5">${currentStatusText}</h5>
                     <p class="text-xs text-gray-600 mt-1">Document successfully registered in system pipeline processing queues.</p>
                 </div>
             </div>
         `;
     }
     // 4. Render Final Framework Layout Container
-
     outputArea.innerHTML = `
         <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-6">
@@ -1266,7 +1306,6 @@ function executeClientPackageSearch() {
                     <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Current Lifecycle Status</span>
                     <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase border ${statusClass}">
                         ${doc.status || 'In Review'}
-                        ${currentStatusText}
                     </span>
                 </div>
             </div>
@@ -1274,39 +1313,12 @@ function executeClientPackageSearch() {
                 <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4"><i class="fa-solid fa-truck-ramp-box mr-1.5 text-indigo-500"></i> Real-time Tracking History Logs</h4>
                 <div class="relative pl-1 border-l-2 border-dashed border-gray-200 ml-2 space-y-6 py-2">
                     ${timelineHTML}
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4"><i class="fa-solid fa-truck-ramp-box mr-1.5 text-indigo-500"></i> Real-time Tracking History Logs</h4>
-                    <div class="relative pl-1 border-l-2 border-dashed border-gray-200 ml-2 space-y-6 py-2">
-                        ${timelineHTML}
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100/70 h-fit space-y-3 text-xs">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-2 border-b border-gray-200/60"><i class="fa-solid fa-flag-checkered mr-1"></i> Destination Details</h4>
-                    <div><span class="text-gray-400 block text-[10px] uppercase">Target Office</span><span class="font-semibold text-gray-800">${doc.destinationOffice || doc.destOffice || 'N/A'}</span></div>
-                    <div><span class="text-gray-400 block text-[10px] uppercase">Personnel Assignee</span><span class="font-semibold text-gray-800">${doc.destinationPerson || doc.destPerson || 'Not Specified'}</span></div>
-                    <div class="pt-2"><a href="${doc.driveFileUrl || '#'}" target="_blank" class="text-indigo-600 font-semibold hover:underline inline-flex items-center gap-1"><i class="fa-solid fa-file-pdf text-red-500"></i> Open Drive Document</a></div>
                 </div>
             </div>
         </div>
     `;
 }
     window.addEventListener('DOMContentLoaded', async () => {
-   / ==========================================
-// 5. WINDOW GLOBAL LIFECYCLE LISTENERS
-// ==========================================
-window.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const res = await fetch(API_URL);
-        documentCache = await res.json();
-    } catch(e) { 
-        console.warn("Warm-up data cache fetch exception handling:", e); 
-    }
-
-    const savedSession = localStorage.getItem('docTrack_session');
-    if (savedSession) {
         try {
             const res = await fetch(API_URL);
             documentCache = await res.json();
@@ -1314,27 +1326,16 @@ window.addEventListener('DOMContentLoaded', async () => {
         const savedSession = localStorage.getItem('docTrack_session');
         if (savedSession) {
             const user = JSON.parse(savedSession);
-            renderTargetDashboard(user.role, user.username, user.fullName, user.office);
-        } catch (e) {
-            console.error("Session parse anomaly encountered:", e);
-            localStorage.removeItem('docTrack_session');
+             renderTargetDashboard(user.role, user.username, user.fullName, user.office);
         }
     });
         document.addEventListener("DOMContentLoaded", function() {
-    }
-    
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function() {
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     const closeSidebarBtn = document.getElementById("close-sidebar-btn");
     const sidebar = document.getElementById("dashboard-sidebar");
 
     // Open Sidebar on Mobile
+
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener("click", () => {
             sidebar.classList.remove("-translate-x-full");
@@ -1348,6 +1349,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
-</script>
+ </script> 
 </body>
 </html>

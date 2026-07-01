@@ -541,10 +541,8 @@
             &copy; 2026 DocTrack System. Crafted with GitHub, Sheets, and Drive.
         </footer>
     </main>
-
-  <script>
-
-    const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwADhm98021HnUaOONdpcJTIjFz-dU9uQFF-SrY2ZC-owVzGd27C617ri2J8kZ7JUt6/exec"; 
 
     let documentCache = [];
     let currentLoggedUserRole = '';
@@ -635,77 +633,78 @@
         }
     }
 
-   async function handleSystemLogin(event) {
-    if (event) event.preventDefault();
+    async function handleLogin(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById('login-username').value.trim();
+    const passwordInput = document.getElementById('login-password').value.trim();
+    const loginBtn = document.getElementById('btn-login-submit');
 
-    const userInput = document.getElementById('login-username');
-    const passwordInput = document.getElementById('login-password');
-    const loginBtn = document.getElementById('login-submit-btn');
-    const errorMessage = document.getElementById('login-error-msg');
-
-    if (!userInput || !passwordInput) return;
-
-    const username = userInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!username || !password) {
-        if (errorMessage) {
-            errorMessage.textContent = "Please fill out both username and password fields.";
-            errorMessage.classList.remove('hidden');
-        }
+    if (!usernameInput || !passwordInput) {
+        alert("Please enter both your username and password.");
         return;
     }
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
 
-    if (loginBtn) {
-        loginBtn.disabled = true;
-        loginBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Authenticating...`;
-    }
-    if (errorMessage) errorMessage.classList.add('hidden');
-
+    const loginFormData = new FormData();
+    loginFormData.append("action", "login");
+    loginFormData.append("username", usernameInput);
+    loginFormData.append("password", passwordInput);
     try {
-        const payload = {
-            action: 'loginVerification',
-            username: username,
-            password: password
-        };
+        const response = await fetch(API_URL, { method: "POST", body: loginFormData });
 
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        // Read response text first to make sure it's valid JSON
 
-        const data = await response.json();
+        const rawText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseError) {
+            console.error("Malformed JSON received from backend:", rawText);
+            throw new Error("Invalid backend format response string.");
+        }
 
-        if (data && data.success) {
-            const sessionPayload = {
-                username: data.username || username,
-                role: data.role || 'Staff',
-                fullName: data.fullName || 'Authorized User',
-                office: data.office || 'Main Headquarters'
-            };
-            
-            localStorage.setItem('docTrack_session', JSON.stringify(sessionPayload));
-            renderTargetDashboard(sessionPayload.role, sessionPayload.username, sessionPayload.fullName, sessionPayload.office);
+        if (data.success) {
+            alert(`Welcome back, ${data.fullName || data.username}!`);
+            localStorage.setItem('docTrack_session', JSON.stringify({
+                role: data.role,
+                username: data.username,
+                fullName: data.fullName,
+                office: data.office || 'N/A'
+            }));
+            renderTargetDashboard(data.role, data.username, data.fullName, data.office || 'N/A'); 
         } else {
-            throw new Error(data.message || "Invalid authentication credentials matched.");
+
+            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
+
         }
 
-    } catch (error) {
-        console.error("Authentication Request Exception:", error);
-        if (errorMessage) {
-            errorMessage.textContent = error.message || "Network authentication failure. Verify credentials.";
-            errorMessage.classList.remove('hidden');
-        }
+    } catch (err) {
+
+        console.error("Login trace execution error details:", err);
+
+        alert("Connection failed. Verify Apps Script configuration permissions.");
+
     } finally {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = `Sign In to Workspace <i class="fa-solid fa-arrow-right-to-bracket ml-1.5 text-xs opacity-80"></i>`;
-        }
+
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `Sign In`;
     }
 }
 
+    function renderTargetDashboard(role, targetKey, fullName, office) {
+        currentLoggedUserRole = role;
+        currentLoggedFullName = fullName;
+        currentLoggedUserOffice = office || 'Main Desk';
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
+              // Ensure sidebar handles its display adaptively across mobile & desktop platforms
+        const sidebar = document.getElementById('dashboard-sidebar');
+        if (window.innerWidth < 1024) {
+            sidebar.classList.add('hidden'); // Keep hidden on mobile by default
+        } else {
+            sidebar.classList.remove('hidden'); // Force layout visible on desktop
+        }
    function renderTargetDashboard(role, targetKey, fullName, office) {
     // Standardize matching string case rules
     const lowerRole = String(role).toLowerCase();
@@ -731,6 +730,23 @@
         document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
     }
 
+        document.getElementById('staff-only-links').classList.add('hidden');
+        document.getElementById('superadmin-only-links').classList.add('hidden');
+        document.getElementById('client-only-links').classList.add('hidden');
+        document.getElementById('shared-dashboard-view').classList.add('hidden');
+        document.getElementById('client-view').classList.add('hidden');
+        document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
+
+        const submissionView = document.getElementById('client-submission-view');
+        if (submissionView) submissionView.classList.add('hidden');
+        const receiverPanel = document.getElementById('office-receiver-view');
+        if (receiverPanel) receiverPanel.classList.add('hidden');
+
+       if (role === 'client') {
+            document.getElementById('client-only-links').classList.remove('hidden');
+            document.getElementById('client-view').classList.remove('hidden');
+
+            // Build the Shopee-style tracking layout search engine base
     // Reset visibility structures safely
     const views = [
         'staff-only-links', 'superadmin-only-links', 'client-only-links', 
@@ -742,6 +758,7 @@
         if (el) el.classList.add('hidden');
     });
 
+            document.getElementById('client-view').innerHTML = `
     if (lowerRole === 'client') {
         const clientView = document.getElementById('client-view');
         const clientLinks = document.getElementById('client-only-links');
@@ -779,6 +796,10 @@
             `;
         }
 
+            // Auto-populate and fire if a targetKey was passed during initialization
+
+            if (targetKey && targetKey !== 'client') {
+                document.getElementById('client-search-input').value = targetKey;
         if (targetKey && targetKey !== 'client') {
             const searchInput = document.getElementById('client-search-input');
             if (searchInput) {
@@ -793,6 +814,15 @@
         const receiverPanel = document.getElementById('office-receiver-view');
         const superadminLinks = document.getElementById('superadmin-only-links');
 
+        else if (role === 'admin' || role === 'superadmin') {
+            document.getElementById('staff-only-links').classList.remove('hidden');
+            document.getElementById('shared-dashboard-view').classList.remove('hidden');
+            if (receiverPanel) receiverPanel.classList.remove('hidden'); 
+            renderAdminTable();
+            if (role === 'superadmin') {
+                document.getElementById('superadmin-only-links').classList.remove('hidden');
+                loadUserLedgerDirectory();
+            }
         if (staffLinks) staffLinks.classList.remove('hidden');
         if (sharedDashboard) sharedDashboard.classList.remove('hidden');
         if (receiverPanel) receiverPanel.classList.remove('hidden');
@@ -804,6 +834,7 @@
             if (typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory();
         }
     }
+
 }
     function renderClientView(doc) {
         const clientView = document.getElementById('client-view');
@@ -1211,6 +1242,7 @@ function executeClientPackageSearch() {
         return;
     }
 
+    // 1. Find the matching document entry from your document cache
     const doc = documentCache.find(d => d?.docId?.toUpperCase() === query);
 
     if (!doc) {
@@ -1223,8 +1255,13 @@ function executeClientPackageSearch() {
         return;
     }
 
+    // 2. Determine Status Badge Colors
     const currentStatusText = doc.currentStatus || doc.status || 'In Review';
     let statusClass = "bg-amber-100 text-amber-800 border-amber-200";
+    if (doc.status?.toLowerCase().includes("approved")) statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
+    if (doc.status?.toLowerCase().includes("return") || doc.status?.toLowerCase().includes("reject")) statusClass = "bg-rose-100 text-rose-800 border-rose-200";
+    // 3. Extract and Process the JSON History Array from Column F
+    let historyRaw = doc.history || doc.History || doc.historyLog || "";
     if (currentStatusText.toLowerCase().includes("approved") || currentStatusText.toLowerCase().includes("ready")) {
         statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
     }
@@ -1232,6 +1269,7 @@ function executeClientPackageSearch() {
         statusClass = "bg-rose-100 text-rose-800 border-rose-200";
     }
 
+    // Check fallback arrays if the mapped property is raw
     let historyRaw = doc.history || doc.History || doc.historyLog || "";
     if (!historyRaw && doc._raw && Array.isArray(doc._raw)) historyRaw = doc._raw[5];
     if (!historyRaw && Array.isArray(doc)) historyRaw = doc[5];
@@ -1241,13 +1279,16 @@ function executeClientPackageSearch() {
         try {
             historyArray = typeof historyRaw === 'string' ? JSON.parse(historyRaw) : historyRaw;
         } catch (e) {
+            console.warn("History log is plain text rather than formal JSON array format:", historyRaw);
             console.warn("Parsing error on timeline entry logs:", e);
             historyArray = String(historyRaw).split(/\n|\||;/).map(str => ({ description: str.trim() })).filter(item => item.description);
         }
     }
 
     let timelineHTML = "";
+    if (Array.isArray(historyArray) && historyArray.length > 0) {
 
+        // Sort explicitly by date descending (Newest first at the top)
     if (Array.isArray(historyArray) && historyArray.length > 0) {
         const sortedHistory = [...historyArray].sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
@@ -1256,12 +1297,18 @@ function executeClientPackageSearch() {
         });
 
         sortedHistory.forEach((entry, index) => {
+            const isLatest = index === 0; 
+            const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
+            const logDesc = entry.description || entry.desc || "";
             const isLatest = index === 0;
             const logTitle = entry.title || entry.status || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.remarks || entry.desc || "";
             const logTime = entry.timestamp || entry.time || entry.date || "";
             const logOffice = entry.office || entry.officeLocation || entry.location || "";
 
+            // 🌟 EXTRACT OFFICE: Looks inside the history entry properties for office metadata
+
+            const logOffice = entry.office || entry.location || entry.currentOffice || "";
             timelineHTML += `
                 <div class="relative pl-6">
                     <div class="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm transition-all
@@ -1280,6 +1327,7 @@ function executeClientPackageSearch() {
                                 <i class="fa-solid fa-location-dot text-[9px] text-indigo-500"></i> ${logOffice}
                             </div>
                         ` : ''}
+                        ${logDesc ? `<p class="text-xs text-gray-600 ${logOffice ? 'mt-1.5' : 'mt-0.5'} leading-relaxed font-normal whitespace-pre-line">${logDesc}</p>` : ''}
                         
                         ${logDesc ? `<p class="text-xs text-gray-600 mt-1 leading-relaxed font-normal italic">"${logDesc}"</p>` : ''}
                         
@@ -1289,17 +1337,21 @@ function executeClientPackageSearch() {
             `;
         });
     } else {
+        // Fallback interface layout if history logs are completely empty
         timelineHTML = `
             <div class="relative pl-6">
                 <div class="absolute -left-[5px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow-sm ring-4 ring-indigo-100"></div>
                 <div class="bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/40">
                     <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">🌟 Latest Movement Activity</span>
+                    <h5 class="text-xs font-semibold text-gray-900 mt-0.5">${doc.currentStatus || doc.status || 'In Review'}</h5>
+                    ${doc.office ? `<p class="text-[11px] font-medium text-gray-500 mt-0.5"><i class="fa-solid fa-location-dot mr-1 text-indigo-500"></i> ${doc.office}</p>` : ''}
                     <h5 class="text-xs font-semibold text-gray-900 mt-0.5">${currentStatusText}</h5>
                     <p class="text-xs text-gray-600 mt-1">Document successfully registered in system pipeline processing queues.</p>
                 </div>
             </div>
         `;
     }
+    // 4. Render Final Framework Layout Container
 
     outputArea.innerHTML = `
         <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all">
@@ -1312,10 +1364,15 @@ function executeClientPackageSearch() {
                 <div class="sm:text-right shrink-0">
                     <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Current Lifecycle Status</span>
                     <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase border ${statusClass}">
+                        ${doc.status || 'In Review'}
                         ${currentStatusText}
                     </span>
                 </div>
             </div>
+            <div class="mt-4">
+                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4"><i class="fa-solid fa-truck-ramp-box mr-1.5 text-indigo-500"></i> Real-time Tracking History Logs</h4>
+                <div class="relative pl-1 border-l-2 border-dashed border-gray-200 ml-2 space-y-6 py-2">
+                    ${timelineHTML}
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2">
@@ -1335,6 +1392,7 @@ function executeClientPackageSearch() {
         </div>
     `;
 }
+    window.addEventListener('DOMContentLoaded', async () => {
    / ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================
@@ -1349,12 +1407,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     const savedSession = localStorage.getItem('docTrack_session');
     if (savedSession) {
         try {
+            const res = await fetch(API_URL);
+            documentCache = await res.json();
+        } catch(e) { console.warn(e); }
+        const savedSession = localStorage.getItem('docTrack_session');
+        if (savedSession) {
             const user = JSON.parse(savedSession);
             renderTargetDashboard(user.role, user.username, user.fullName, user.office);
         } catch (e) {
             console.error("Session parse anomaly encountered:", e);
             localStorage.removeItem('docTrack_session');
         }
+    });
+        document.addEventListener("DOMContentLoaded", function() {
     }
     
     const loginForm = document.getElementById('login-form');
@@ -1368,12 +1433,14 @@ document.addEventListener("DOMContentLoaded", function() {
     const closeSidebarBtn = document.getElementById("close-sidebar-btn");
     const sidebar = document.getElementById("dashboard-sidebar");
 
+    // Open Sidebar on Mobile
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener("click", () => {
             sidebar.classList.remove("-translate-x-full");
         });
     }
 
+    // Close Sidebar on Mobile
     if (closeSidebarBtn && sidebar) {
         closeSidebarBtn.addEventListener("click", () => {
             sidebar.classList.add("-translate-x-full");

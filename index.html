@@ -1235,7 +1235,6 @@ function executeClientPackageSearch() {
     }
 
     // 1. Find the matching document entry from your document cache
-
     const doc = documentCache.find(d => d?.docId?.toUpperCase() === query);
 
     if (!doc) {
@@ -1248,8 +1247,34 @@ function executeClientPackageSearch() {
         return;
     }
 
-    // 2. Determine Status Badge Colors
+    // 🌟 NEW SECURITY LAYER: Enforce Account Ownership Constraints
+    const savedSession = localStorage.getItem('docTrack_session');
+    let loggedInUsername = "";
+    if (savedSession) {
+        try {
+            const user = JSON.parse(savedSession);
+            loggedInUsername = user.username ? user.username.trim().toLowerCase() : "";
+        } catch (e) {
+            console.error("Session profile parse anomaly during tracking verification:", e);
+        }
+    }
 
+    const docOwner = doc.submittedBy ? String(doc.submittedBy).trim().toLowerCase() : "";
+    
+    // If the document exists but was uploaded by someone else, block visibility
+    if (docOwner !== loggedInUsername) {
+        outputArea.innerHTML = `
+            <div class="text-center p-8 bg-white rounded-2xl border border-amber-100 shadow-sm">
+                <i class="fa-solid fa-shield-halved text-red-600 text-4xl mb-3 block animate-pulse"></i>
+                <h4 class="font-bold text-gray-800 text-sm tracking-wide">Access Restriction Violation</h4>
+                <p class="text-xs text-gray-500 max-w-md mx-auto mt-2 leading-relaxed">
+                    This document package does not belong to your account profile. Clients are strictly authorized to track self-uploaded logistical entries only.
+                </p>
+            </div>`;
+        return;
+    }
+
+    // 2. Determine Status Badge Colors
     let statusClass = "bg-amber-100 text-amber-800 border-amber-200";
     if (doc.status?.toLowerCase().includes("approved")) statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
     if (doc.status?.toLowerCase().includes("return") || doc.status?.toLowerCase().includes("reject")) statusClass = "bg-rose-100 text-rose-800 border-rose-200";
@@ -1258,7 +1283,6 @@ function executeClientPackageSearch() {
     let historyRaw = doc.history || doc.History || doc.historyLog || "";
 
     // Check fallback arrays if the mapped property is raw
-
     if (!historyRaw && doc._raw && Array.isArray(doc._raw)) historyRaw = doc._raw[5];
     if (!historyRaw && Array.isArray(doc)) historyRaw = doc[5];
 
@@ -1274,7 +1298,6 @@ function executeClientPackageSearch() {
 
     let timelineHTML = "";
     if (Array.isArray(historyArray) && historyArray.length > 0) {
-
         // Sort explicitly by date descending (Newest first at the top)
         const sortedHistory = [...historyArray].sort((a, b) => {
             const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
@@ -1287,10 +1310,8 @@ function executeClientPackageSearch() {
             const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.desc || "";
             const logTime = entry.timestamp || entry.time || entry.date || "";
-
-            // 🌟 EXTRACT OFFICE: Looks inside the history entry properties for office metadata
-
             const logOffice = entry.office || entry.location || entry.currentOffice || "";
+
             timelineHTML += `
                 <div class="relative pl-6">
                     <div class="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm transition-all
@@ -1315,9 +1336,7 @@ function executeClientPackageSearch() {
             `;
         });
     } else {
-
         // Fallback interface layout if history logs are completely empty
-
         timelineHTML = `
             <div class="relative pl-6">
                 <div class="absolute -left-[5px] top-1.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white shadow-sm ring-4 ring-indigo-100"></div>
@@ -1330,6 +1349,7 @@ function executeClientPackageSearch() {
             </div>
         `;
     }
+
     // 4. Render Final Framework Layout Container
     outputArea.innerHTML = `
         <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm transition-all">
@@ -1355,7 +1375,6 @@ function executeClientPackageSearch() {
         </div>
     `;
 }
-
    async function handleSubmitDocumentPackage(event) {
     event.preventDefault();
     

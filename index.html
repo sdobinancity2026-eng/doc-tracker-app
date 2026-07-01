@@ -665,16 +665,16 @@
             alert(`Welcome back, ${data.fullName || data.username}!`);
             
             // Save role, position, and office directly from Google Sheets rows
+            // Inside your handleLogin function success block:
             localStorage.setItem('docTrack_session', JSON.stringify({
                 role: data.role,
-                position: data.position || data.role, // Grab Position column
+                position: data.position,
                 username: data.username,
                 fullName: data.fullName,
-                office: data.office || 'N/A'          // Grab Office column
+                office: data.office,
+                schoolName: data.schoolName // Save column G parameter
             }));
-            
-            // Pass the custom role/position data down to the UI renderer
-            renderTargetDashboard(data.role, data.username, data.fullName, data.office, data.position); 
+            renderTargetDashboard(data.role, data.username, data.fullName, data.office, data.position, data.schoolName);
         } else {
             alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
         }
@@ -687,14 +687,14 @@
     }
 }
 
-   function renderTargetDashboard(role, targetKey, fullName, office, position) {
+   function renderTargetDashboard(role, targetKey, fullName, office, position, schoolName) {
     const lowerRole = String(role).toLowerCase();
     
     currentLoggedUserRole = role;
     currentLoggedFullName = fullName;
-    // Fall back to a blank string if it's not provided yet, instead of hardcoding 'Main Desk'
     currentLoggedUserOffice = office && office !== 'N/A' ? office : ''; 
     
+    // 1. Core Visibility Screen Toggles
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('top-navbar').classList.remove('hidden');
 
@@ -705,26 +705,36 @@
         if (sidebar) sidebar.classList.remove('hidden');
     }
 
-    // Display actual sheet values in your sidebar layout elements
+    // 2. Hydrate Global Profile Component Texts
     if (document.getElementById('sidebar-fullname')) {
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
     }
     
     if (document.getElementById('sidebar-role-pill')) {
-        // Fall back to standard role naming text if the position sheet cell is empty
+        // Enforce fallback value structures if specific column records are left blank
         const userPosition = position || role; 
         
-        if (lowerRole === 'admin' || lowerRole === 'superadmin') {
-            document.getElementById('sidebar-role-pill').innerHTML = `
-                <div class="text-xs text-gray-400 font-bold lowercase tracking-normal mb-0.5">${userPosition}</div>
-                <div class="text-[11px] text-gray-500 font-medium">${currentLoggedUserOffice}</div>
-            `;
+        // Contextually determine the secondary line text based on the user group role
+        let regionalLocationText = "";
+        if (lowerRole === 'client') {
+            regionalLocationText = schoolName || office || "External Station";
         } else {
-            document.getElementById('sidebar-role-pill').innerText = `${userPosition} (${currentLoggedUserOffice})`;
+            regionalLocationText = currentLoggedUserOffice || "Operations Desk";
         }
+        
+        // 🌟 TAILWIND REFINEMENTS: Corners changed to rounded-lg, lowercase text styling removed
+        document.getElementById('sidebar-role-pill').className = "bg-blue-600/20 border border-blue-500/30 rounded-lg p-3 mt-2 text-white block w-full";
+        
+        document.getElementById('sidebar-role-pill').innerHTML = `
+            <div class="text-xs font-semibold tracking-normal text-blue-200">${userPosition}</div>
+            <div class="text-[11px] text-gray-300 font-medium mt-1 select-none flex items-center gap-1">
+                <i class="fa-solid ${lowerRole === 'client' ? 'fa-school' : 'fa-building'} text-[10px] text-gray-400"></i> 
+                ${regionalLocationText}
+            </div>
+        `;
     }
 
-    // Reset visibility layouts
+    // 3. Clear App Workspace Dashboard Context Nodes
     const viewIds = [
         'staff-only-links', 'superadmin-only-links', 'client-only-links', 
         'shared-dashboard-view', 'client-view', 'superadmin-user-ledger-view', 
@@ -740,6 +750,7 @@
     const receiverPanel = document.getElementById('office-receiver-view');
     if (receiverPanel) receiverPanel.classList.add('hidden');
 
+    // 4. Privileged Route Component Rendering
     if (lowerRole === 'client') {
         if (document.getElementById('client-only-links')) document.getElementById('client-only-links').classList.remove('hidden');
         if (document.getElementById('client-view')) {
@@ -1348,6 +1359,7 @@ function executeClientPackageSearch() {
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Warm up cache data
     try {
         const res = await fetch(API_URL);
         documentCache = await res.json();
@@ -1355,17 +1367,20 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.warn("Warm-up data cache fetch exception handling:", e); 
     }
 
+    // 2. Read and load saved user session parameters
     const savedSession = localStorage.getItem('docTrack_session');
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
-            // 🌟 FIX: Pass the stored position and office values when auto-loading the dashboard session
+            
+            // Call the renderer exactly once, passing all 6 required arguments
             renderTargetDashboard(
                 user.role, 
                 user.username, 
                 user.fullName, 
                 user.office || 'N/A', 
-                user.position || user.role
+                user.position || user.role,
+                user.schoolName || ''
             );
         } catch (e) {
             console.error("Session parse anomaly encountered:", e);
@@ -1373,9 +1388,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
+    // 3. Attach form submission event bindings
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin); // Ensure this points to handleLogin
+        loginForm.addEventListener('submit', handleLogin);
     }
 });
         document.addEventListener("DOMContentLoaded", function() {

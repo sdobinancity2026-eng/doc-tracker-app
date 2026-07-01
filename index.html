@@ -685,42 +685,73 @@
     }
 }
 
-    function renderTargetDashboard(role, targetKey, fullName, office) {
-        currentLoggedUserRole = role;
-        currentLoggedFullName = fullName;
-        currentLoggedUserOffice = office || 'Main Desk';
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
+   function renderTargetDashboard(role, targetKey, fullName, office) {
+    // 1. Normalize case comparison variables safely
+    const lowerRole = String(role).toLowerCase();
+    
+    currentLoggedUserRole = role;
+    currentLoggedFullName = fullName;
+    currentLoggedUserOffice = office && office !== 'N/A' ? office : 'Main Desk';
+    
+    // 2. Manage master layout screen transitions
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('top-navbar').classList.remove('hidden');
 
-              // Ensure sidebar handles its display adaptively across mobile & desktop platforms
-        const sidebar = document.getElementById('dashboard-sidebar');
-        if (window.innerWidth < 1024) {
-            sidebar.classList.add('hidden'); // Keep hidden on mobile by default
-        } else {
-            sidebar.classList.remove('hidden'); // Force layout visible on desktop
-        }
+    // Adaptive sidebar layout sizing configurations
+    const sidebar = document.getElementById('dashboard-sidebar');
+    if (window.innerWidth < 1024) {
+        if (sidebar) sidebar.classList.add('hidden');
+    } else {
+        if (sidebar) sidebar.classList.remove('hidden');
+    }
 
+    // =========================================================
+    // 3. SIDEBAR TEXT MODIFICATIONS (Full Name, Position, Office)
+    // =========================================================
+    if (document.getElementById('sidebar-fullname')) {
+        // Displays user's complete actual name
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
-        document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
-        document.getElementById('staff-only-links').classList.add('hidden');
-        document.getElementById('superadmin-only-links').classList.add('hidden');
-        document.getElementById('client-only-links').classList.add('hidden');
-        document.getElementById('shared-dashboard-view').classList.add('hidden');
-        document.getElementById('client-view').classList.add('hidden');
-        document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
+    }
+    
+    if (document.getElementById('sidebar-role-pill')) {
+        if (lowerRole === 'admin' || lowerRole === 'superadmin') {
+            // Renders cleanly as: "Admin / Superadmin" on line 1, and "Office Name" directly under it
+            document.getElementById('sidebar-role-pill').innerHTML = `
+                <div class="font-bold text-indigo-400 uppercase tracking-wider text-[11px]">${role}</div>
+                <div class="text-xs text-gray-400 font-medium mt-0.5"><i class="fa-solid fa-building text-[10px] mr-1 text-gray-500"></i> ${currentLoggedUserOffice}</div>
+            `;
+        } else {
+            // Fallback default style handling for clients
+            document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
+        }
+    }
 
-        const submissionView = document.getElementById('client-submission-view');
+    // 4. Reset display nodes visibility
+    const viewIds = [
+        'staff-only-links', 'superadmin-only-links', 'client-only-links', 
+        'shared-dashboard-view', 'client-view', 'superadmin-user-ledger-view', 
+        'client-submission-view', 'office-receiver-view'
+    ];
+    viewIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
 
-        if (submissionView) submissionView.classList.add('hidden');
-        const receiverPanel = document.getElementById('office-receiver-view');
-        if (receiverPanel) receiverPanel.classList.add('hidden');
-       if (role === 'client') {
+    const submissionView = document.getElementById('client-submission-view');
+    if (submissionView) submissionView.classList.add('hidden');
+    
+    const receiverPanel = document.getElementById('office-receiver-view');
+    if (receiverPanel) receiverPanel.classList.add('hidden');
+
+    // 5. Evaluate role privileges
+    if (lowerRole === 'client') {
+        if (document.getElementById('client-only-links')) {
             document.getElementById('client-only-links').classList.remove('hidden');
-            document.getElementById('client-view').classList.remove('hidden');
-
-            // Build the Shopee-style tracking layout search engine base
-
-            document.getElementById('client-view').innerHTML = `
+        }
+        const clientView = document.getElementById('client-view');
+        if (clientView) {
+            clientView.classList.remove('hidden');
+            clientView.innerHTML = `
                 <div class="max-w-2xl mx-auto px-4 py-8">
                     <div class="bg-indigo-900 rounded-2xl p-6 shadow-lg text-white mb-6">
                         <h3 class="text-lg font-bold mb-2">Track Your Document Package</h3>
@@ -746,28 +777,39 @@
                     </div>
                 </div>
             `;
-
-            // Auto-populate and fire if a targetKey was passed during initialization
-
-            if (targetKey && targetKey !== 'client') {
-                document.getElementById('client-search-input').value = targetKey;
-                executeClientPackageSearch();
-            }
         }
 
-        else if (role === 'admin' || role === 'superadmin') {
+        if (targetKey && targetKey !== 'client') {
+            const clientInput = document.getElementById('client-search-input');
+            if (clientInput) clientInput.value = targetKey;
+            if (typeof executeClientPackageSearch === 'function') executeClientPackageSearch();
+        }
+    } 
+    else if (lowerRole === 'admin' || lowerRole === 'superadmin') {
+        if (document.getElementById('staff-only-links')) {
             document.getElementById('staff-only-links').classList.remove('hidden');
+        }
+        if (document.getElementById('shared-dashboard-view')) {
             document.getElementById('shared-dashboard-view').classList.remove('hidden');
-            if (receiverPanel) receiverPanel.classList.remove('hidden'); 
+        }
+        if (receiverPanel) {
+            receiverPanel.classList.remove('hidden'); 
+        }
+        
+        if (typeof renderAdminTable === 'function') {
             renderAdminTable();
-            if (role === 'superadmin') {
+        }
+        
+        if (lowerRole === 'superadmin') {
+            if (document.getElementById('superadmin-only-links')) {
                 document.getElementById('superadmin-only-links').classList.remove('hidden');
+            }
+            if (typeof loadUserLedgerDirectory === 'function') {
                 loadUserLedgerDirectory();
             }
         }
     }
-
-
+}
     function renderClientView(doc) {
         const clientView = document.getElementById('client-view');
         clientView.classList.remove('hidden');

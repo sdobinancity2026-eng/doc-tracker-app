@@ -1181,13 +1181,23 @@
         return;
     }
 
-    // Determine Status Badge Colors (Matches Admin dashboard styles)
-    let statusClass = "bg-amber-100 text-amber-800 border-amber-200";
-    if (doc.status?.toLowerCase().includes("approved")) statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
-    if (doc.status?.toLowerCase().includes("return") || doc.status?.toLowerCase().includes("reject")) statusClass = "bg-rose-100 text-rose-800 border-rose-200";
+    // Normalized Status String straight from the spreadsheet row data
+    const rawStatus = (doc.status || 'IN REVIEW').toUpperCase().trim();
 
-    // Standard fallback logging timeline arrays if your row logic includes a tracking history string/array
-    // If your backend only tracks one single current location, we default beautifully to a 2-step setup:
+    // MATCHING ADMIN DASHBOARD COLOR SCHEMES EXACTLY
+    let statusClass = "bg-amber-100 text-amber-800 border-amber-200"; // Default 'IN REVIEW' yellow-orange tint
+    
+    if (rawStatus.includes("APPROVED") || rawStatus.includes("SUBMITTED HARD COPY")) {
+        statusClass = "bg-emerald-100 text-emerald-800 border-emerald-200 text-[11px] font-bold"; // Admin Green Match
+    } else if (rawStatus.includes("RETURN") || rawStatus.includes("REJECT")) {
+        statusClass = "bg-rose-100 text-rose-800 border-rose-200"; // Admin Red Match
+    } else if (rawStatus.includes("REVISION")) {
+        statusClass = "bg-orange-100 text-orange-800 border-orange-200"; // Admin Orange Match
+    } else if (rawStatus.includes("ROUTE")) {
+        statusClass = "bg-indigo-100 text-indigo-800 border-indigo-200"; // Admin Blue Route Match
+    }
+
+    // Render Timeline Output Panel
     outputArea.innerHTML = `
         <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-6">
@@ -1198,8 +1208,8 @@
                 </div>
                 <div class="sm:text-right shrink-0">
                     <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">Current Lifecycle Status</span>
-                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase border ${statusClass}">
-                        ${doc.status || 'In Review'}
+                    <span class="inline-block px-3 py-1 rounded-sm text-[11px] font-extrabold uppercase border ${statusClass}">
+                        ${rawStatus}
                     </span>
                 </div>
             </div>

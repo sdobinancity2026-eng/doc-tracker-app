@@ -1355,6 +1355,72 @@ function executeClientPackageSearch() {
         </div>
     `;
 }
+
+    async function handleSubmitDocumentPackage(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('btn-submit-package');
+    const docTitleInput = document.getElementById('doc-title').value.trim();
+    const docTypeInput = document.getElementById('doc-type').value;
+
+    if (!docTitleInput) {
+        alert("Please enter a document title.");
+        return;
+    }
+
+    // 1. Retrieve the active logged-in session profile data
+    const savedSession = localStorage.getItem('docTrack_session');
+    let username = "anonymous";
+    let originLocation = "External Client Station";
+
+    if (savedSession) {
+        try {
+            const user = JSON.parse(savedSession);
+            username = user.username || username;
+            
+            // If they are a client, use their School Name as the origin point
+            if (user.role === 'client') {
+                originLocation = user.schoolName || "External Client Station";
+            } else {
+                originLocation = user.office || "Main Desk";
+            }
+        } catch (e) {
+            console.error("Failed to parse session during document submission:", e);
+        }
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Submitting...`;
+
+    // 2. Package the submission payloads
+    const formData = new FormData();
+    formData.append("action", "submitDocument"); // Adjust this action text to match your Code.gs setup
+    formData.append("title", docTitleInput);
+    formData.append("docType", docTypeInput);
+    formData.append("submittedBy", username);
+    formData.append("origin", originLocation); // Maps directly to your sheet's Column H ("origin")
+
+    try {
+        const response = await fetch(API_URL, { method: "POST", body: formData });
+        const data = await response.json();
+
+        if (data.success) {
+            alert(`Document Package successfully registered! Tracking ID: ${data.docId}`);
+            if (document.getElementById('doc-submission-form')) {
+                document.getElementById('doc-submission-form').reset();
+            }
+            // Optional: Refresh local views or navigate back
+        } else {
+            alert(`Submission Error: ${data.message || 'Could not register package.'}`);
+        }
+    } catch (err) {
+        console.error("Submission pipeline error:", err);
+        alert("Network processing failure. Please try again.");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `Submit Document Package`;
+    }
+}
     // ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================

@@ -1207,12 +1207,16 @@
     let timelineHTML = "";
 
     if (Array.isArray(historyArray) && historyArray.length > 0) {
-        // FIXED: Removed .reverse() so the events display chronologically in ASCENDING order (Oldest -> Newest)
-        const ascendingHistory = [...historyArray]; 
+        // 🌟 FORCE EXPLICIT TIMESTAMP SORTING: Newest (Most recent Date) down to Oldest Date
+        const sortedHistory = [...historyArray].sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return timeB - timeA; // Descending Sort Equation
+        });
 
-        ascendingHistory.forEach((entry, index) => {
-            // In ascending order, the very last element in the array is the latest operational event
-            const isLatest = index === ascendingHistory.length - 1; 
+        sortedHistory.forEach((entry, index) => {
+            // Since it's sorted descending, the very first element (index 0) is guaranteed to be the Newest!
+            const isLatest = index === 0; 
             
             const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.desc || "";

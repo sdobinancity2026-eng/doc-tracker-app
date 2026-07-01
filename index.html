@@ -1344,17 +1344,40 @@ function executeClientPackageSearch() {
         </div>
     `;
 }
-    window.addEventListener('DOMContentLoaded', async () => {
+    // ==========================================
+// 5. WINDOW GLOBAL LIFECYCLE LISTENERS
+// ==========================================
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res = await fetch(API_URL);
+        documentCache = await res.json();
+    } catch(e) { 
+        console.warn("Warm-up data cache fetch exception handling:", e); 
+    }
+
+    const savedSession = localStorage.getItem('docTrack_session');
+    if (savedSession) {
         try {
-            const res = await fetch(API_URL);
-            documentCache = await res.json();
-        } catch(e) { console.warn(e); }
-        const savedSession = localStorage.getItem('docTrack_session');
-        if (savedSession) {
             const user = JSON.parse(savedSession);
-             renderTargetDashboard(user.role, user.username, user.fullName, user.office);
+            // 🌟 FIX: Pass the stored position and office values when auto-loading the dashboard session
+            renderTargetDashboard(
+                user.role, 
+                user.username, 
+                user.fullName, 
+                user.office || 'N/A', 
+                user.position || user.role
+            );
+        } catch (e) {
+            console.error("Session parse anomaly encountered:", e);
+            localStorage.removeItem('docTrack_session');
         }
-    });
+    }
+    
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin); // Ensure this points to handleLogin
+    }
+});
         document.addEventListener("DOMContentLoaded", function() {
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     const closeSidebarBtn = document.getElementById("close-sidebar-btn");

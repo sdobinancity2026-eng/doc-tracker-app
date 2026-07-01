@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DocTrack Pro | SDO Biñan</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <script src="https://cdn.tailwindcss.com/3.4.15"></script>
     
@@ -12,21 +11,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <link rel="icon" type="image/png" sizes="32x32" href="https://sdobinancity2026-eng.github.io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://sdobinancity2026-eng.github.io/favicon-16x16.png">
-    <link rel="shortcut icon" href="https://sdobinancity2026-eng.github.io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://sdobinancity2026-eng.github.io/doc-tracker-app/assets/doctracklogo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://sdobinancity2026-eng.github.io/doc-tracker-app/assets/doctracklogo.png">
+    <link rel="shortcut icon" type="image/x-icon" href="https://sdobinancity2026-eng.github.io/doc-tracker-app/assets/doctracklogo.png">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="https://sdobinancity2026-eng.github.io/apple-touch-icon.png">
+    <link class="apple-touch-icon" sizes="180x180" href="https://sdobinancity2026-eng.github.io/doc-tracker-app/assets/doctracklogo.png">
 
     <link rel="manifest" href="./manifest.json">
-
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="DocTrack Pro">
     <meta name="apple-mobile-web-app-status-bar-style" content="#312e81">
     <meta name="theme-color" content="#312e81">
     
-
-   <style>
     <style>
         /* =========================================================
            THERMAL XPRINTER (XP-58IIH) 58mm PRINT SPECIFIC LAYOUT 
@@ -697,9 +693,13 @@
         document.getElementById('login-view').classList.add('hidden');
         document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
 
-        // Ensure standard desktop classes remain intact while hiding mobile views
+              // Ensure sidebar handles its display adaptively across mobile & desktop platforms
         const sidebar = document.getElementById('dashboard-sidebar');
-        sidebar.classList.add('hidden'); 
+        if (window.innerWidth < 1024) {
+            sidebar.classList.add('hidden'); // Keep hidden on mobile by default
+        } else {
+            sidebar.classList.remove('hidden'); // Force layout visible on desktop
+        }
 
         document.getElementById('sidebar-fullname').innerText = fullName || targetKey;
         document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
@@ -720,9 +720,25 @@
         if (role === 'client') {
             document.getElementById('client-only-links').classList.remove('hidden');
             document.getElementById('client-view').classList.remove('hidden');
-            const doc = documentCache.find(d => d.docId === targetKey || d.clientName.toLowerCase() === targetKey.toLowerCase());
-            if (doc) renderClientView(doc);
-        } 
+            
+            // Fixed: Added safe checks (?.) and string fallbacks to prevent undefined crashes
+            const doc = documentCache.find(d => 
+                d?.docId === targetKey || 
+                d?.clientName?.toLowerCase() === (targetKey || "").toLowerCase()
+            );
+            
+            if (doc) {
+                renderClientView(doc);
+            } else {
+                // Optional: Fallback view if the client has no documents yet
+                document.getElementById('client-view').innerHTML = `
+                    <div class="text-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-md mx-auto">
+                        <i class="fa-solid fa-folder-open text-gray-300 text-4xl mb-3 block"></i>
+                        <h4 class="font-bold text-gray-700">No Document Tracked Yet</h4>
+                        <p class="text-xs text-gray-400 mt-1">Use the side panel tabs to submit your very first tracking request package.</p>
+                    </div>`;
+            }
+        }
         else if (role === 'admin' || role === 'superadmin') {
             document.getElementById('staff-only-links').classList.remove('hidden');
             document.getElementById('shared-dashboard-view').classList.remove('hidden');

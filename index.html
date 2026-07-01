@@ -692,21 +692,7 @@
     }
 }
 
-    function renderTargetDashboard(role, targetKey, fullName, office) {
-        currentLoggedUserRole = role;
-        currentLoggedFullName = fullName;
-        currentLoggedUserOffice = office || 'Main Desk';
-        document.getElementById('login-view').classList.add('hidden');
-        document.getElementById('top-navbar').classList.remove('hidden'); // Show header bar
-              // Ensure sidebar handles its display adaptively across mobile & desktop platforms
-        const sidebar = document.getElementById('dashboard-sidebar');
-        if (window.innerWidth < 1024) {
-            sidebar.classList.add('hidden'); // Keep hidden on mobile by default
-        } else {
-            sidebar.classList.remove('hidden'); // Force layout visible on desktop
-        }
    function renderTargetDashboard(role, targetKey, fullName, office) {
-    // Standardize matching string case rules
     const lowerRole = String(role).toLowerCase();
     
     currentLoggedUserRole = role;
@@ -730,35 +716,23 @@
         document.getElementById('sidebar-role-pill').innerText = `${role} (${currentLoggedUserOffice})`;
     }
 
-        document.getElementById('staff-only-links').classList.add('hidden');
-        document.getElementById('superadmin-only-links').classList.add('hidden');
-        document.getElementById('client-only-links').classList.add('hidden');
-        document.getElementById('shared-dashboard-view').classList.add('hidden');
-        document.getElementById('client-view').classList.add('hidden');
-        document.getElementById('superadmin-user-ledger-view').classList.add('hidden');
-
-        const submissionView = document.getElementById('client-submission-view');
-        if (submissionView) submissionView.classList.add('hidden');
-        const receiverPanel = document.getElementById('office-receiver-view');
-        if (receiverPanel) receiverPanel.classList.add('hidden');
-
-       if (role === 'client') {
-            document.getElementById('client-only-links').classList.remove('hidden');
-            document.getElementById('client-view').classList.remove('hidden');
-
-            // Build the Shopee-style tracking layout search engine base
     // Reset visibility structures safely
-    const views = [
-        'staff-only-links', 'superadmin-only-links', 'client-only-links', 
-        'shared-dashboard-view', 'client-view', 'superadmin-user-ledger-view', 
-        'client-submission-view', 'office-receiver-view'
+    const viewIds = [
+        'staff-only-links', 
+        'superadmin-only-links', 
+        'client-only-links', 
+        'shared-dashboard-view', 
+        'client-view', 
+        'superadmin-user-ledger-view', 
+        'client-submission-view', 
+        'office-receiver-view'
     ];
-    views.forEach(id => {
+    
+    viewIds.forEach(function(id) {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
 
-            document.getElementById('client-view').innerHTML = `
     if (lowerRole === 'client') {
         const clientView = document.getElementById('client-view');
         const clientLinks = document.getElementById('client-only-links');
@@ -766,6 +740,7 @@
         if (clientLinks) clientLinks.classList.remove('hidden');
         if (clientView) {
             clientView.classList.remove('hidden');
+            // Template strings are perfectly backtick enclosed here to eliminate parsing crashes
             clientView.innerHTML = `
                 <div class="max-w-2xl mx-auto px-4 py-8">
                     <div class="bg-indigo-900 rounded-2xl p-6 shadow-lg text-white mb-6">
@@ -796,10 +771,6 @@
             `;
         }
 
-            // Auto-populate and fire if a targetKey was passed during initialization
-
-            if (targetKey && targetKey !== 'client') {
-                document.getElementById('client-search-input').value = targetKey;
         if (targetKey && targetKey !== 'client') {
             const searchInput = document.getElementById('client-search-input');
             if (searchInput) {
@@ -814,92 +785,22 @@
         const receiverPanel = document.getElementById('office-receiver-view');
         const superadminLinks = document.getElementById('superadmin-only-links');
 
-        else if (role === 'admin' || role === 'superadmin') {
-            document.getElementById('staff-only-links').classList.remove('hidden');
-            document.getElementById('shared-dashboard-view').classList.remove('hidden');
-            if (receiverPanel) receiverPanel.classList.remove('hidden'); 
-            renderAdminTable();
-            if (role === 'superadmin') {
-                document.getElementById('superadmin-only-links').classList.remove('hidden');
-                loadUserLedgerDirectory();
-            }
         if (staffLinks) staffLinks.classList.remove('hidden');
         if (sharedDashboard) sharedDashboard.classList.remove('hidden');
         if (receiverPanel) receiverPanel.classList.remove('hidden');
         
-        if (typeof renderAdminTable === 'function') renderAdminTable();
+        if (typeof renderAdminTable === 'function') {
+            renderAdminTable();
+        }
         
         if (lowerRole === 'superadmin') {
             if (superadminLinks) superadminLinks.classList.remove('hidden');
-            if (typeof loadUserLedgerDirectory === 'function') loadUserLedgerDirectory();
+            if (typeof loadUserLedgerDirectory === 'function') {
+                loadUserLedgerDirectory();
+            }
         }
     }
-
 }
-    function renderClientView(doc) {
-        const clientView = document.getElementById('client-view');
-        clientView.classList.remove('hidden');
-        let timelineHTML = '';
-
-        if (doc.history && doc.history.length > 0) {
-            doc.history.forEach((step, index) => {
-                const isCurrentLocation = index === 0; 
-                let statusColorClass = 'text-gray-800';
-                let circleColorClass = 'bg-emerald-500';
-
-                if (step.status.toLowerCase().includes('revision')) {
-                    statusColorClass = 'text-amber-600 font-bold';
-                    circleColorClass = 'bg-amber-500 ring-4 ring-amber-100';
-                } else if (step.status.toLowerCase().includes('returned')) {
-                    statusColorClass = 'text-red-600 font-bold';
-                    circleColorClass = 'bg-red-500 ring-4 ring-red-100';
-                } else if (isCurrentLocation) {
-                    statusColorClass = 'text-indigo-600 font-bold';
-                    circleColorClass = 'bg-indigo-600 ring-4 ring-indigo-100';
-                }
-
-                timelineHTML += `
-                <div class="relative pl-6 pb-6 border-l-2 ${isCurrentLocation ? 'border-indigo-600' : 'border-emerald-200'} last:pb-0">
-                    <div class="absolute -left-[11px] top-0 ${circleColorClass} text-white rounded-full w-5 h-5 flex items-center justify-center">
-                        ${isCurrentLocation ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : '<i class="fa-solid fa-check text-[10px]"></i>'}
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">${step.officeLocation}</span>
-                        <h4 class="${isCurrentLocation ? 'text-base' : 'text-sm'} ${statusColorClass}">${step.status}</h4>
-                        <p class="text-xs text-gray-500 mt-0.5">Processed by: <strong>${step.receivedBy}</strong> ${step.remarks ? `— <span class="text-gray-700 italic">"${step.remarks}"</span>` : ''}</p>
-                        <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${step.timestamp}</span>
-                    </div>
-                </div>`;
-            });
-        }
-
-        clientView.innerHTML = `
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 md:flex justify-between items-center gap-4">
-                <div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">SDO Biñan Tracking Pipeline</span>
-                    <h2 class="text-xl font-bold text-gray-900 mt-1">Tracking ID: ${doc.docId}</h2>
-                    <p class="text-sm text-gray-500">Classification: <strong>${doc.docType || 'N/A'}</strong></p>
-                </div>
-                <div class="text-left md:text-right">
-                    <span class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1.5 rounded-full font-bold uppercase tracking-wide inline-block">${doc.currentStatus}</span>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-                    <h3 class="text-base font-bold text-gray-900 mb-6"><i class="fa-solid fa-route text-indigo-500 mr-2"></i>Inter-Office Routing Logs</h3>
-                    <div class="mt-4">${timelineHTML}</div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                    <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-flag-checkered text-gray-400 mr-2"></i>Destination End-Goal</h3>
-                    <div class="space-y-3 text-sm border-t border-gray-100 pt-3">
-                        <div><span class="text-xs text-gray-400 block">Target Office</span><span class="font-semibold text-gray-800">${doc.destinationOffice || 'N/A'}</span></div>
-                        <div><span class="text-xs text-gray-400 block">Attention Personnel</span><span class="font-semibold text-gray-800">${doc.destinationPerson || 'Not Specified'}</span></div>
-                        <div class="pt-2"><a href="${doc.driveFileUrl}" target="_blank" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> Open Drive PDF</a></div>
-                    </div>
-                </div>
-            </div>`;
-    }
-
     function renderAdminTable() {
         const tbody = document.getElementById('admin-table-tbody');
         if (!tbody) return;

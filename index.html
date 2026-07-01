@@ -1197,11 +1197,9 @@
     
     if (historyRaw) {
         try {
-            // If it's already an array object, use it; otherwise, parse the JSON text string
             historyArray = typeof historyRaw === 'string' ? JSON.parse(historyRaw) : historyRaw;
         } catch (e) {
             console.warn("History log is plain text rather than formal JSON array format:", historyRaw);
-            // Fallback for plain text rows split by newlines/pipes
             historyArray = String(historyRaw).split(/\n|\||;/).map(str => ({ description: str.trim() })).filter(item => item.description);
         }
     }
@@ -1209,14 +1207,14 @@
     let timelineHTML = "";
 
     if (Array.isArray(historyArray) && historyArray.length > 0) {
-        // Clone and reverse the history array so the most recent event sits cleanly at the top
-        const reversedHistory = [...historyArray].reverse();
+        // FIXED: Removed .reverse() so the events display chronologically in ASCENDING order (Oldest -> Newest)
+        const ascendingHistory = [...historyArray]; 
 
-        reversedHistory.forEach((entry, index) => {
-            const isLatest = index === 0;
+        ascendingHistory.forEach((entry, index) => {
+            // In ascending order, the very last element in the array is the latest operational event
+            const isLatest = index === ascendingHistory.length - 1; 
             
-            // Extract the properties matching your exact Google Sheet JSON object structure
-            const logTitle = entry.title || (isLatest ? "Movement Activity Logged" : "Routing Stage Verified");
+            const logTitle = entry.title || (isLatest ? "Current Tracking Destination" : "Routing Stage Verified");
             const logDesc = entry.description || entry.desc || "";
             const logTime = entry.timestamp || entry.time || entry.date || "";
 
@@ -1280,7 +1278,6 @@
         </div>
     `;
 }
-
     window.addEventListener('DOMContentLoaded', async () => {
         try {
             const res = await fetch(API_URL);

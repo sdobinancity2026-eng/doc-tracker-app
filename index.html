@@ -1306,52 +1306,62 @@ async function loadAllSystemUsers() {
     const tbody = document.getElementById('user-ledger-tbody');
     if (!tbody) return;
 
-    // Clear old elements cleanly before making the network request to prevent stacking rows
-    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">Loading system database records...</td></tr>`;
+    // Show an elegant placeholder spinner while fetching data
+    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 font-medium"><i class="fa-solid fa-circle-notch fa-spin mr-2 text-indigo-600 text-sm"></i> Syncing security ledger configurations...</td></tr>`;
 
     try {
-        // Fetch from your deployment sheet endpoint (passing custom route specifier if your web app processes target parameters)
+        // Attempt to request the user tab specifically
         const res = await fetch(`${API_URL}?target=users`);
         const data = await res.json();
         
-        tbody.innerHTML = ''; // Empty out loader notice track
+        tbody.innerHTML = ''; 
 
-        // Fallback array capture based on your deployment schema structure
-        const usersList = Array.isArray(data) ? data : (data.users || documentCache.users || []);
+        // 🌟 SUPER ROBUST UNPACKING: Look everywhere for where your data could be hidden
+        let usersList = [];
+        if (Array.isArray(data)) {
+            usersList = data; // Directly an array
+        } else if (data && Array.isArray(data.users)) {
+            usersList = data.users; // Nested in an object key
+        } else if (window.documentCache && Array.isArray(window.documentCache.users)) {
+            usersList = window.documentCache.users; // Fallback to pre-loaded documentCache data
+        } else if (window.documentCache && Array.isArray(window.documentCache)) {
+            usersList = window.documentCache;
+        }
 
+        // If after trying everything it's still empty, fallback safely
         if (!usersList || usersList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No registered accounts located.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-400 italic bg-gray-50/50 rounded-lg">No registered accounts located in database.</td></tr>`;
             return;
         }
 
+        // Render the dataset items loop cleanly
         usersList.forEach(user => {
-    if (!user.username) return; 
+            // Skip empty rows or header placeholders from the sheet
+            if (!user.username || user.username.toLowerCase() === 'username') return; 
 
-    // Create a safe, stringified snapshot of the user object to pass into the editor window
-    const userSnapshot = btoa(unescape(encodeURIComponent(JSON.stringify(user))));
+            // Create a safe, stringified snapshot for the edit feature modal layout
+            const userSnapshot = btoa(unescape(encodeURIComponent(JSON.stringify(user))));
 
-    const row = document.createElement('tr');
-    row.className = "border-b border-gray-100 text-xs hover:bg-gray-50/50 transition-all duration-150";
-    row.innerHTML = `
-        <td class="p-4 font-medium text-gray-900">${user.fullname || user.fullName || '---'}</td>
-        <td class="p-4 text-gray-500 font-mono">${user.username}</td>
-        <td class="p-4 text-gray-500">${user.position || user.role || 'N/A'}</td>
-        <td class="p-4 text-right flex justify-end gap-2 items-center">
-            <!-- 🌟 EDIT BUTTON -->
-            <button onclick="openUserEditModal('${userSnapshot}')" class="text-indigo-500 hover:text-indigo-700 cursor-pointer p-1">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <!-- DELETE BUTTON -->
-            <button onclick="deleteUserAccount('${user.username}')" class="text-red-400 hover:text-red-600 cursor-pointer p-1">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(row);
-});
+            const row = document.createElement('tr');
+            row.className = "border-b border-gray-100 text-xs hover:bg-gray-50/50 transition-all duration-150";
+            row.innerHTML = `
+                <td class="p-4 font-medium text-gray-900">${user.fullname || user.fullName || 'No Name Assigned'}</td>
+                <td class="p-4 text-gray-500 font-mono">${user.username}</td>
+                <td class="p-4 text-gray-500">${user.position || user.role || 'N/A'}</td>
+                <td class="p-4 text-right flex justify-end gap-3 items-center">
+                    <button onclick="openUserEditModal('${userSnapshot}')" class="text-indigo-500 hover:text-indigo-700 cursor-pointer p-1 transition-colors">
+                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                    </button>
+                    <button onclick="deleteUserAccount('${user.username}')" class="text-red-400 hover:text-red-600 cursor-pointer p-1 transition-colors">
+                        <i class="fa-solid fa-trash text-sm"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     } catch (e) {
         console.error("System user ledger synchronization anomaly:", e);
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Failed to sync secure user matrix rows.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-400 font-medium bg-red-50/50 rounded-lg"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Failed to sync secure user matrix rows.</td></tr>`;
     }
 }
 /**

@@ -155,6 +155,10 @@
                         <i class="fa-solid fa-circle-plus w-4"></i>
                         <span>Submit Document</span>
                     </a>
+                    <a onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <i class="fa-solid fa-folder-open w-4"></i>
+                        <span>Submitted Docs</span>
+                    </a>
                 </div>
                 
                 <div id="superadmin-only-links" class="space-y-1 mt-4 pt-4 border-t border-indigo-800 hidden">
@@ -318,7 +322,7 @@
                 </div>
             </section>
 
-            <section id="client-tracking-view" class="space-y-6 hidden">
+            <section id="client-view" class="space-y-6 hidden">
                  </section>
 
             <section id="client-submitted-ledger-view" class="space-y-6 hidden">
@@ -382,7 +386,26 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Target Destination Office Unit</label>
-                            <input id="sub-dest-office" type="text" placeholder="e.g., Accounting Division" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
+                            <select id="sub-dest-office" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required>
+                                <option value="" disabled selected>Select an office...</option>
+                                <option value="Records Section">Records Section</option>
+                                <option value="OSDS">Office of the Schools Division Superintendent</option> 
+                                <option value="ASDS">Office of the Assistant Schools Division Superintendent</option>
+                                <option value="Legal Services">Legal Services</option>
+                                <option value="Administrative Services">Office of the Administrative Services</option>
+                                <option value="Procurement Unit">Procurement Unit</option>
+                                <option value="School Health">School Health Section</option>
+                                <option value="CID">Curriculum Implementation Division</option>
+                                <option value="SGOD">School Governance and Operation Division</option>
+                                <option value="LRMDS">Learning Resource Management Section</option>
+                                <option value="Property Unit">Property and Supply Unit</option>
+                                <option value="Personnel Unit">Personnel Unit</option>
+                                <option value="Accounting Unit">Accounting Unit</option>
+                                <option value="Budget Unit">Budget Unit</option>
+                                <option value="Cash Unit">Cash Unit</option>
+                                <option value="Finance Services">Finance Services Section</option>
+                                <option value="ICT Services">ICT Services Section</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Attention Person / Signatory Target</label>
@@ -393,11 +416,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Submitted By (Authorized Liaison)</label>
-                            <input id="sub-submitted-by" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium cursor-not-allowed focus:outline-none" readonly />
+                            <input id="sub-submitted-by" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-semibold cursor-not-allowed focus:outline-none select-none" readonly />
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Originating Institution / Unit</label>
-                            <input id="sub-school-office" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-medium cursor-not-allowed focus:outline-none" readonly />
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Originating Institution / School Unit</label>
+                            <input id="sub-school-office" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-semibold cursor-not-allowed focus:outline-none select-none" readonly />
                         </div>
                     </div>
 
@@ -424,7 +447,6 @@
             <section id="superadmin-user-ledger-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                     <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision System Profile</h3>
-
                     <form id="form-create-user" onsubmit="createNewAccount(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Access Authorization Role Base</label>
@@ -450,17 +472,14 @@
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Position / Job Rank Designation</label>
                             <input id="new-user-position" type="text" placeholder="e.g., Administrative Assistant II" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
                         </div>
-
                         <div id="office-field-container">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Assigned Core Office Base</label>
                             <input id="new-user-office" type="text" placeholder="e.g., CID, SGOD, Cashier" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
                         </div>
-
                         <div id="conditional-client-fields" class="hidden">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Affiliated School Station Branch Name</label>
                             <input id="new-user-school" type="text" placeholder="e.g., Biñan National High School" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
                         </div>
-
                         <button id="btn-create-account" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-sm transition cursor-pointer">
                             Create System Account
                         </button>
@@ -472,7 +491,6 @@
                         <h3 class="text-base font-bold text-gray-900">Security Ledger Matrices</h3>
                         <p class="text-xs text-gray-500">Live operational account authorization entries recorded inside database rows.</p>
                     </div>
-
                     <div class="border border-gray-100 rounded-xl overflow-hidden">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
@@ -483,8 +501,7 @@
                                     <th class="p-4 text-right">Scope Ops</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100">
-                                </tbody>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100"></tbody>
                         </table>
                     </div>
                 </div>
@@ -1222,7 +1239,7 @@
         if (clientTracking) clientTracking.classList.remove('hidden');
     } else if (targetTab === 'client-submission') {
         if (clientSubmission) clientSubmission.classList.remove('hidden');
-        
+
         // 🌟 AUTOMATION HOOK: Read active identity parameters from current logged-in context
         if (typeof currentUser !== 'undefined' && currentUser) {
             const fieldUser = document.getElementById('sub-submitted-by');

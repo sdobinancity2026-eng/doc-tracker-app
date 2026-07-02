@@ -1219,87 +1219,89 @@
     }
 
  /**
- * 2. PRIMARY VIEW CONTROLLER FRAMEWORK
+ * ROBUST VIEW SWITCHER CONTROL
+ * Safely changes views without re-authenticating or displaying disruptive alerts
  */
 function switchSidebarTab(targetTab) {
-    const loginView = document.getElementById('login-view');
-    const opsCenter = document.getElementById('shared-dashboard-view');
-    const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
-    const clientTracking = document.getElementById('client-view');
-    const clientSubmission = document.getElementById('client-submission-view'); 
-    const receiverPanel = document.getElementById('office-receiver-view');
-    const clientSubmittedLedger = document.getElementById('client-submitted-ledger-view');
+    // 1. Check if user session exists. If not, force them to stay on login view.
+    const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
+    
+    if (!savedSession && targetTab !== 'login-panel-view-forced') {
+        targetTab = 'login-panel-view-forced';
+    }
+
+    // 2. Safely parse user context if it isn't loaded globally yet
+    if (!window.currentUser && savedSession) {
+        try {
+            window.currentUser = JSON.parse(savedSession);
+        } catch(e) {
+            console.error("Error reading session during tab switch:", e);
+        }
+    }
+
+    // 3. Map out all content views to toggle visibility
+    const views = {
+        'login-panel-view-forced': document.getElementById('login-view'),
+        'main-dash': [document.getElementById('shared-dashboard-view'), document.getElementById('office-receiver-view')],
+        'user-ledger': document.getElementById('superadmin-user-ledger-view'),
+        'client-tracking': document.getElementById('client-view'),
+        'client-submission': document.getElementById('client-submission-view'),
+        'client-submitted-ledger': document.getElementById('client-submitted-ledger-view')
+    };
+
     const topNavbar = document.getElementById('top-navbar');
     const sidebarElement = document.getElementById('dashboard-sidebar');
 
-    // Edge case override if authentication state is not validated
-    if (targetTab === 'login-panel-view-forced' || (!window.currentUser && targetTab !== 'login-panel-view-forced')) {
-        if (loginView) loginView.classList.remove('hidden');
-        if (opsCenter) opsCenter.classList.add('hidden');
-        if (ledgerCenter) ledgerCenter.classList.add('hidden');
-        if (clientTracking) clientTracking.classList.add('hidden');
-        if (clientSubmission) clientSubmission.classList.add('hidden');
-        if (receiverPanel) receiverPanel.classList.add('hidden');
-        if (clientSubmittedLedger) clientSubmittedLedger.classList.add('hidden');
+    // 4. Hide EVERYTHING first to ensure a clean slate
+    Object.values(views).flat().forEach(el => {
+        if (el) el.classList.add('hidden');
+    });
+
+    // 5. Handle Login View presentation vs Application shell presentation
+    if (targetTab === 'login-panel-view-forced') {
+        if (views['login-panel-view-forced']) views['login-panel-view-forced'].classList.remove('hidden');
         if (topNavbar) topNavbar.classList.add('hidden');
         if (sidebarElement) sidebarElement.classList.add('hidden');
-        return;
+        return; // Halt further execution here
     }
 
-    // Retain current viewed state into context variables and browser storage
-    currentActiveViewTab = targetTab;
-    localStorage.setItem('currentActiveViewTab', targetTab);
-
-    // Render core shell panels visible once identity is active
-    if (loginView) loginView.classList.add('hidden');
+    // Ensure application shell layouts are visible if logged in
     if (topNavbar) topNavbar.classList.remove('hidden');
     if (sidebarElement) sidebarElement.classList.remove('hidden');
 
-    // Clear content panels
-    if (opsCenter) opsCenter.classList.add('hidden');
-    if (ledgerCenter) ledgerCenter.classList.add('hidden');
-    if (clientTracking) clientTracking.classList.add('hidden');
-    if (clientSubmission) clientSubmission.classList.add('hidden');
-    if (receiverPanel) receiverPanel.classList.add('hidden');
-    if (clientSubmittedLedger) clientSubmittedLedger.classList.add('hidden');
+    // Save active tab preference so it survives manual page refreshes
+    currentActiveViewTab = targetTab;
+    localStorage.setItem('currentActiveViewTab', targetTab);
 
-    // Target View Activation Routine
-    if (targetTab === 'main-dash') {
-        if (opsCenter) opsCenter.classList.remove('hidden');
-        if (receiverPanel) receiverPanel.classList.remove('hidden');
-    } else if (targetTab === 'user-ledger') {
-        if (ledgerCenter) ledgerCenter.classList.remove('hidden');
-    } else if (targetTab === 'client-tracking') {
-        if (clientTracking) clientTracking.classList.remove('hidden');
-    } else if (targetTab === 'client-submission') {
-        if (clientSubmission) clientSubmission.classList.remove('hidden');
+    // 6. Show only the targeted view components
+    const targetElement = views[targetTab];
+    if (targetElement) {
+        if (Array.isArray(targetElement)) {
+            targetElement.forEach(el => { if (el) el.classList.remove('hidden'); });
+        } else {
+            targetElement.classList.remove('hidden');
+        }
+    }
+
+    // 7. Auto-fill Read-Only Liaison Metadata Fields securely
+    if (targetTab === 'client-submission' && window.currentUser) {
+        const fieldUser = document.getElementById('sub-submitted-by');
+        const fieldOrigin = document.getElementById('sub-school-office');
         
-        // 🌟 METADATA AUTO-FILL HOOK: Always write values and display them securely via non-editable states
-        if (window.currentUser) {
-            const fieldUser = document.getElementById('sub-submitted-by');
-            const fieldOrigin = document.getElementById('sub-school-office');
-
-            if (fieldUser) {
-                fieldUser.value = window.currentUser.fullname || window.currentUser.username || 'Authorized Operator Context';
-            }
-            if (fieldOrigin) {
-                fieldOrigin.value = window.currentUser.school || window.currentUser.office || 'Division Base Office';
-            }
-        }
-    } else if (targetTab === 'client-submitted-ledger') {
-        if (clientSubmittedLedger) clientSubmittedLedger.classList.remove('hidden');
-        if (typeof renderClientSubmittedDocsTable === 'function') {
-            renderClientSubmittedDocsTable();
-        }
+        // Use uniform property checking mapping your session model variables
+        if (fieldUser) fieldUser.value = window.currentUser.fullName || window.currentUser.fullname || window.currentUser.username || '';
+        if (fieldOrigin) fieldOrigin.value = window.currentUser.schoolName || window.currentUser.school || window.currentUser.office || '';
     }
 
-    // Run layout navigation item visual highlighting code
+    // 8. Trigger conditional background data sync targets seamlessly
+    if (targetTab === 'client-submitted-ledger' && typeof renderClientSubmittedDocsTable === 'function') {
+        renderClientSubmittedDocsTable();
+    } else if (targetTab === 'main-dash' && typeof refreshDocumentCache === 'function') {
+        refreshDocumentCache();
+    }
+
+    // Apply sidebar link active state CSS enhancements
     highlightSidebarLink(targetTab);
-
-    // Auto-close drawer overlay after selection on mobile viewports
-    if (window.innerWidth < 1024 && typeof toggleMobileSidebar === 'function') {
-        toggleMobileSidebar();
-    }
 }
 /**
  * 3. GLOBAL AUTO-REFRESH SYNC ENGINE (Every 30 Seconds Background Loop)

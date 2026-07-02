@@ -1663,50 +1663,67 @@ function executeClientPackageSearch() {
     }
 }
 
-    // Filter the documentCache object grid by active matching author profile accounts
-function renderClientSubmittedDocsTable() {
+ function renderClientSubmittedDocsTable() {
+    console.log("Initializing Submitted Docs Table Render Loop...");
+    
     const tableBody = document.getElementById('client-ledger-table-rows');
-    if (!tableBody) return;
+    if (!tableBody) {
+        console.error("CRITICAL ERROR: Could not locate element ID 'client-ledger-table-rows' in DOM!");
+        return;
+    }
 
-    // 1. Get current username out of cache memory structures safely
+    // 1. Get session metrics matching username vs fullname variants
     const savedSession = localStorage.getItem('docTrack_session');
-    let loggedInUser = "";
+    let rawUsername = "";
+    let rawFullname = "";
+
     if (savedSession) {
         try { 
             const parsed = JSON.parse(savedSession);
-            // Fallback checking to capture whatever name property matches your auth structural definitions
-            loggedInUser = (parsed.username || parsed.name || parsed.user || "").toLowerCase().trim(); 
+            rawUsername = String(parsed.username || "").toLowerCase().trim();
+            rawFullname = String(parsed.fullname || parsed.fullName || parsed.name || "").toLowerCase().trim();
+            console.log("Logged In Context Properties - Username:", rawUsername, "| Fullname:", rawFullname);
         } catch(e) {
-            console.error("Failed to parse user session state on table load:", e);
+            console.error("Session profile parsing failure:", e);
         }
     }
 
-    // Defensive check: If document cache hasn't loaded yet, try to prevent crashing
+    // Defensive check: If array doesn't exist yet, avoid breaking the UI layout
     if (typeof documentCache === 'undefined' || !Array.isArray(documentCache)) {
+        console.warn("documentCache variable is not an array or is uninitialized.");
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center p-8 text-gray-400 font-medium">
-                    <i class="fa-solid fa-circle-notch fa-spin text-indigo-600 mr-2"></i> Initializing central dataset cache repositories...
+                <td colspan="6" class="text-center p-8 text-indigo-600 font-semibold">
+                    <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Synching tracking arrays... Try re-clicking in a brief moment.
                 </td>
             </tr>`;
         return;
     }
 
-    // 2. Filter down matching items uploaded by the client (with deep property check protection)
+    console.log("Total entries inside raw documentCache:", documentCache.length);
+
+    // 2. Filter document array safely supporting either account identifier
     const userDocs = documentCache.filter(doc => {
         if (!doc) return false;
-        // Check structural property layout names generated from Column G matching variations
-        const creator = String(doc.submittedBy || doc.SubmittedBy || doc.uploader || doc.user || "").trim().toLowerCase();
-        return creator === loggedInUser && loggedInUser !== "";
+        
+        // Match against whatever database headers you have mapped (Column G)
+        const creatorField = String(doc.submittedBy || doc.SubmittedBy || doc.uploader || "").trim().toLowerCase();
+        
+        // True if it matches either your account handle ("jhon") or full text context ("john doe")
+        return (creatorField === rawUsername || creatorField === rawFullname) && rawUsername !== "";
     });
+
+    console.log("Filtered user matching documents total count:", userDocs.length);
 
     if (userDocs.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center p-12 text-gray-400 italic bg-gray-50/30 rounded-xl">
+                <td colspan="6" class="text-center p-12 text-gray-400 italic bg-gray-50/50 rounded-xl">
                     <i class="fa-solid fa-box-open text-4xl mb-3 block text-gray-300"></i>
                     <span class="font-bold text-gray-700 block text-xs not-italic">No Document Logs Found</span>
-                    <p class="text-[11px] text-gray-400 mt-0.5 max-w-xs mx-auto not-italic">We couldn't locate any records uploaded under your username context profile (${loggedInUser || 'Anonymous'}).</p>
+                    <p class="text-[11px] text-gray-400 mt-1 max-w-sm mx-auto not-italic">
+                        No records were submitted by user tracking handles matching "<strong>${rawUsername}</strong>" or "<strong>${rawFullname}</strong>".
+                    </p>
                 </td>
             </tr>`;
         return;
@@ -1714,23 +1731,18 @@ function renderClientSubmittedDocsTable() {
 
     let rowsHtml = "";
     userDocs.forEach(doc => {
-        // 3. Normalize data fields with object structural key matching fallbacks
         const docId = doc.docId || doc.id || doc.TrackingId || "UNKNOWN";
-        const title = doc.title || doc.Title || doc.documentTitle || "Untitled Document Package";
-        const docType = doc.docType || doc.DocType || doc.type || "General Package";
-        
-        // Destination Fallback Mapping Paths
-        const destinationOffice = doc.destOffice || doc.destinationOffice || doc.DestOffice || doc.office || doc.Office || "---";
-        const destinationPerson = doc.destPerson || doc.destinationPerson || doc.DestPerson || doc.person || "---";
-        
-        // Status Badging Normalization Checks
-        const currentStatus = String(doc.currentStatus || doc.status || doc.Status || "In Review");
+        const title = doc.title || doc.Title || "Untitled Package";
+        const docType = doc.docType || doc.DocType || "General Document";
+        const destinationOffice = doc.destOffice || doc.destinationOffice || doc.Office || "---";
+        const destinationPerson = doc.destPerson || doc.destinationPerson || "---";
+        const currentStatus = String(doc.currentStatus || doc.status || "In Review");
         
         let badgeStyle = "bg-amber-50 text-amber-700 border-amber-100";
         if (currentStatus.toLowerCase().includes("approved") || currentStatus.toLowerCase().includes("complete")) {
             badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
         }
-        if (currentStatus.toLowerCase().includes("reject") || currentStatus.toLowerCase().includes("return") || currentStatus.toLowerCase().includes("cancel")) {
+        if (currentStatus.toLowerCase().includes("reject") || currentStatus.toLowerCase().includes("return")) {
             badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
         }
 

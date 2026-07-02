@@ -161,16 +161,23 @@
                     </a>
                 </div>
 
-                <div id="client-only-links" class="space-y-1 hidden">
-                    <a onclick="switchSidebarTab('client-tracking')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl bg-indigo-800 text-white font-medium text-sm cursor-pointer transition">
-                        <i class="fa-solid fa-magnifying-glass-location w-4"></i>
-                        <span>Track My Document</span>
-                    </a>
-                    <a onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
-                        <i class="fa-solid fa-file-circle-plus w-4"></i>
-                        <span>Submit Document Package</span>
-                    </a>
-                </div>
+                <ul id="client-only-links" class="space-y-1 mt-4 hidden">
+                    <li>
+                        <a href="#" onclick="switchSidebarTab('client-dashboard')" class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-300 hover:bg-white/10 rounded-lg transition">
+                            <i class="fa-solid fa-magnifying-glass text-[14px] w-5"></i> Track Document
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchSidebarTab('client-submission')" class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-300 hover:bg-white/10 rounded-lg transition">
+                            <i class="fa-solid fa-circle-plus text-[14px] w-5"></i> Submit Document
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-300 hover:bg-white/10 rounded-lg transition">
+                            <i class="fa-solid fa-folder-open text-[14px] w-5"></i> Submitted Docs
+                        </a>
+                    </li>
+                </ul>
             </nav>
         </div>
 
@@ -314,6 +321,36 @@
             </section>
 
             <section id="client-view" class="space-y-6 hidden">
+                  <div id="client-submitted-ledger-view" class="hidden max-w-6xl mx-auto px-4 py-8">
+                            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                                <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+                                    <div>
+                                        <h3 class="text-base font-bold text-gray-900">Your Submitted Packages</h3>
+                                        <p class="text-xs text-gray-400 mt-0.5">Real-time status overview and management dashboard for your self-uploaded pipelines.</p>
+                                    </div>
+                                    <button onclick="refreshClientLedgerDataset()" class="bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Sync Data
+                                    </button>
+                                </div>
+                        
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="bg-gray-50/70 border-b border-gray-100 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                                                <th class="p-3">Tracking ID</th>
+                                                <th class="p-3">Document Details</th>
+                                                <th class="p-3">Destination Office</th>
+                                                <th class="p-3">Target Signatory</th>
+                                                <th class="p-3">Lifecycle Status</th>
+                                                <th class="p-3 text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="client-ledger-table-rows" class="text-xs text-gray-600 divide-y divide-gray-50">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                 </section>
 
             <section id="client-submission-view" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hidden">
@@ -534,6 +571,61 @@
                         <span>Print (XP-58IIH)</span>
                     </button>
                 </div>
+            </div>
+        </div>
+
+                <div id="document-modification-modal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden transform transition-all scale-95 duration-200">
+                <div class="bg-indigo-950 text-white p-4 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-bold">Modify Package Metadata</h4>
+                        <p id="modal-tracking-id-label" class="text-[10px] font-mono text-indigo-300 mt-0.5">DOC-XXXXX</p>
+                    </div>
+                    <button onclick="closeModificationModal()" class="text-indigo-200 hover:text-white transition cursor-pointer text-sm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <form id="modal-edit-form" onsubmit="executeDocumentMetaUpdate(event)" class="p-5 space-y-4 text-xs">
+                    <input type="hidden" id="edit-target-docid">
+                    
+                    <div>
+                        <label class="block font-bold text-gray-700 uppercase tracking-wide mb-1">Document Title</label>
+                        <input type="text" id="edit-doc-title" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-indigo-600 text-xs">
+                    </div>
+        
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-gray-700 uppercase tracking-wide mb-1">Document Classification</label>
+                            <select id="edit-doc-type" class="w-full p-2 border border-gray-200 rounded-lg focus:outline-indigo-600 text-xs bg-white">
+                                <option value="Letter">Letter</option>
+                                <option value="Memo">Memorandum</option>
+                                <option value="Unspecified">General Document</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 uppercase tracking-wide mb-1">Destination Office</label>
+                            <input type="text" id="edit-dest-office" class="w-full p-2 border border-gray-200 rounded-lg focus:outline-indigo-600 text-xs">
+                        </div>
+                    </div>
+        
+                    <div>
+                        <label class="block font-bold text-gray-700 uppercase tracking-wide mb-1">Target Person / Signatory</label>
+                        <input type="text" id="edit-dest-person" class="w-full p-2 border border-gray-200 rounded-lg focus:outline-indigo-600 text-xs">
+                    </div>
+        
+                    <div class="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                        <label class="block font-bold text-indigo-900 uppercase tracking-wide mb-1">Change / Replace Uploaded PDF File</label>
+                        <div id="modal-current-file-link" class="mb-2 text-indigo-600 font-medium truncate"></div>
+                        <input type="file" id="edit-file-upload" accept="application/pdf" class="w-full text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:cursor-pointer">
+                        <p class="text-[10px] text-gray-400 mt-1">Leave file empty if you want to keep the current version.</p>
+                    </div>
+        
+                    <div class="pt-2 border-t border-gray-100 flex justify-end gap-2">
+                        <button type="button" onclick="closeModificationModal()" class="px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition cursor-pointer">Cancel</button>
+                        <button type="submit" id="btn-modal-save" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition cursor-pointer">Save Changes</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1104,37 +1196,46 @@
         }
     }
 
-    function switchSidebarTab(targetTab) {
-        const opsCenter = document.getElementById('shared-dashboard-view');
-        const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
-        const clientTracking = document.getElementById('client-view');
-        const clientSubmission = document.getElementById('client-submission-view'); 
-        const receiverPanel = document.getElementById('office-receiver-view');
+   function switchSidebarTab(targetTab) {
+    const opsCenter = document.getElementById('shared-dashboard-view');
+    const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
+    const clientTracking = document.getElementById('client-view');
+    const clientSubmission = document.getElementById('client-submission-view'); 
+    const receiverPanel = document.getElementById('office-receiver-view');
+    // 🌟 Capture the new ledger view container element
+    const clientSubmittedLedger = document.getElementById('client-submitted-ledger-view');
 
+    // Hide absolutely everything first to avoid overlapping layout states
+    if (opsCenter) opsCenter.classList.add('hidden');
+    if (ledgerCenter) ledgerCenter.classList.add('hidden');
+    if (clientTracking) clientTracking.classList.add('hidden');
+    if (clientSubmission) clientSubmission.classList.add('hidden');
+    if (receiverPanel) receiverPanel.classList.add('hidden');
+    if (clientSubmittedLedger) clientSubmittedLedger.classList.add('hidden'); // 🌟 Hide it by default
 
-        if (opsCenter) opsCenter.classList.add('hidden');
-        if (ledgerCenter) ledgerCenter.classList.add('hidden');
-        if (clientTracking) clientTracking.classList.add('hidden');
-        if (clientSubmission) clientSubmission.classList.add('hidden');
-        if (receiverPanel) receiverPanel.classList.add('hidden');
-
-        if (targetTab === 'main-dash') {
-            if (opsCenter) opsCenter.classList.remove('hidden');
-            if (receiverPanel) receiverPanel.classList.remove('hidden');
-        } else if (targetTab === 'user-ledger') {
-            if (ledgerCenter) ledgerCenter.classList.remove('hidden');
-        } else if (targetTab === 'client-tracking') {
-            if (clientTracking) clientTracking.classList.remove('hidden');
-        } else if (targetTab === 'client-submission') {
-            if (clientSubmission) clientSubmission.classList.remove('hidden');
-        }
-
-        // Auto-close drawer overlay after selection on mobile devices
-
-        if (window.innerWidth < 1024) {
-            toggleMobileSidebar();
+    // Target View Activation Routine
+    if (targetTab === 'main-dash') {
+        if (opsCenter) opsCenter.classList.remove('hidden');
+        if (receiverPanel) receiverPanel.classList.remove('hidden');
+    } else if (targetTab === 'user-ledger') {
+        if (ledgerCenter) ledgerCenter.classList.remove('hidden');
+    } else if (targetTab === 'client-tracking') {
+        if (clientTracking) clientTracking.classList.remove('hidden');
+    } else if (targetTab === 'client-submission') {
+        if (clientSubmission) clientSubmission.classList.remove('hidden');
+    } else if (targetTab === 'client-submitted-ledger') {
+        // 🌟 Activate view and trigger the data layout generation loop
+        if (clientSubmittedLedger) clientSubmittedLedger.classList.remove('hidden');
+        if (typeof renderClientSubmittedDocsTable === 'function') {
+            renderClientSubmittedDocsTable();
         }
     }
+
+    // Auto-close drawer overlay after selection on mobile devices
+    if (window.innerWidth < 1024 && typeof toggleMobileSidebar === 'function') {
+        toggleMobileSidebar();
+    }
+}
 
     async function loadUserLedgerDirectory() {
         const tbody = document.getElementById('user-ledger-tbody');
@@ -1448,6 +1549,11 @@ function executeClientPackageSearch() {
         </div>
     `;
 }
+    
+  // ==========================================
+//  Clients side 
+// ==========================================
+    
    async function handleSubmitDocumentPackage(event) {
     event.preventDefault();
     
@@ -1531,6 +1637,149 @@ function executeClientPackageSearch() {
             submitBtn.className = "bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg text-xs hover:bg-indigo-700 transition cursor-pointer shrink-0";
             submitBtn.innerHTML = `Submit Document Package`;
         }, 4000);
+    }
+}
+
+    // Filter the documentCache object grid by active matching author profile accounts
+function renderClientSubmittedDocsTable() {
+    const tableBody = document.getElementById('client-ledger-table-rows');
+    if (!tableBody) return;
+
+    // Get current username out of cache memory structures
+    const savedSession = localStorage.getItem('docTrack_session');
+    let loggedInUser = "";
+    if (savedSession) {
+        try { loggedInUser = JSON.parse(savedSession).username.toLowerCase().trim(); } catch(e){}
+    }
+
+    // Filter down matching items uploaded by the client
+    const userDocs = documentCache.filter(doc => doc && String(doc.submittedBy).trim().toLowerCase() === loggedInUser);
+
+    if (userDocs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center p-8 text-gray-400 italic">
+                    <i class="fa-solid fa-box-open text-3xl mb-2 block text-gray-200"></i>
+                    You haven't uploaded any document packages yet.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    let rowsHtml = "";
+    userDocs.forEach(doc => {
+        let badgeStyle = "bg-amber-50 text-amber-700 border-amber-100";
+        if (String(doc.status).toLowerCase().includes("approved")) badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
+        if (String(doc.status).toLowerCase().includes("reject") || String(doc.status).toLowerCase().includes("return")) badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
+
+        rowsHtml += `
+            <tr class="hover:bg-gray-50/50 transition">
+                <td class="p-3 font-mono font-bold text-indigo-600">${doc.docId}</td>
+                <td class="p-3">
+                    <div class="font-bold text-gray-800">${doc.title}</div>
+                    <div class="text-[10px] text-gray-400 font-medium mt-0.5">${doc.docType || 'General Package'}</div>
+                </td>
+                <td class="p-3 font-medium text-gray-700">${doc.destOffice || '---'}</td>
+                <td class="p-3 text-gray-600">${doc.destPerson || '---'}</td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 border rounded text-[10px] font-bold uppercase ${badgeStyle}">${doc.status || 'In Review'}</span>
+                </td>
+                <td class="p-3 text-center">
+                    <button onclick="launchDocumentEditModal('${doc.docId}')" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 mx-auto">
+                        <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                    </button>
+                </td>
+            </tr>`;
+    });
+    tableBody.innerHTML = rowsHtml;
+}
+
+// Pull fresh cache configurations directly off data arrays
+async function refreshClientLedgerDataset() {
+    const tableBody = document.getElementById('client-ledger-table-rows');
+    tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-6"><i class="fa-solid fa-circle-notch fa-spin text-indigo-600 mr-2"></i> Syncing core arrays...</td></tr>`;
+    try {
+        const res = await fetch(API_URL);
+        documentCache = await res.json();
+        renderClientSubmittedDocsTable();
+    } catch(err) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-red-500 font-medium">Sync process encountered pipeline failure models.</td></tr>`;
+    }
+}
+
+    function launchDocumentEditModal(docId) {
+    const targetDoc = documentCache.find(d => d && d.docId === docId);
+    if (!targetDoc) return;
+
+    document.getElementById('edit-target-docid').value = docId;
+    document.getElementById('modal-tracking-id-label').innerText = `Editing Details for Reference: ${docId}`;
+    document.getElementById('edit-doc-title').value = targetDoc.title || "";
+    document.getElementById('edit-doc-type').value = targetDoc.docType || "Letter";
+    document.getElementById('edit-dest-office').value = targetDoc.destOffice || "";
+    document.getElementById('edit-dest-person').value = targetDoc.destPerson || "";
+    
+    const fileLinkLabel = document.getElementById('modal-current-file-link');
+    if (targetDoc.driveFileUrl && targetDoc.driveFileUrl.startsWith("http")) {
+        fileLinkLabel.innerHTML = `<a href="${targetDoc.driveFileUrl}" target="_blank" class="underline flex items-center gap-1"><i class="fa-solid fa-file-pdf text-red-500"></i> View Existing Document Copy</a>`;
+    } else {
+        fileLinkLabel.innerHTML = `<span class="text-gray-400 italic"><i class="fa-solid fa-link-slash"></i> No file copy attached</span>`;
+    }
+
+    document.getElementById('edit-file-upload').value = ""; // Clear file selector reset
+    document.getElementById('document-modification-modal').classList.remove('hidden');
+}
+
+function closeModificationModal() {
+    document.getElementById('document-modification-modal').classList.add('hidden');
+}
+
+async function executeDocumentMetaUpdate(event) {
+    event.preventDefault();
+    const saveBtn = document.getElementById('btn-modal-save');
+    const fileSelector = document.getElementById('edit-file-upload');
+    const docId = document.getElementById('edit-target-docid').value;
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...`;
+
+    let filePayload = { data: "", name: "", type: "" };
+    if (fileSelector.files.length > 0) {
+        const file = fileSelector.files[0];
+        filePayload = await new Promise((res) => {
+            const r = new FileReader();
+            r.onload = (e) => res({ data: e.target.result.split(',')[1], name: file.name, type: file.type });
+            r.readAsDataURL(file);
+        });
+    }
+
+    const payload = {
+        action: "editClientDocument", // Add this route block step inside Code.gs to handle
+        docId: docId,
+        title: document.getElementById('edit-doc-title').value.trim(),
+        docType: document.getElementById('edit-doc-type').value,
+        destOffice: document.getElementById('edit-dest-office').value.trim(),
+        destPerson: document.getElementById('edit-dest-person').value.trim(),
+        fileData: filePayload.data,
+        fileName: filePayload.name,
+        fileType: filePayload.type
+    };
+
+    try {
+        const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if (result.success) {
+            closeModificationModal();
+            refreshClientLedgerDataset(); // Auto refresh views on success metrics
+        } else {
+            alert("Modification processing rejected by backend.");
+        }
+    } catch(err) {
+        console.error(err);
+        alert("Network update synchronization tracking error exception.");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `Save Changes`;
     }
 }
     // ==========================================

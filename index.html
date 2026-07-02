@@ -1668,22 +1668,45 @@ function renderClientSubmittedDocsTable() {
     const tableBody = document.getElementById('client-ledger-table-rows');
     if (!tableBody) return;
 
-    // Get current username out of cache memory structures
+    // 1. Get current username out of cache memory structures safely
     const savedSession = localStorage.getItem('docTrack_session');
     let loggedInUser = "";
     if (savedSession) {
-        try { loggedInUser = JSON.parse(savedSession).username.toLowerCase().trim(); } catch(e){}
+        try { 
+            const parsed = JSON.parse(savedSession);
+            // Fallback checking to capture whatever name property matches your auth structural definitions
+            loggedInUser = (parsed.username || parsed.name || parsed.user || "").toLowerCase().trim(); 
+        } catch(e) {
+            console.error("Failed to parse user session state on table load:", e);
+        }
     }
 
-    // Filter down matching items uploaded by the client
-    const userDocs = documentCache.filter(doc => doc && String(doc.submittedBy).trim().toLowerCase() === loggedInUser);
+    // Defensive check: If document cache hasn't loaded yet, try to prevent crashing
+    if (typeof documentCache === 'undefined' || !Array.isArray(documentCache)) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center p-8 text-gray-400 font-medium">
+                    <i class="fa-solid fa-circle-notch fa-spin text-indigo-600 mr-2"></i> Initializing central dataset cache repositories...
+                </td>
+            </tr>`;
+        return;
+    }
+
+    // 2. Filter down matching items uploaded by the client (with deep property check protection)
+    const userDocs = documentCache.filter(doc => {
+        if (!doc) return false;
+        // Check structural property layout names generated from Column G matching variations
+        const creator = String(doc.submittedBy || doc.SubmittedBy || doc.uploader || doc.user || "").trim().toLowerCase();
+        return creator === loggedInUser && loggedInUser !== "";
+    });
 
     if (userDocs.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center p-8 text-gray-400 italic">
-                    <i class="fa-solid fa-box-open text-3xl mb-2 block text-gray-200"></i>
-                    You haven't uploaded any document packages yet.
+                <td colspan="6" class="text-center p-12 text-gray-400 italic bg-gray-50/30 rounded-xl">
+                    <i class="fa-solid fa-box-open text-4xl mb-3 block text-gray-300"></i>
+                    <span class="font-bold text-gray-700 block text-xs not-italic">No Document Logs Found</span>
+                    <p class="text-[11px] text-gray-400 mt-0.5 max-w-xs mx-auto not-italic">We couldn't locate any records uploaded under your username context profile (${loggedInUser || 'Anonymous'}).</p>
                 </td>
             </tr>`;
         return;
@@ -1691,32 +1714,50 @@ function renderClientSubmittedDocsTable() {
 
     let rowsHtml = "";
     userDocs.forEach(doc => {
+        // 3. Normalize data fields with object structural key matching fallbacks
+        const docId = doc.docId || doc.id || doc.TrackingId || "UNKNOWN";
+        const title = doc.title || doc.Title || doc.documentTitle || "Untitled Document Package";
+        const docType = doc.docType || doc.DocType || doc.type || "General Package";
+        
+        // Destination Fallback Mapping Paths
+        const destinationOffice = doc.destOffice || doc.destinationOffice || doc.DestOffice || doc.office || doc.Office || "---";
+        const destinationPerson = doc.destPerson || doc.destinationPerson || doc.DestPerson || doc.person || "---";
+        
+        // Status Badging Normalization Checks
+        const currentStatus = String(doc.currentStatus || doc.status || doc.Status || "In Review");
+        
         let badgeStyle = "bg-amber-50 text-amber-700 border-amber-100";
-        if (String(doc.status).toLowerCase().includes("approved")) badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
-        if (String(doc.status).toLowerCase().includes("reject") || String(doc.status).toLowerCase().includes("return")) badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
+        if (currentStatus.toLowerCase().includes("approved") || currentStatus.toLowerCase().includes("complete")) {
+            badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-100";
+        }
+        if (currentStatus.toLowerCase().includes("reject") || currentStatus.toLowerCase().includes("return") || currentStatus.toLowerCase().includes("cancel")) {
+            badgeStyle = "bg-rose-50 text-rose-700 border-rose-100";
+        }
 
         rowsHtml += `
-            <tr class="hover:bg-gray-50/50 transition">
-                <td class="p-3 font-mono font-bold text-indigo-600">${doc.docId}</td>
+            <tr class="hover:bg-gray-50/50 transition duration-150">
+                <td class="p-3 font-mono font-bold text-indigo-600 tracking-tight">${docId}</td>
                 <td class="p-3">
-                    <div class="font-bold text-gray-800">${doc.title}</div>
-                    <div class="text-[10px] text-gray-400 font-medium mt-0.5">${doc.docType || 'General Package'}</div>
+                    <div class="font-bold text-gray-800">${title}</div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">${docType}</div>
                 </td>
-                <td class="p-3 font-medium text-gray-700">${doc.destOffice || '---'}</td>
-                <td class="p-3 text-gray-600">${doc.destPerson || '---'}</td>
+                <td class="p-3 font-semibold text-gray-600">${destinationOffice}</td>
+                <td class="p-3 text-gray-500 font-medium">${destinationPerson}</td>
                 <td class="p-3">
-                    <span class="px-2 py-0.5 border rounded text-[10px] font-bold uppercase ${badgeStyle}">${doc.status || 'In Review'}</span>
+                    <span class="inline-block px-2.5 py-0.5 border rounded-full text-[10px] font-bold uppercase ${badgeStyle}">
+                        ${currentStatus}
+                    </span>
                 </td>
-                <td class="p-3 text-center">
-                    <button onclick="launchDocumentEditModal('${doc.docId}')" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 mx-auto">
+                <td class="p-3 text-center whitespace-nowrap">
+                    <button onclick="launchDocumentEditModal('${docId}')" class="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-xs">
                         <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
                     </button>
                 </td>
             </tr>`;
     });
+    
     tableBody.innerHTML = rowsHtml;
 }
-
 // Pull fresh cache configurations directly off data arrays
 async function refreshClientLedgerDataset() {
     const tableBody = document.getElementById('client-ledger-table-rows');

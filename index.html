@@ -147,15 +147,15 @@
 
             <nav class="space-y-1">
                 <div id="staff-only-links" class="space-y-1 hidden">
-                    <a onclick="switchSidebarTab('main-dash')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl bg-indigo-800 text-white font-medium text-sm cursor-pointer transition">
+                    <a id="link-main-dash" onclick="switchSidebarTab('main-dash')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                         <i class="fa-solid fa-table-list w-4"></i>
                         <span>Operations Center</span>
                     </a>
-                    <a onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                    <a id="link-client-submission-admin" onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                         <i class="fa-solid fa-circle-plus w-4"></i>
                         <span>Submit Document</span>
                     </a>
-                    <a onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                    <a id="link-client-submitted-ledger-admin" onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                         <i class="fa-solid fa-folder-open w-4"></i>
                         <span>Submitted Docs</span>
                     </a>
@@ -163,11 +163,11 @@
                 
                 <div id="superadmin-only-links" class="space-y-1 mt-4 pt-4 border-t border-indigo-800 hidden">
                     <span class="text-[10px] uppercase font-bold text-indigo-400 px-4 block tracking-wider mb-2">Systems Config</span>
-                    <a onclick="switchSidebarTab('user-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                    <a id="link-user-ledger" onclick="switchSidebarTab('user-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                         <i class="fa-solid fa-users-gear w-4"></i>
                         <span>User Account Ledger</span>
                     </a>
-                    <a onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                    <a id="link-client-submission-super" onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                         <i class="fa-solid fa-circle-plus w-4"></i>
                         <span>Submit Document</span>
                     </a>
@@ -175,17 +175,17 @@
 
                 <ul id="client-only-links" class="space-y-1 mt-4 hidden">
                     <li>
-                        <a onclick="switchSidebarTab('client-tracking')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <a id="link-client-tracking" onclick="switchSidebarTab('client-tracking')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                             <i class="fa-solid fa-magnifying-glass text-[14px] w-4"></i> <span>Track Document</span>
                         </a>
                     </li>
                     <li>
-                        <a onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <a id="link-client-submission" onclick="switchSidebarTab('client-submission')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                             <i class="fa-solid fa-circle-plus text-[14px] w-4"></i> <span>Submit Document</span>
                         </a>
                     </li>
                     <li>
-                        <a onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
+                        <a id="link-client-submitted-ledger" onclick="switchSidebarTab('client-submitted-ledger')" class="flex items-center space-x-3 px-4 py-2.5 rounded-xl text-indigo-200 hover:bg-indigo-800/50 hover:text-white font-medium text-sm cursor-pointer transition">
                             <i class="fa-solid fa-folder-open text-[14px] w-4"></i> <span>Submitted Docs</span>
                         </a>
                     </li>
@@ -415,12 +415,12 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Submitted By (Authorized Liaison)</label>
-                            <input id="sub-submitted-by" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-semibold cursor-not-allowed focus:outline-none select-none" readonly />
+                            <label class="block text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1.5">Submitted By (Authorized Liaison)</label>
+                            <input id="sub-submitted-by" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 font-semibold rounded-xl text-sm cursor-not-allowed outline-none select-none shadow-inner" readonly />
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Originating Institution / School Unit</label>
-                            <input id="sub-school-office" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 font-semibold cursor-not-allowed focus:outline-none select-none" readonly />
+                            <label class="block text-xs font-bold text-indigo-900 uppercase tracking-wider mb-1.5">Originating Institution / School Unit</label>
+                            <input id="sub-school-office" type="text" class="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 font-semibold rounded-xl text-sm cursor-not-allowed outline-none select-none shadow-inner" readonly />
                         </div>
                     </div>
 
@@ -447,6 +447,7 @@
             <section id="superadmin-user-ledger-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
                     <h3 class="text-base font-bold text-gray-900 mb-4"><i class="fa-solid fa-user-plus text-indigo-500 mr-2"></i>Provision System Profile</h3>
+
                     <form id="form-create-user" onsubmit="createNewAccount(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Access Authorization Role Base</label>
@@ -472,15 +473,18 @@
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Position / Job Rank Designation</label>
                             <input id="new-user-position" type="text" placeholder="e.g., Administrative Assistant II" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
                         </div>
+
                         <div id="office-field-container">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Assigned Core Office Base</label>
                             <input id="new-user-office" type="text" placeholder="e.g., CID, SGOD, Cashier" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" required />
                         </div>
+
                         <div id="conditional-client-fields" class="hidden">
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Affiliated School Station Branch Name</label>
                             <input id="new-user-school" type="text" placeholder="e.g., Biñan National High School" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition" />
                         </div>
-                        <button id="btn-create-account" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-sm transition cursor-pointer">
+
+                        <button id="btn-create-account" type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-sm transition mt-2 cursor-pointer">
                             Create System Account
                         </button>
                     </form>
@@ -491,6 +495,7 @@
                         <h3 class="text-base font-bold text-gray-900">Security Ledger Matrices</h3>
                         <p class="text-xs text-gray-500">Live operational account authorization entries recorded inside database rows.</p>
                     </div>
+
                     <div class="border border-gray-100 rounded-xl overflow-hidden">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
@@ -501,7 +506,8 @@
                                     <th class="p-4 text-right">Scope Ops</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100"></tbody>
+                            <tbody id="user-ledger-tbody" class="divide-y divide-gray-100">
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -1212,15 +1218,44 @@
         }
     }
 
-   function switchSidebarTab(targetTab) {
+ /**
+ * 2. PRIMARY VIEW CONTROLLER FRAMEWORK
+ */
+function switchSidebarTab(targetTab) {
+    const loginView = document.getElementById('login-view');
     const opsCenter = document.getElementById('shared-dashboard-view');
     const ledgerCenter = document.getElementById('superadmin-user-ledger-view');
     const clientTracking = document.getElementById('client-view');
     const clientSubmission = document.getElementById('client-submission-view'); 
     const receiverPanel = document.getElementById('office-receiver-view');
     const clientSubmittedLedger = document.getElementById('client-submitted-ledger-view');
+    const topNavbar = document.getElementById('top-navbar');
+    const sidebarElement = document.getElementById('dashboard-sidebar');
 
-    // Hide absolutely everything first to avoid overlapping layout states
+    // Edge case override if authentication state is not validated
+    if (targetTab === 'login-panel-view-forced' || (!window.currentUser && targetTab !== 'login-panel-view-forced')) {
+        if (loginView) loginView.classList.remove('hidden');
+        if (opsCenter) opsCenter.classList.add('hidden');
+        if (ledgerCenter) ledgerCenter.classList.add('hidden');
+        if (clientTracking) clientTracking.classList.add('hidden');
+        if (clientSubmission) clientSubmission.classList.add('hidden');
+        if (receiverPanel) receiverPanel.classList.add('hidden');
+        if (clientSubmittedLedger) clientSubmittedLedger.classList.add('hidden');
+        if (topNavbar) topNavbar.classList.add('hidden');
+        if (sidebarElement) sidebarElement.classList.add('hidden');
+        return;
+    }
+
+    // Retain current viewed state into context variables and browser storage
+    currentActiveViewTab = targetTab;
+    localStorage.setItem('currentActiveViewTab', targetTab);
+
+    // Render core shell panels visible once identity is active
+    if (loginView) loginView.classList.add('hidden');
+    if (topNavbar) topNavbar.classList.remove('hidden');
+    if (sidebarElement) sidebarElement.classList.remove('hidden');
+
+    // Clear content panels
     if (opsCenter) opsCenter.classList.add('hidden');
     if (ledgerCenter) ledgerCenter.classList.add('hidden');
     if (clientTracking) clientTracking.classList.add('hidden');
@@ -1235,59 +1270,131 @@
     } else if (targetTab === 'user-ledger') {
         if (ledgerCenter) ledgerCenter.classList.remove('hidden');
     } else if (targetTab === 'client-tracking') {
-        // 🌟 Restored Track Document screen mapping
         if (clientTracking) clientTracking.classList.remove('hidden');
     } else if (targetTab === 'client-submission') {
         if (clientSubmission) clientSubmission.classList.remove('hidden');
-
-        // 🌟 AUTOMATION HOOK: Read active identity parameters from current logged-in context
-        if (typeof currentUser !== 'undefined' && currentUser) {
+        
+        // 🌟 METADATA AUTO-FILL HOOK: Always write values and display them securely via non-editable states
+        if (window.currentUser) {
             const fieldUser = document.getElementById('sub-submitted-by');
             const fieldOrigin = document.getElementById('sub-school-office');
 
             if (fieldUser) {
-                fieldUser.value = currentUser.fullname || currentUser.username || '';
+                fieldUser.value = window.currentUser.fullname || window.currentUser.username || 'Authorized Operator Context';
             }
             if (fieldOrigin) {
-                // Dynamically fallback to assigned administrative office base context if school attribute is blank
-                fieldOrigin.value = currentUser.school || currentUser.office || '';
+                fieldOrigin.value = window.currentUser.school || window.currentUser.office || 'Division Base Office';
             }
         }
     } else if (targetTab === 'client-submitted-ledger') {
-        // 🌟 Restored Submitted Docs history mapping
         if (clientSubmittedLedger) clientSubmittedLedger.classList.remove('hidden');
         if (typeof renderClientSubmittedDocsTable === 'function') {
             renderClientSubmittedDocsTable();
         }
     }
 
-    // 🌟 Run the Highlight Feature Engine
+    // Run layout navigation item visual highlighting code
     highlightSidebarLink(targetTab);
 
-    // Auto-close drawer overlay after selection on mobile devices
+    // Auto-close drawer overlay after selection on mobile viewports
     if (window.innerWidth < 1024 && typeof toggleMobileSidebar === 'function') {
         toggleMobileSidebar();
     }
 }
+/**
+ * 3. GLOBAL AUTO-REFRESH SYNC ENGINE (Every 30 Seconds Background Loop)
+ */
+function initiateAutoSyncPollingLoop() {
+    setInterval(() => {
+        // Skip background refresh calls completely if user hasn't authenticated yet
+        if (!window.currentUser) return;
 
-// 🌟 HIGHLIGHT HIGHLIGHTER IMPLEMENTATION
-function highlightSidebarLink(activeTabId) {
-    // Collect all nav link elements inside your menu links blocks
-    const navLinks = document.querySelectorAll('aside a[onclick^="switchSidebarTab"]');
+        console.log(`[Sync Engine]: Initiating background sync payload for view mode: ${currentActiveViewTab}`);
+        
+        // Execute focused network data refresh based on the active tab context
+        if (currentActiveViewTab === 'main-dash') {
+            if (typeof refreshDocumentCache === 'function') {
+                refreshDocumentCache(); // Invisible sheet synchronization updates
+            }
+        } else if (currentActiveViewTab === 'client-submitted-ledger') {
+            if (typeof renderClientSubmittedDocsTable === 'function') {
+                renderClientSubmittedDocsTable(); // Silently reload data grid lines
+            }
+        } else if (currentActiveViewTab === 'user-ledger') {
+            if (typeof loadAllSystemUsers === 'function') {
+                loadAllSystemUsers(); // Reload user ledger matrices if the function exists
+            }
+        }
+    }, 30000); // 30,000 milliseconds = 30 seconds interval mapping
+}
+
+/**
+ * Example login tracking wrap framework context to hook into your handleLogin routine
+ */
+function initializeInterfaceAccessPrivileges(userContext) {
+    if (!userContext) return;
     
-    navLinks.forEach(link => {
-        // Parse the target string token out of the attribute parameter element
-        const matches = link.getAttribute('onclick').match(/'([^']+)'/);
-        const linkTabId = matches ? matches[1] : null;
+    // Update Profile Labels across sidebar container widgets
+    const labelName = document.getElementById('sidebar-fullname');
+    const labelRole = document.getElementById('sidebar-role-pill');
+    if (labelName) labelName.textContent = userContext.fullname || userContext.username;
+    if (labelRole) labelRole.textContent = userContext.role;
 
-        if (linkTabId === activeTabId) {
-            // Active State Classes (Highlighted dark backdrop with bright white text)
-            link.className = "flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-white bg-white/15 rounded-lg border-l-4 border-indigo-500 transition-all shadow-xs";
-        } else {
-            // Normal Rest State Classes (Muted text layout that glows slightly on hover)
-            link.className = "flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-all border-l-4 border-transparent";
+    // Toggle menu tree node visibilities matching defined privileges
+    const staffBox = document.getElementById('staff-only-links');
+    const superBox = document.getElementById('superadmin-only-links');
+    const clientBox = document.getElementById('client-only-links');
+
+    if (staffBox) staffBox.classList.add('hidden');
+    if (superBox) superBox.classList.add('hidden');
+    if (clientBox) clientBox.classList.add('hidden');
+
+    if (userContext.role === 'superadmin') {
+        if (superBox) superBox.classList.remove('hidden');
+        if (staffBox) staffBox.classList.remove('hidden'); // Superadmins also view standard processing lists
+    } else if (userContext.role === 'admin') {
+        if (staffBox) staffBox.classList.remove('hidden');
+    } else if (userContext.role === 'client') {
+        if (clientBox) clientBox.classList.remove('hidden');
+    }
+}
+
+/**
+ * Custom Highlighting link class applier loop updates
+ */
+function highlightSidebarLink(targetTab) {
+    // Clear styles from all clickable navigation nodes
+    const linkIds = [
+        'link-main-dash', 'link-client-submission-admin', 'link-client-submitted-ledger-admin',
+        'link-user-ledger', 'link-client-submission-super',
+        'link-client-tracking', 'link-client-submission', 'link-client-submitted-ledger'
+    ];
+    
+    linkIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('bg-indigo-800', 'text-white');
+            el.classList.add('text-indigo-200', 'hover:bg-indigo-800/50', 'hover:text-white');
         }
     });
+
+    // Assign highlight style class context matching the current route
+    let activeId = 'link-' + targetTab;
+    
+    // Handle edge case mappings for roles that share the submission layout view
+    if (targetTab === 'client-submission' && window.currentUser) {
+        if (window.currentUser.role === 'admin') activeId = 'link-client-submission-admin';
+        if (window.currentUser.role === 'superadmin') activeId = 'link-client-submission-super';
+    }
+    if (targetTab === 'client-submitted-ledger' && window.currentUser && window.currentUser.role === 'admin') {
+        activeId = 'link-client-submitted-ledger-admin';
+    }
+
+    const activeElement = document.getElementById(activeId);
+    if (activeElement) {
+        activeElement.classList.remove('text-indigo-200', 'hover:bg-indigo-800/50');
+        activeElement.classList.add('bg-indigo-800', 'text-white');
+    }
 }
 
     async function loadUserLedgerDirectory() {
@@ -1888,7 +1995,7 @@ async function executeDocumentMetaUpdate(event) {
         saveBtn.innerHTML = `Save Changes`;
     }
 }
-    // ==========================================
+  // ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
@@ -1901,38 +2008,40 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Read and load saved user session parameters
-    const savedSession = localStorage.getItem('docTrack_session');
+    const savedSession = localStorage.getItem('currentUserContext');
     if (savedSession) {
         try {
-            const user = JSON.parse(savedSession);
+            window.currentUser = JSON.parse(savedSession);
             
-            // Call the renderer exactly once, passing all 6 required arguments
-            renderTargetDashboard(
-                user.role, 
-                user.username, 
-                user.fullName, 
-                user.office || 'N/A', 
-                user.position || user.role,
-                user.schoolName || ''
-            );
+            // Reconstruct view privileges across layouts dynamically
+            initializeInterfaceAccessPrivileges(window.currentUser);
+            
+            // Read or assign safe fallbacks for standard entry view target contexts
+            const savedTab = localStorage.getItem('currentActiveViewTab');
+            currentActiveViewTab = savedTab || (window.currentUser.role === 'client' ? 'client-tracking' : 'main-dash');
+            
+            // Switch tabs cleanly without requiring credentials entry loop
+            switchSidebarTab(currentActiveViewTab);
         } catch (e) {
             console.error("Session parse anomaly encountered:", e);
-            localStorage.removeItem('docTrack_session');
+            localStorage.clear();
+            switchSidebarTab('login-panel-view-forced');
         }
+    } else {
+        // Explicitly clear viewport frames down to standard login state
+        switchSidebarTab('login-panel-view-forced');
     }
-    
+
     // 3. Attach form submission event bindings
-    const loginForm = document.getElementById('login-form');
+    const loginForm = document.getElementById('form-login');
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
-});
-        document.addEventListener("DOMContentLoaded", function() {
+
+    // 4. Mobile Menu Navigation Sidebar Element Hooks
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     const closeSidebarBtn = document.getElementById("close-sidebar-btn");
     const sidebar = document.getElementById("dashboard-sidebar");
-
-    // Open Sidebar on Mobile
 
     if (mobileMenuBtn && sidebar) {
         mobileMenuBtn.addEventListener("click", () => {
@@ -1940,12 +2049,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Close Sidebar on Mobile
     if (closeSidebarBtn && sidebar) {
         closeSidebarBtn.addEventListener("click", () => {
             sidebar.classList.add("-translate-x-full");
         });
     }
+
+    // 5. Initialize the background data polling sync mechanism (30 seconds)
+    initiateAutoSyncPollingLoop();
 });
  </script> 
 </body>

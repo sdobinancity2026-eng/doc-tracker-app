@@ -2241,6 +2241,30 @@ async function handleUserUpdate(event, originalUserObj) {
         saveBtn.innerHTML = `Save Changes`;
     }
 }
+   /**
+ * Securely terminates the session and prevents automatic re-login.
+ */
+function logout() {
+    // 1. Clear out memory tracking
+    window.currentUser = null;
+
+    // 2. Wipe ALL local storage variables related to session tracking
+    localStorage.removeItem('currentUserContext');
+    localStorage.removeItem('docTrack_session');
+    localStorage.removeItem('currentActiveViewTab');
+    
+    // Optional: Wipe sessionStorage too if you are using it anywhere
+    sessionStorage.clear();
+
+    // 3. Show a notification if your app uses one
+    if (typeof showModernNotification === 'function') {
+        showModernNotification('Logged Out', 'Session ended successfully.', 'success');
+    }
+
+    // 4. Force the page to reload or redirect back to the login layout
+    // This resets the state completely and forces the login screen to render.
+    window.location.reload(); 
+}
  // ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================

@@ -1303,6 +1303,32 @@ function switchSidebarTab(targetTab) {
     // Apply sidebar link active state CSS enhancements
     highlightSidebarLink(targetTab);
 }
+    function loadAllSystemUsers() {
+    const tbody = document.getElementById('user-ledger-tbody');
+    if (!tbody) return;
+
+    // 🌟 THE CRITICAL FIX: Clear out the old rows first before adding new data!
+    tbody.innerHTML = ''; 
+
+    // Example loop processing your database rows
+    // (Ensure your keys match your Google Sheet database columns lowercase: fullname, username, etc.)
+    userCache.forEach(user => {
+        const row = document.createElement('tr');
+        row.className = "border-b border-gray-100 text-xs";
+        
+        row.innerHTML = `
+            <td class="p-4 font-medium text-gray-900">${user.fullname || 'No Name'}</td>
+            <td class="p-4 text-gray-500">${user.username || '---'}</td>
+            <td class="p-4 text-gray-500">${user.position || user.role}</td>
+            <td class="p-4 text-right">
+                <button onclick="deleteUserAccount('${user.username}')" class="text-red-500 hover:text-red-700 cursor-pointer">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 /**
  * 3. GLOBAL AUTO-REFRESH SYNC ENGINE (Every 30 Seconds Background Loop)
  */

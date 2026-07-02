@@ -748,15 +748,17 @@
         }
     }
 
-   async function handleLogin(event) {
+  async function handleLogin(event) {
     event.preventDefault();
     const usernameInput = document.getElementById('login-username').value.trim();
     const passwordInput = document.getElementById('login-password').value.trim();
     const loginBtn = document.getElementById('btn-login-submit');
+    
     if (!usernameInput || !passwordInput) {
-        alert("Please enter both your username and password.");
+        showModernNotification("Missing Information", "Please enter both your username and password.", "error");
         return;
     }
+    
     loginBtn.disabled = true;
     loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Authenticating...`;
 
@@ -764,6 +766,7 @@
     loginFormData.append("action", "login");
     loginFormData.append("username", usernameInput);
     loginFormData.append("password", passwordInput);
+    
     try {
         const response = await fetch(API_URL, { method: "POST", body: loginFormData });
         const rawText = await response.text();
@@ -776,31 +779,52 @@
         }
 
         if (data.success) {
-            alert(`Welcome back, ${data.fullName || data.username}!`);
-            
-            // Save role, position, and office directly from Google Sheets rows
-            // Inside your handleLogin function success block:
-            localStorage.setItem('docTrack_session', JSON.stringify({
+            // Create user context object
+            const authenticatedUserObj = {
                 role: data.role,
                 position: data.position,
                 username: data.username,
                 fullName: data.fullName,
                 office: data.office,
-                schoolName: data.schoolName // Save column G parameter
-            }));
-            renderTargetDashboard(data.role, data.username, data.fullName, data.office, data.position, data.schoolName);
+                schoolName: data.schoolName
+            };
+
+            // 1. Assign to the global window instance variable immediately
+            window.currentUser = authenticatedUserObj;
+
+            // 2. Save session under 'currentUserContext' so refresh-persistence works across all pages
+            localStorage.setItem('currentUserContext', JSON.stringify(authenticatedUserObj));
+            
+            // 3. Clear any saved active views from old sessions to prevent route contamination
+            localStorage.removeItem('currentActiveViewTab');
+
+            // 4. Initialize access privilege maps safely 
+            if (typeof initializeInterfaceAccessPrivileges === 'function') {
+                initializeInterfaceAccessPrivileges(window.currentUser);
+            }
+
+            // 5. Fire your beautiful, singular modern notification popup banner
+            showModernNotification(
+                'Access Granted', 
+                `Welcome back, ${data.fullName || data.username}!`, 
+                'success'
+            );
+            
+            // 6. Direct user to their matching landing viewport layout using the clean switcher channel
+            const initialTab = data.role === 'client' ? 'client-tracking' : 'main-dash';
+            switchSidebarTab(initialTab);
+
         } else {
-            alert(`Login Failed: ${data.message || 'Invalid credentials provided.'}`);
+            showModernNotification("Login Failed", data.message || 'Invalid credentials provided.', "error");
         }
     } catch (err) {
         console.error("Login trace execution error details:", err);
-        alert("Connection failed. Verify Apps Script configuration permissions.");
+        showModernNotification("Connection Error", "Connection failed. Verify Apps Script configuration permissions.", "error");
     } finally {
         loginBtn.disabled = false;
         loginBtn.innerHTML = `Sign In`;
     }
 }
-
    function renderTargetDashboard(role, targetKey, fullName, office, position, schoolName) {
     const lowerRole = String(role).toLowerCase();
     
@@ -1216,28 +1240,15 @@
         }
     }
 
- /**
- * ROBUST VIEW SWITCHER CONTROL
- * Safely changes views without re-authenticating or displaying disruptive alerts
+/**
+ * SEAMLESS TAB CONFIGURATION SWITCHER
  */
 function switchSidebarTab(targetTab) {
-    // 1. Check if user session exists. If not, force them to stay on login view.
-    const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
-    
+    const savedSession = localStorage.getItem('currentUserContext');
     if (!savedSession && targetTab !== 'login-panel-view-forced') {
         targetTab = 'login-panel-view-forced';
     }
 
-    // 2. Safely parse user context if it isn't loaded globally yet
-    if (!window.currentUser && savedSession) {
-        try {
-            window.currentUser = JSON.parse(savedSession);
-        } catch(e) {
-            console.error("Error reading session during tab switch:", e);
-        }
-    }
-
-    // 3. Map out all content views to toggle visibility
     const views = {
         'login-panel-view-forced': document.getElementById('login-view'),
         'main-dash': [document.getElementById('shared-dashboard-view'), document.getElementById('office-receiver-view')],
@@ -1250,28 +1261,23 @@ function switchSidebarTab(targetTab) {
     const topNavbar = document.getElementById('top-navbar');
     const sidebarElement = document.getElementById('dashboard-sidebar');
 
-    // 4. Hide EVERYTHING first to ensure a clean slate
-    Object.values(views).flat().forEach(el => {
-        if (el) el.classList.add('hidden');
-    });
+    // Hide all view tracks safely
+    Object.values(views).flat().forEach(el => { if (el) el.classList.add('hidden'); });
 
-    // 5. Handle Login View presentation vs Application shell presentation
     if (targetTab === 'login-panel-view-forced') {
         if (views['login-panel-view-forced']) views['login-panel-view-forced'].classList.remove('hidden');
         if (topNavbar) topNavbar.classList.add('hidden');
         if (sidebarElement) sidebarElement.classList.add('hidden');
-        return; // Halt further execution here
+        return;
     }
 
-    // Ensure application shell layouts are visible if logged in
     if (topNavbar) topNavbar.classList.remove('hidden');
     if (sidebarElement) sidebarElement.classList.remove('hidden');
 
-    // Save active tab preference so it survives manual page refreshes
     currentActiveViewTab = targetTab;
     localStorage.setItem('currentActiveViewTab', targetTab);
 
-    // 6. Show only the targeted view components
+    // Make target view visible
     const targetElement = views[targetTab];
     if (targetElement) {
         if (Array.isArray(targetElement)) {
@@ -1281,51 +1287,72 @@ function switchSidebarTab(targetTab) {
         }
     }
 
-    // 7. Auto-fill Read-Only Liaison Metadata Fields securely
-    if (targetTab === 'client-submission' && window.currentUser) {
-        const fieldUser = document.getElementById('sub-submitted-by');
-        const fieldOrigin = document.getElementById('sub-school-office');
-        
-        // Use uniform property checking mapping your session model variables
-        if (fieldUser) fieldUser.value = window.currentUser.fullName || window.currentUser.fullname || window.currentUser.username || '';
-        if (fieldOrigin) fieldOrigin.value = window.currentUser.schoolName || window.currentUser.school || window.currentUser.office || '';
-    }
-
-    // 8. Trigger conditional background data sync targets seamlessly
-    if (targetTab === 'client-submitted-ledger' && typeof renderClientSubmittedDocsTable === 'function') {
+    // 🌟 FETCH AND LOAD USERS ONLY WHEN THE LEDGER IS TARGETED
+    if (targetTab === 'user-ledger') {
+        loadAllSystemUsers();
+    } else if (targetTab === 'client-submitted-ledger' && typeof renderClientSubmittedDocsTable === 'function') {
         renderClientSubmittedDocsTable();
-    } else if (targetTab === 'main-dash' && typeof refreshDocumentCache === 'function') {
-        refreshDocumentCache();
+    } else if (targetTab === 'main-dash') {
+        renderAdminTable();
     }
 
-    // Apply sidebar link active state CSS enhancements
-    highlightSidebarLink(targetTab);
+    if (typeof highlightSidebarLink === 'function') highlightSidebarLink(targetTab);
 }
-    function loadAllSystemUsers() {
+
+/**
+ * LOADS USERS FROM THE GOOGLE SHEET 'USERS' DEPLOYMENT EXCLUSIVELY
+ */
+async function loadAllSystemUsers() {
     const tbody = document.getElementById('user-ledger-tbody');
     if (!tbody) return;
 
-    // 🌟 THE CRITICAL FIX: Clear out the old rows first before adding new data!
-    tbody.innerHTML = ''; 
+    // Clear old elements cleanly before making the network request to prevent stacking rows
+    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">Loading system database records...</td></tr>`;
 
-    // Example loop processing your database rows
-    // (Ensure your keys match your Google Sheet database columns lowercase: fullname, username, etc.)
-    userCache.forEach(user => {
-        const row = document.createElement('tr');
-        row.className = "border-b border-gray-100 text-xs";
+    try {
+        // Fetch from your deployment sheet endpoint (passing custom route specifier if your web app processes target parameters)
+        const res = await fetch(`${API_URL}?target=users`);
+        const data = await res.json();
         
-        row.innerHTML = `
-            <td class="p-4 font-medium text-gray-900">${user.fullname || 'No Name'}</td>
-            <td class="p-4 text-gray-500">${user.username || '---'}</td>
-            <td class="p-4 text-gray-500">${user.position || user.role}</td>
-            <td class="p-4 text-right">
-                <button onclick="deleteUserAccount('${user.username}')" class="text-red-500 hover:text-red-700 cursor-pointer">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
+        tbody.innerHTML = ''; // Empty out loader notice track
+
+        // Fallback array capture based on your deployment schema structure
+        const usersList = Array.isArray(data) ? data : (data.users || documentCache.users || []);
+
+        if (!usersList || usersList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">No registered accounts located.</td></tr>`;
+            return;
+        }
+
+        usersList.forEach(user => {
+    if (!user.username) return; 
+
+    // Create a safe, stringified snapshot of the user object to pass into the editor window
+    const userSnapshot = btoa(unescape(encodeURIComponent(JSON.stringify(user))));
+
+    const row = document.createElement('tr');
+    row.className = "border-b border-gray-100 text-xs hover:bg-gray-50/50 transition-all duration-150";
+    row.innerHTML = `
+        <td class="p-4 font-medium text-gray-900">${user.fullname || user.fullName || '---'}</td>
+        <td class="p-4 text-gray-500 font-mono">${user.username}</td>
+        <td class="p-4 text-gray-500">${user.position || user.role || 'N/A'}</td>
+        <td class="p-4 text-right flex justify-end gap-2 items-center">
+            <!-- 🌟 EDIT BUTTON -->
+            <button onclick="openUserEditModal('${userSnapshot}')" class="text-indigo-500 hover:text-indigo-700 cursor-pointer p-1">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <!-- DELETE BUTTON -->
+            <button onclick="deleteUserAccount('${user.username}')" class="text-red-400 hover:text-red-600 cursor-pointer p-1">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+});
+    } catch (e) {
+        console.error("System user ledger synchronization anomaly:", e);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Failed to sync secure user matrix rows.</td></tr>`;
+    }
 }
 /**
  * 3. GLOBAL AUTO-REFRESH SYNC ENGINE (Every 30 Seconds Background Loop)
@@ -2021,11 +2048,193 @@ async function executeDocumentMetaUpdate(event) {
         saveBtn.innerHTML = `Save Changes`;
     }
 }
-  // ==========================================
+    /**
+ * PREMIUM APP LAYOUT NOTIFICATION ENGINE
+ * Replaces standard alert dialog blocks cleanly
+ */
+function showModernNotification(title, message, type = 'success') {
+    // Remove existing notifications if any are lingering
+    const existingToast = document.getElementById('doc-track-toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'doc-track-toast';
+    
+    // Modern Tailwind styling configuration framework
+    toast.className = `fixed bottom-5 right-5 z-50 flex items-start gap-3 rounded-xl bg-white p-4 shadow-2xl border-l-4 transform translate-y-10 opacity-0 transition-all duration-300 max-w-sm min-w-[280px]
+        ${type === 'success' ? 'border-indigo-600' : 'border-red-500'}`;
+
+    // Elegant iconography setup based on alert type mapping
+    const iconHtml = type === 'success' 
+        ? `<div class="rounded-full bg-indigo-50 p-1.5 text-indigo-600"><i class="fa-solid fa-circle-check text-sm"></i></div>`
+        : `<div class="rounded-full bg-red-50 p-1.5 text-red-500"><i class="fa-solid fa-circle-exclamation text-sm"></i></div>`;
+
+    toast.innerHTML = `
+        ${iconHtml}
+        <div class="flex-1">
+            <h4 class="text-xs font-semibold text-gray-900">${title}</h4>
+            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">${message}</p>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Smooth entry slide layout animation frames
+    setTimeout(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+    }, 50);
+
+    // Auto cleanup decay phase execution rules (Fades out after 4 seconds)
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+    /**
+ * OPENS THE USER MODAL EDITOR PIPELINE
+ * Dynamically handles field compilation based on existing record attributes
+ */
+function openUserEditModal(encodedUserObj) {
+    // Decode data matrix safely
+    const user = JSON.parse(decodeURIComponent(escape(atob(encodedUserObj))));
+    
+    // Remove existing modal instances if any exist
+    const existingModal = document.getElementById('user-edit-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'user-edit-modal';
+    modal.className = "fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4";
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden transform scale-95 transition-all duration-200">
+            <div class="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                <h3 class="text-sm font-semibold">Modify System Profile Matrix</h3>
+                <button onclick="document.getElementById('user-edit-modal').remove()" class="text-white/80 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-edit-user" class="p-4 space-y-3 text-xs text-gray-700">
+                <!-- Username (Read-Only Primary Key Reference) -->
+                <div>
+                    <label class="block font-medium text-gray-500 mb-1">Unique Account Username</label>
+                    <input type="text" id="edit-username" value="${user.username}" readonly class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-gray-400 cursor-not-allowed font-mono outline-none" />
+                </div>
+                
+                <!-- Password Field -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">Account Security Password Code</label>
+                    <input type="password" id="edit-password" placeholder="•••••••• (Enter new code if changing)" class="w-full p-2 border border-gray-200 rounded outline-indigo-600" />
+                </div>
+
+                <!-- Access Authorization Role Base Selection -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">Access Authorization Role Base</label>
+                    <select id="edit-role" class="w-full p-2 border border-gray-200 rounded outline-indigo-600">
+                        <option value="Office Admin Staff" ${user.role === 'Office Admin Staff' ? 'selected' : ''}>Office Admin Staff</option>
+                        <option value="LSB Job Order Clerk" ${user.role === 'LSB Job Order Clerk' ? 'selected' : ''}>LSB Job Order Clerk</option>
+                        <option value="Super Admin" ${user.role === 'Super Admin' ? 'selected' : ''}>Super Admin</option>
+                        <option value="client" ${user.role === 'client' ? 'selected' : ''}>Client/Liaison</option>
+                    </select>
+                </div>
+
+                <!-- Descriptor / Name Mapping Checks -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">User Full Name Descriptor</label>
+                    <input type="text" id="edit-fullname" value="${user.fullname || user.fullName || ''}" class="w-full p-2 border border-gray-200 rounded outline-indigo-600" />
+                </div>
+
+                <!-- Position Designation -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">Position / Job Rank Designation</label>
+                    <input type="text" id="edit-position" value="${user.position || ''}" class="w-full p-2 border border-gray-200 rounded outline-indigo-600" />
+                </div>
+
+                <!-- Assigned Core Office Base -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">Assigned Core Office Base</label>
+                    <input type="text" id="edit-office" value="${user.office || ''}" class="w-full p-2 border border-gray-200 rounded outline-indigo-600" />
+                </div>
+
+                <!-- School Deployment Location Assignment -->
+                <div>
+                    <label class="block font-medium text-gray-600 mb-1">Assigned School Node Location</label>
+                    <input type="text" id="edit-school" value="${user.schoolName || user.school || ''}" class="w-full p-2 border border-gray-200 rounded outline-indigo-600" />
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-gray-50 mt-4">
+                    <button type="button" onclick="document.getElementById('user-edit-modal').remove()" class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 cursor-pointer">Cancel</button>
+                    <button type="submit" id="btn-edit-user-submit" class="px-4 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer font-medium">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Fade and scale effect animation framework assignment
+    setTimeout(() => { modal.firstElementChild.classList.remove('scale-95'); }, 10);
+
+    // Bind submit logic dynamically
+    document.getElementById('form-edit-user').addEventListener('submit', (e) => handleUserUpdate(e, user));
+}
+
+    /**
+ * PROCESSES USER LEDGER RECORD UPDATES UPSTREAM TO GOOGLE SHEETS
+ */
+async function handleUserUpdate(event, originalUserObj) {
+    event.preventDefault();
+    const saveBtn = document.getElementById('btn-edit-user-submit');
+    
+    const newPassword = document.getElementById('edit-password').value.trim();
+    const newRole = document.getElementById('edit-role').value;
+    const newFullname = document.getElementById('edit-fullname').value.trim();
+    const newPosition = document.getElementById('edit-position').value.trim();
+    const newOffice = document.getElementById('edit-office').value.trim();
+    const newSchool = document.getElementById('edit-school').value.trim();
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Saving...`;
+
+    const updateFormData = new FormData();
+    updateFormData.append("action", "updateUser");
+    updateFormData.append("username", originalUserObj.username);
+    updateFormData.append("role", newRole);
+    updateFormData.append("fullname", newFullname);
+    updateFormData.append("position", newPosition);
+    updateFormData.append("office", newOffice);
+    updateFormData.append("schoolName", newSchool);
+    
+    // Only pass the password if it's explicitly typed out to prevent clearing original credentials
+    if (newPassword) {
+        updateFormData.append("password", newPassword);
+    }
+
+    try {
+        const response = await fetch(API_URL, { method: "POST", body: updateFormData });
+        const result = await response.json();
+
+        if (result.success) {
+            showModernNotification("Record Updated", "User metrics have been permanently written to database.", "success");
+            document.getElementById('user-edit-modal').remove();
+            
+            // Reload user records view immediately to reflect the edits
+            loadAllSystemUsers();
+        } else {
+            showModernNotification("Update Failed", result.message || "Spreadsheet rejected the update statement.", "error");
+        }
+    } catch (err) {
+        console.error("Database user matrix write execution failure details:", err);
+        showModernNotification("Engine Exception", "Failed to connect to the cloud spreadsheet environment.", "error");
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `Save Changes`;
+    }
+}
+ // ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Warm up cache data
+    // 1. Warm up core document tracking data cache
     try {
         const res = await fetch(API_URL);
         documentCache = await res.json();
@@ -2033,7 +2242,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.warn("Warm-up data cache fetch exception handling:", e); 
     }
 
-    // 2. Read and load saved user session parameters
+    // 2. Read and load saved user session parameters across refreshes
     const savedSession = localStorage.getItem('currentUserContext');
     if (savedSession) {
         try {
@@ -2042,11 +2251,11 @@ window.addEventListener('DOMContentLoaded', async () => {
             // Reconstruct view privileges across layouts dynamically
             initializeInterfaceAccessPrivileges(window.currentUser);
             
-            // Read or assign safe fallbacks for standard entry view target contexts
+            // Restore exact view tab state to survive manual page refreshes across all pages
             const savedTab = localStorage.getItem('currentActiveViewTab');
             currentActiveViewTab = savedTab || (window.currentUser.role === 'client' ? 'client-tracking' : 'main-dash');
             
-            // Switch tabs cleanly without requiring credentials entry loop
+            // Switch tabs cleanly without requiring login credentials loop
             switchSidebarTab(currentActiveViewTab);
         } catch (e) {
             console.error("Session parse anomaly encountered:", e);
@@ -2054,13 +2263,13 @@ window.addEventListener('DOMContentLoaded', async () => {
             switchSidebarTab('login-panel-view-forced');
         }
     } else {
-        // Explicitly clear viewport frames down to standard login state
         switchSidebarTab('login-panel-view-forced');
     }
 
-    // 3. Attach form submission event bindings
-    const loginForm = document.getElementById('form-login');
+    // 3. Attach login form submission binding safely
+    const loginForm = document.getElementById('form-login') || document.getElementById('login-form');
     if (loginForm) {
+        loginForm.removeEventListener('submit', handleLogin); // Prevent double attachment
         loginForm.addEventListener('submit', handleLogin);
     }
 
@@ -2070,18 +2279,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     const sidebar = document.getElementById("dashboard-sidebar");
 
     if (mobileMenuBtn && sidebar) {
-        mobileMenuBtn.addEventListener("click", () => {
-            sidebar.classList.remove("-translate-x-full");
-        });
+        mobileMenuBtn.addEventListener("click", () => sidebar.classList.remove("-translate-x-full"));
     }
-
     if (closeSidebarBtn && sidebar) {
-        closeSidebarBtn.addEventListener("click", () => {
-            sidebar.classList.add("-translate-x-full");
-        });
+        closeSidebarBtn.addEventListener("click", () => sidebar.classList.add("-translate-x-full"));
     }
 
-    // 5. Initialize the background data polling sync mechanism (30 seconds)
+    // 5. Initialize background polling
     initiateAutoSyncPollingLoop();
 });
  </script> 

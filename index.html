@@ -1512,6 +1512,7 @@ function highlightSidebarLink(targetTab) {
 
     const submitBtn = document.getElementById('btn-doc-submit');
     const fileInput = document.getElementById('sub-file-upload');
+    const formElement = document.getElementById('form-document-submission');
 
     if (!fileInput || fileInput.files.length === 0) {
         submitBtn.className = "bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition animate-pulse";
@@ -1531,11 +1532,10 @@ function highlightSidebarLink(targetTab) {
         return;
     }
 
-    // 2. Safely parse values from the read-only UI fields or pull matching session lookups
+    // 2. Safely parse values from the read-only UI fields or matching session lookups
     const submittedByEl = document.getElementById('doc-submitted-by');
     const originEl = document.getElementById('doc-originating-unit');
 
-    // Pull from active localStorage key used across your app
     const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
     let sessionUser = "";
     let sessionOrigin = "";
@@ -1543,6 +1543,7 @@ function highlightSidebarLink(targetTab) {
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
+            // Use fallback matching fields matching your spreadsheet logic
             sessionUser = user.fullname || user.fullName || user.username || "";
             sessionOrigin = String(user.role).toLowerCase() === 'client' ? (user.schoolName || user.schoolname || "") : (user.office || "");
         } catch(e) { 
@@ -1550,11 +1551,14 @@ function highlightSidebarLink(targetTab) {
         }
     }
 
-    // Target the verified UI element values with fallbacks to avoid crashes
     const finalSubmittedBy = submittedByEl ? submittedByEl.value.trim() : (sessionUser || "anonymous");
     const finalOrigin = originEl ? originEl.value.trim() : (sessionOrigin || "External Client Station");
 
-    // Update button to show step 1
+    // Grab destination elements safely (Ensure these IDs exist in your HTML template)
+    const destOfficeEl = document.getElementById('sub-dest-office');
+    const destPersonEl = document.getElementById('sub-dest-person');
+
+    // Update button to loading status
     submitBtn.disabled = true;
     submitBtn.className = "bg-amber-600 text-white font-semibold px-5 py-2 rounded-lg text-xs cursor-not-allowed";
     submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing File...`;
@@ -1567,12 +1571,13 @@ function highlightSidebarLink(targetTab) {
 
         submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce mr-2"></i> Uploading to Cloud...`;
 
+        // 🌟 FIX: Keys matched exactly to Google Sheet Column headers (destinationOffice & destinationPerson)
         const requestPayload = {
             action: "submitDocument",
             title: docTitle,
             docType: docType,
-            destOffice: document.getElementById('sub-dest-office') ? document.getElementById('sub-dest-office').value.trim() : "",
-            destPerson: document.getElementById('sub-dest-person') ? document.getElementById('sub-dest-person').value.trim() : "",
+            destinationOffice: destOfficeEl ? destOfficeEl.value.trim() : "",
+            destinationPerson: destPersonEl ? destPersonEl.value.trim() : "",
             submittedBy: finalSubmittedBy,
             origin: finalOrigin, 
             fileData: rawBytes,
@@ -1594,21 +1599,27 @@ function highlightSidebarLink(targetTab) {
             const data = await response.json();
 
             if (data.success) {
+                // Success feedback
                 submitBtn.className = "bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition";
                 submitBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Registered: ${data.docId}!`;
 
-                if (document.getElementById('form-document-submission')) {
-                    document.getElementById('form-document-submission').reset();
+                // 🌟 FIX: Clear all editable fields in the form cleanly
+                if (formElement) {
+                    formElement.reset();
                 }
                 
-                // Repopulate user information back into the read-only slots after clearing form inputs
-                autofillSubmissionSenderContext();
+                // Keep the Read-Only user context fields populated so they aren't blank
+                if (typeof autofillSubmissionSenderContext === 'function') {
+                    autofillSubmissionSenderContext();
+                }
 
+                // 🌟 FIX: Return or refresh the "client-submission" page instead of dropping to tracking view
                 setTimeout(() => {
                     if (typeof switchSidebarTab === 'function') {
-                        switchSidebarTab('client-tracking');
+                        switchSidebarTab('client-submission'); 
                     }
                 }, 2000);
+
             } else {
                 submitBtn.className = "bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition";
                 submitBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i> Server Rejection Error`;
@@ -1885,8 +1896,8 @@ function executeClientPackageSearch() {
         return;
     }
 
-    // 1. Get session metrics matching username vs fullname variants
-    const savedSession = localStorage.getItem('docTrack_session');
+    // 1. Get session metrics matching local key variables used throughout layout views
+    const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
     let rawUsername = "";
     let rawFullname = "";
 
@@ -1919,11 +1930,11 @@ function executeClientPackageSearch() {
     const userDocs = documentCache.filter(doc => {
         if (!doc) return false;
 
-        // Match against whatever database headers you have mapped (Column G)
+        // Match against database header values mapped out in Column G
         const creatorField = String(doc.submittedBy || doc.SubmittedBy || doc.uploader || "").trim().toLowerCase();
 
-        // True if it matches either your account handle ("jhon") or full text context ("john doe")
-        return (creatorField === rawUsername || creatorField === rawFullname) && rawUsername !== "";
+        // Matches structural data against either unique handler
+        return (creatorField === rawUsername || creatorField === rawFullname) && (rawUsername !== "" || rawFullname !== "");
     });
 
     console.log("Filtered user matching documents total count:", userDocs.length);
@@ -1944,11 +1955,14 @@ function executeClientPackageSearch() {
 
     let rowsHtml = "";
     userDocs.forEach(doc => {
+        // Safe checks matching tracking schema layouts
         const docId = doc.docId || doc.id || doc.TrackingId || "UNKNOWN";
         const title = doc.title || doc.Title || "Untitled Package";
         const docType = doc.docType || doc.DocType || "General Document";
-        const destinationOffice = doc.destOffice || doc.destinationOffice || doc.Office || "---";
-        const destinationPerson = doc.destPerson || doc.destinationPerson || "---";
+        
+        // Ensure accurate property mapping check sequence for newly submitted entries
+        const destinationOffice = doc.destinationOffice || doc.destOffice || doc.Office || "---";
+        const destinationPerson = doc.destinationPerson || doc.destPerson || "---";
         const currentStatus = String(doc.currentStatus || doc.status || "In Review");
 
         let badgeStyle = "bg-amber-50 text-amber-700 border-amber-100";

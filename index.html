@@ -1288,8 +1288,13 @@ function switchSidebarTab(targetTab) {
         }
     }
 
-    // 🌟 FETCH AND LOAD USERS ONLY WHEN THE LEDGER IS TARGETED
-    if (targetTab === 'user-ledger') {
+    // RUN AUTOFILL INTERCEPT ROUTINES
+    if (targetTab === 'client-submission') {
+        // Simple micro-delay allows the DOM nodes to unhide fully
+        setTimeout(() => {
+            autofillSubmissionSenderContext();
+        }, 30);
+    } else if (targetTab === 'user-ledger') {
         loadAllSystemUsers();
     } else if (targetTab === 'client-submitted-ledger' && typeof renderClientSubmittedDocsTable === 'function') {
         renderClientSubmittedDocsTable();
@@ -1508,7 +1513,7 @@ function highlightSidebarLink(targetTab) {
     const submitBtn = document.getElementById('btn-doc-submit');
     const fileInput = document.getElementById('sub-file-upload');
 
-    if (fileInput.files.length === 0) {
+    if (!fileInput || fileInput.files.length === 0) {
         submitBtn.className = "bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition animate-pulse";
         submitBtn.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-2"></i> Please select a PDF file!`;
         setTimeout(() => { resetSubmitButton(submitBtn); }, 3000);
@@ -1526,21 +1531,28 @@ function highlightSidebarLink(targetTab) {
         return;
     }
 
-    // 2. Fallback check: Retrieve user session data automatically if fields are blank
-    const savedSession = localStorage.getItem('docTrack_session');
+    // 2. Safely parse values from the read-only UI fields or pull matching session lookups
+    const submittedByEl = document.getElementById('doc-submitted-by');
+    const originEl = document.getElementById('doc-originating-unit');
+
+    // Pull from active localStorage key used across your app
+    const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
     let sessionUser = "";
     let sessionOrigin = "";
 
     if (savedSession) {
         try {
             const user = JSON.parse(savedSession);
-            sessionUser = user.username || "";
-            sessionOrigin = user.role === 'client' ? (user.schoolName || "") : (user.office || "");
-        } catch(e) { console.error(e); }
+            sessionUser = user.fullname || user.fullName || user.username || "";
+            sessionOrigin = String(user.role).toLowerCase() === 'client' ? (user.schoolName || user.schoolname || "") : (user.office || "");
+        } catch(e) { 
+            console.error("Session parse error:", e); 
+        }
     }
 
-    const finalSubmittedBy = document.getElementById('sub-submitted-by').value.trim() || sessionUser || "anonymous";
-    const finalOrigin = document.getElementById('sub-school-office').value.trim() || sessionOrigin || "External Client Station";
+    // Target the verified UI element values with fallbacks to avoid crashes
+    const finalSubmittedBy = submittedByEl ? submittedByEl.value.trim() : (sessionUser || "anonymous");
+    const finalOrigin = originEl ? originEl.value.trim() : (sessionOrigin || "External Client Station");
 
     // Update button to show step 1
     submitBtn.disabled = true;
@@ -1555,22 +1567,20 @@ function highlightSidebarLink(targetTab) {
 
         submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce mr-2"></i> Uploading to Cloud...`;
 
-        // 🌟 FIX: package everything into a single JSON object instead of FormData
         const requestPayload = {
             action: "submitDocument",
             title: docTitle,
             docType: docType,
-            destOffice: document.getElementById('sub-dest-office').value.trim(),
-            destPerson: document.getElementById('sub-dest-person').value.trim(),
+            destOffice: document.getElementById('sub-dest-office') ? document.getElementById('sub-dest-office').value.trim() : "",
+            destPerson: document.getElementById('sub-dest-person') ? document.getElementById('sub-dest-person').value.trim() : "",
             submittedBy: finalSubmittedBy,
-            origin: finalOrigin, // Sent to backend 'params.origin' to land in column H
+            origin: finalOrigin, 
             fileData: rawBytes,
             fileName: `${docTitle}.pdf`,
             fileType: targetFile.type
         };
 
         try {
-            // Swap text status just before hitting network pipeline
             setTimeout(() => {
                 if (submitBtn.disabled && submitBtn.innerHTML.includes("Uploading")) {
                     submitBtn.innerHTML = `<i class="fa-solid fa-database fa-fade mr-2"></i> Registering Sheet Rows...`;
@@ -1579,18 +1589,21 @@ function highlightSidebarLink(targetTab) {
 
             const response = await fetch(API_URL, { 
                 method: "POST", 
-                body: JSON.stringify(requestPayload) // Sends parameters as a clean raw text block
+                body: JSON.stringify(requestPayload)
             });
             const data = await response.json();
 
             if (data.success) {
-                // Success State Button Notification
                 submitBtn.className = "bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-xs transition";
                 submitBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Registered: ${data.docId}!`;
 
-                document.getElementById('form-document-submission').reset();
+                if (document.getElementById('form-document-submission')) {
+                    document.getElementById('form-document-submission').reset();
+                }
+                
+                // Repopulate user information back into the read-only slots after clearing form inputs
+                autofillSubmissionSenderContext();
 
-                // Delay view switch slightly so they can read the Tracking ID on the button
                 setTimeout(() => {
                     if (typeof switchSidebarTab === 'function') {
                         switchSidebarTab('client-tracking');
@@ -1611,7 +1624,6 @@ function highlightSidebarLink(targetTab) {
 
     reader.readAsDataURL(targetFile);
 }
-
 function resetSubmitButton(btn) {
     btn.disabled = false;
     btn.className = "bg-indigo-600 text-white font-semibold px-5 py-2 rounded-lg text-xs hover:bg-indigo-700 transition cursor-pointer";
@@ -2264,6 +2276,32 @@ function logout() {
     // 4. Force the page to reload or redirect back to the login layout
     // This resets the state completely and forces the login screen to render.
     window.location.reload(); 
+}
+
+    function autofillSubmissionSenderContext() {
+    const savedSession = localStorage.getItem('currentUserContext') || localStorage.getItem('docTrack_session');
+    const submittedByField = document.getElementById('doc-submitted-by');
+    const originField = document.getElementById('doc-originating-unit');
+
+    if (!submittedByField || !originField) return;
+
+    if (savedSession) {
+        try {
+            const user = JSON.parse(savedSession);
+            
+            // Populate matching parameters
+            submittedByField.value = user.fullname || user.fullName || user.username || "Anonymous Liaison";
+            
+            const role = String(user.role).toLowerCase();
+            if (role === 'client') {
+                originField.value = user.schoolName || user.schoolname || "External Client Station";
+            } else {
+                originField.value = user.office || "Main Desk HQ";
+            }
+        } catch (e) {
+            console.error("Autofill parser fallback exception:", e);
+        }
+    }
 }
  // ==========================================
 // 5. WINDOW GLOBAL LIFECYCLE LISTENERS
